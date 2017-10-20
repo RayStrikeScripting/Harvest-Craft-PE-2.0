@@ -130,6 +130,11 @@ Translation.addTranslation("Harded leather helm", {ru:"Шлем из прочн�
 Translation.addTranslation("Hardened leather chest", {ru:"Кираса из прочной кожи",zh:"坚硬皮革胸甲"});
 Translation.addTranslation("Harded leather leggins", {ru:"Поножи из прочной кожи",zh:"坚硬皮革护腿"});
 Translation.addTranslation("Hardened leather boots", {ru:"Ботинки из прочной кожи",zh:"坚硬皮革鞋子"});
-Translation.addTranslation("strawberry", {zh: "草莓"});
-Translation.addTranslation("strawberry juice", {zh: "草莓汁"});
-
+Translation.addTranslation("strawberry", {ru: "Клубника"}, {zh: "草莓"});
+Translation.addTranslation("strawberry juice", {ru: "Клубничный сок"}, {zh: "草莓汁"});
+Translation.addTranslation("Vindaloo", {ru: "Виндалу"});
+Translation.addTranslation("Curry Powder", {ru: "Кари порошок"}, {zh: "咖哩粉"});
+Translation.addTranslation("Spider Eye Soup", {ru: "Суп из паучьего глаза"}, {zh: "蜘蛛眼湯"});
+Translation.addTranslation("Zombie Jerky", {ru: "Вяленная зомбятина"}, {zh: "殭屍傑基"});
+Translation.addTranslation("Curry Leaf Seed", {ru: "Семя кари"}, {zh: "咖哩種子"});
+Translation.addTranslation("Curry Leaf", {ru: "Лист кари"}, {zh: "咖哩葉"});
