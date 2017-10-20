@@ -75,6 +75,6 @@ IDRegistry.genItemID("corn_seed");
 Item.createFoodItem("corn_seed", "Corn seed", {name: "corn_seed", meta: 0});
 Recipes.addShapeless({id: ItemID.corn_seed, count: 1, data: 0}, [{id: ItemID.corn, data: 0}]);
 
-IDRegistry.genItemID("peppercorn_seed");
-Item.createFoodItem("peppercorn_seed", "Peppercorn seed", {name: "peppercorn_seed", meta: 0});
-Recipes.addShapeless({id: ItemID.peppercorn_seed, count: 1, data: 0}, [{id: ItemID.peppercorn, data: 0}]);
+IDRegistry.genItemID("curryleaf_seed");
+Item.createFoodItem("curryleaf_seed", "Curry Leaf seed", {name: "curryleafseeditem", meta: 0});
+Recipes.addShapeless({id: ItemID.curryleaf_seed, count: 1, data: 0}, [{id: ItemID.curryleaf, data: 0}]);
