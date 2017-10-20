@@ -38,3 +38,5 @@ IDRegistry.genItemID("corn");
 Item.createFoodItem("corn", "Corn", {name: "corn", meta: 0}, {food: 1});
 IDRegistry.genItemID("peppercorn");
 Item.createFoodItem("peppercorn", "Peppercorn", {name: "pepper_corn", meta: 0}, {food: 1});
+IDRegistry.genItemID("curryleaf");
+Item.createFoodItem("curryleaf", "Curry Leaf", {name: "curryleafitem", meta: 0}, {food: 1});
