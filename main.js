@@ -2,7 +2,7 @@
 BUILD INFO:
   dir: dev
   target: main.js
-  files: 63
+  files: 69
 */
 
 
@@ -28,212 +28,39 @@ BUILD INFO:
 // file: OTHER/header.js
 
 Callback.addCallback("LevelLoaded", function(){
-	Game.message(ChatColor.GREEN + "HarvestCraft Pe v2.0.1");
-	Game.message(ChatColor.WHITE + "Author: MrMacflame, Edited by: Nikolay Savenko");
-	Game.message(ChatColor.WHITE + " https://vk.com/raystrike ");
+	Game.message(ChatColor.GREEN + "HarvestCraft PE v2.3.1 by Nikolay Savenko");
 });	
 
 
 
 
-// file: API/HarvestAPI.js
+// file: API/importLib.js
 
-var Harvest = {
-registerDrop:function(bl,itm){
-Block.registerDropFunction(bl, function(coords, blockID, blockData, level){
-return[[ itm, 1 + parseInt(Math.random() * 3),0 ]];
-});
-},
-registerDestroy:function(bl,itm){
-Block.registerDropFunction(bl, function(coords, blockID, blockData, level){
-return[[ itm, 1,0 ]];
-});
-},
-	animationSaplingSet: function(Item,ani1,ani2){		
-		ani1.describeItem({
-			id: Item,
-			count: 1,
-			data: 0,
-			rotation: "x",
-			size:1
-		});
-		ani1.load();		
-		ani2.describeItem({
-			id: Item,
-			count: 1,
-			data: 0,
-			rotation: "z",
-			size:1
-		});
-		ani2.load();
-	},
-	plantShape:function(id){
-	Block.setBlockShape( id , {x: 0.1, y: 0, z: 0.1}, {x: 0.9, y: 0.5, z: 0.9});
-	},
-	dropFruit:function(id,x,y,z){
-	 Entity.setVelocity(
-		World.drop(	x ,	y,	z ,	id, 1 + parseInt(Math.random() * 3), 0	),
-		(Math.random()*0.4),
-		(Math.random()*0.4),
-		(Math.random()*0.4)
-		);
-	},
-	dropPlant:function(id,x,y,z){
-	 		Entity.setVelocity(
-			World.drop(	x ,		y,		z ,		id, 1 , 0	),
-(Math.random()*0.4),
-	 (Math.random()*0.4),
-		 (Math.random()*0.4)
-		);
-	},
-checkFruit:function(x,y,z,block){   
-if((World.getBlockID(x,y-1,z)==0)&&(World.getBlockID(x-1,y-1,z)==0)&&(World.getBlockID(x+1,y-1,z)==0)&&(World.getBlockID(x,y-1,z-1)==0)&&(World.getBlockID(x,y-1,z+1)==0)){
-			World.setBlock(x, y-1, z, block, 0);
-			World.addTileEntity(x, y-1, z);
-		}
-},
-	animationPlantDescribe:function(Item,ani1,ani2,ani3,ani4){
-	ani1.describeItem({
-			id: Item,
-			count: 1,
-			data: 0,
-			rotation: "x",
-			size:1
-		});
-		ani1.load();		
-		if( __config__.access("advanced_item_models")==false ){
-		ani2.describeItem({
-			id: Item,
-			count: 1,
-			data: 0,
-			rotation: "x",
-			size:1
-		});
-		ani2.load(); 
-		}
-		if(__config__.access("advanced_item_models")==false ){
-		 ani3.describeItem({
-			id: Item,
-			count: 1,
-			data: 0,
-			rotation: "z",
-			size:1
-		});
-		ani3.load();
-		}
-		if( __config__.access("advanced_item_models")==false ){
-		ani4.describeItem({
-			id: Item,
-			count: 1,
-			data: 0,
-			rotation: "z",
-			size:1
-		});
-		ani4.load();
-		}
-	},
-number:function(min,max){
-var num = Math.round((Math.random()*max)+min);
-return num
-},
-	addTree:function(type,fruit,count,x,y,z){
-//��������! �� ������������� � ���������!
-World.setBlock(x+2, y+2, z, fruit, 0);
-World.setBlock(x-2, y+2, z, fruit, 0);
-World.setBlock(x, y+2, z+2, fruit, 0);
-World.setBlock(x-2, y+2, z-2, fruit, 0);
-World.addTileEntity(x+2, y+2, z);
-World.addTileEntity(x-2, y+2, z);
-World.addTileEntity(x, y+2, z+2);
-World.addTileEntity(x, y+2, z-2);
-		World.setBlock(x, y+1, z, 17, type);
-		World.setBlock(x, y+2, z, 17, type);
-	 World.setBlock(x, y+3, z, 17, type);
-	 World.setBlock(x, y+4, z, 17, type);
-	 World.setBlock(x, y+5, z, 17, type);
-	 World.setBlock(x, y+5, z+1,18 , type);
-		World.setBlock(x, y+5, z-1, 18, type);
-	 World.setBlock(x, y+4, z-2, 18, type);
-		World.setBlock(x, y+4, z+2, 18, type);
-	 World.setBlock(x-2, y+4, z, 18, type);
-	 World.setBlock(x+2, y+4, z, 18, type);
-		World.setBlock(x, y+3, z-1, 18, type);
-		World.setBlock(x, y+3, z+1, 18, type);
-		World.setBlock(x, y+4, z-1, 18, type);
-		World.setBlock(x, y+4, z+1, 18, type);				
-		World.setBlock(x+2, y+3, z, 18, type);
-		World.setBlock(x-2, y+3, z, 18, type);
-		World.setBlock(x, y+3, z+2, 18, type);
-		World.setBlock(x, y+3, z-2, 18, type);		
-		World.setBlock(x+1, y+3, z, 18, type);
-		World.setBlock(x-1, y+3, z, 18, type);
-		World.setBlock(x+1, y+3, z+1, 18, type);
-		World.setBlock(x-1, y+3, z-1, 18, type);
-		World.setBlock(x+1, y+3, z+1, 18, type);
-		World.setBlock(x+1, y+3, z-1, 18, type);
-		World.setBlock(x-1, y+3, z+1, 18, type);
-		World.setBlock(x-1, y+3, z-1, 18, type);
-		World.setBlock(x+2, y+3, z+1, 18, type);
-		World.setBlock(x+2, y+3, z-1, 18, type);
-		World.setBlock(x-2, y+3, z+1, 18, type);
-		World.setBlock(x-2, y+3, z-1, 18, type);
-		World.setBlock(x+1, y+3, z+2, 18, type);
-		World.setBlock(x+1, y+3, z-2, 18, type);
-		World.setBlock(x-1, y+3, z+2, 18, type);
-		World.setBlock(x-1, y+3, z-2, 18, 0);
-		World.setBlock(x+2, y+3, z+2, 18, type);
-		World.setBlock(x+2, y+3, z-2, 18, type);
-		World.setBlock(x-2, y+3, z+2, 18, type);
-		World.setBlock(x-2, y+3, z-2, 18, type);
-		World.setBlock(x+1, y+4, z, 18, type);
-		World.setBlock(x-1, y+4, z, 18, type);
-		World.setBlock(x+1, y+4, z+1, 18, type);
-		World.setBlock(x-1, y+4, z-1, 18, type);
-		World.setBlock(x+1, y+4, z+1, 18, type);
-		World.setBlock(x+1, y+4, z-1, 18, type);
-		World.setBlock(x-1, y+4, z+1, 18, type);
-		World.setBlock(x-1, y+4, z-1, 18, type);
-		World.setBlock(x+2, y+4, z+1, 18, type);
-		World.setBlock(x+2, y+4, z-1, 18, type);
-		World.setBlock(x-2, y+4, z+1, 18, type);
-		World.setBlock(x-2, y+4, z-1, 18, type);
-		World.setBlock(x+1, y+4, z+2, 18, type);
-		World.setBlock(x+1, y+4, z-2, 18, type);
-		World.setBlock(x-1, y+4, z+2, 18, type);
-		World.setBlock(x-1, y+4, z-2, 18, type);
-		World.setBlock(x+2, y+4, z+2, 18, type);
-		World.setBlock(x+2, y+4, z-2, 18, type);
-		World.setBlock(x-2, y+4, z+2, 18, type);
-		World.setBlock(x-2, y+4, z-2, 18, type);
-		World.setBlock(x+1, y+5, z, 18, type);
-		World.setBlock(x-1, y+5, z, 18, type);
-		World.setBlock(x+1, y+5, z+1, 18, type);
-		World.setBlock(x-1, y+5, z-1, 18, type);
-		World.setBlock(x+1, y+5, z+1, 18, type);
-		World.setBlock(x+1, y+5, z-1, 18, type);
-		World.setBlock(x-1, y+5, z+1, 18, type);
-		World.setBlock(x-1, y+5, z-1, 18, type);
-		World.setBlock(x, y+6, z, 18, type);
+importLib("PlantModel", "*");
+importLib("Harvest_Core", "*");
+
+
+
+
+// file: API/Prototypes.js
+
+﻿var rrr = Random.Int(1,3);
+var rrd = Random.Int(1,2);
+// Супер костыль!
+/*Callback.addCallback("DestroyBlock", function(coords, block, player){
+	//Это необходимо из за игнорирования if в cropPROTO
+	if(Harvest.dropWithoutDirt[World.getBlockID(coords.x,coords.y+1,coords.z)]){
+		World.destroyBlock(coords.x, coords.y+1, coords.z,true);
+		World.removeTileEntity(coords.x, coords.y+1, coords.z);
 	}
-};
- var TREE_SAPLING_GROUND_TILES = {
-	2: true,
-	3: true,
-	60: true
-};
+});*/
 
-
-
-
-// file: API/shareAPI.js
-
-ModAPI.registerAPI("HAPI", {
-	harvest:Harvest,	
-	requireGlobal: function(command){
-		return eval(command);
-	}
+var BLOCK_TYPE_CANDLE = Block.createSpecialType({
+	base: 50,
+	opaque: false,
+	lightopacity: 0,
+	lightlevel: 10 
 });
-Logger.Log("HarvestAPI shared with name HAPI", "API");
 
 
 
@@ -368,202 +195,386 @@ Translation.addTranslation("Sink 2", {ru:"Глиняный кувшин",zh:"水
 Translation.addTranslation("Sink 3", {ru:"Кирпичный колодец",zh:"水槽3"});
 Translation.addTranslation("Fish trap", {ru:"Ловушка для рыбы",zh:"鱼陷阱"});
 Translation.addTranslation("Animal trap", {ru:"Ловушка для зверей",zh:"动物陷阱"});
-Translation.addTranslation("Harded leather helm", {ru:"Шлем из прочной кожи",zh:"坚硬皮革头盔"});
-Translation.addTranslation("Hardened leather chest", {ru:"Кираса из прочной кожи",zh:"坚硬皮革胸甲"});
-Translation.addTranslation("Harded leather leggins", {ru:"Поножи из прочной кожи",zh:"坚硬皮革护腿"});
-Translation.addTranslation("Hardened leather boots", {ru:"Ботинки из прочной кожи",zh:"坚硬皮革鞋子"});
-Translation.addTranslation("strawberry", {zh: "草莓"});
-Translation.addTranslation("strawberry juice", {zh: "草莓汁"});
-
+Translation.addTranslation("Harded Leather Helmet", {ru:"Шлем из прочной кожи",zh:"坚硬皮革头盔"});
+Translation.addTranslation("Harded Leather Chestplate", {ru:"Кираса из прочной кожи",zh:"坚硬皮革胸甲"});
+Translation.addTranslation("Harded Leather Leggings", {ru:"Поножи из прочной кожи",zh:"坚硬皮革护腿"});
+Translation.addTranslation("Harded Leather Boots", {ru:"Ботинки из прочной кожи",zh:"坚硬皮革鞋子"});
+Translation.addTranslation("Grain bait", {ru: "Семечковая приманка"});
+Translation.addTranslation("Fruit bait", {ru: "Фруктовая приманка"});
+Translation.addTranslation("Veggie bait", {ru: "Овощная приманка"});
+Translation.addTranslation("Curryleaf", {ru: "Японское карри"});
+Translation.addTranslation("Curry Powder", {ru: "Порошок карри"});
+Translation.addTranslation("Curryleaf seed", {ru: "Семя японского карри"});
+Translation.addTranslation("Raw venison", {ru: "Сырая оленина"});
+Translation.addTranslation("Cooked venison", {ru: "Приготовленная оленина"});
+Translation.addTranslation("Raw turkey", {ru: "Сырая индейка"});
+Translation.addTranslation("Cooked turkey", {ru: "Приготовленная индейка"});
+Translation.addTranslation("Spider Eye Soup", {ru: "Суп из глаза паука"});
+Translation.addTranslation("Zombie Jerky", {ru: "Вяленое мясо зомби"});
+Translation.addTranslation("Curry powder", {ru: "Прошок японского карри"});
+Translation.addTranslation("Vindaloo", {ru: "Виндалу"});
+Translation.addTranslation("Sausage", {ru: "Колбаса"});
+Translation.addTranslation("Wax", {ru: "Воск"});
+Translation.addTranslation("Harded leather", {ru: "Прочная кожа"});
+Translation.addTranslation("Candle", {ru: "Свеча"});
+Translation.addTranslation("Candleberry garden", {ru: "Куст свечной ягоды"});
+Translation.addTranslation("Apple", {ru: "Яблоко"});
+Translation.addTranslation("Pressed wax", {ru: "Прессованный воск"});
+Translation.addTranslation("Candle berry", {ru: "Свечная ягода"});
+Translation.addTranslation("Cashew chicken", {ru: "Курица кешью"});
+Translation.addTranslation("Chicken celery casserole", {ru: "Куриная запеканка с сельдереем"});
+Translation.addTranslation("Chicken chowmein", {ru: "Китайское рагу из курицы"});
+Translation.addTranslation("Chicken curry", {ru: "Куриное карри"});
+Translation.addTranslation("Chicken gumbo", {ru: "Куриное гамбо"});
+Translation.addTranslation("Chicken noodle soup", {ru: "Куриный суп с лапшой"});
+Translation.addTranslation("Chicken pot pie", {ru: "Куриный пирог в горшочке"});
+Translation.addTranslation("Chicken sandwich", {ru: "Куриный сэндвич"});
+Translation.addTranslation("Fried chicken", {ru: "Курица фри"});
+Translation.addTranslation("Garlic chicken", {ru: "Курица с чесноком"});
+Translation.addTranslation("General tso chicken", {ru: "Курица генерала ЦО"});
+Translation.addTranslation("Ginger chicken", {ru: "Имбирная курица"});
 
 
 
 
 // file: DEBUG/debugItems.js
 
-/*
-IDRegistry.genItemID("Atree");
+﻿IDRegistry.genItemID("Atree");
 Item.createItem("Atree", "Spawn Tree", {name: "stick", data: 0});
-Item.registerUseFunction("Atree",
- function(coords, item, block){
- Debug.m("Item");	
- Harvest.addTree(0,BlockID.appleBlock,8,coords.x,coords.y,coords.z);
- });
- IDRegistry.genItemID("AGE");
+Item.registerUseFunction("Atree",function(coords, item, block){
+	Debug.m("Item");	
+	Harvest.addTree(0,BlockID.appleBlock,8,coords.x,coords.y,coords.z);
+});
+
+IDRegistry.genItemID("AGE");
 Item.createItem("AGE", "AGE", {name: "stick", data: 0});
-Item.registerUseFunction("AGE",
- function(coords, item, block){
+Item.registerUseFunction("AGE",function(coords, item, block){
 	var te = World.getTileEntity(coords.x,coords.y,coords.z);
-	Game.message(te.data.age);
+	Game.message(te.isCrop);
  });
+ 
 IDRegistry.genItemID("data");
 Item.createItem("data", "data", {name: "stick", data: 0});
-Item.registerUseFunction("data",
- function(coords, item, block){
- Debug.m("ID:"+World.getBlockID(coords.x,coords.y,coords.z));
- Debug.m("DATA:"+World.getBlockData(coords.x,coords.y,coords.z)); 	
- });*/
+Item.registerUseFunction("data",function(coords, item, block){
+	Debug.m("ID:"+World.getBlockID(coords.x,coords.y,coords.z));
+	Debug.m("DATA:"+World.getBlockData(coords.x,coords.y,coords.z)); 	
+});
+ 
 
 
 
 
-// file: DEBUG/animationsItems.js
+// file: CROPS/strawberry.js
 
-IDRegistry.genItemID("apple_ani0");
-Item.createItem("apple_ani0", " ani1", {name: "applee", meta: 0} ,{isTech: true} );
-IDRegistry.genItemID("apple_ani1");
-Item.createFoodItem("apple_ani1", " ani1", {name: "applee", meta: 1},{isTech: true});
-IDRegistry.genItemID("apple_ani2");
-Item.createItem("apple_ani2", " ani1", {name: "applee", meta: 2},{isTech: true});
-//----------------
-IDRegistry.genItemID("strawberry_ani0");
-Item.createFoodItem("strawberry_ani0", " ani1", {name: "strawberrycrop", meta: 0} ,{isTech: true} );
-IDRegistry.genItemID("strawberry_ani1");
-Item.createFoodItem("strawberry_ani1", " ani1", {name: "strawberrycrop", meta: 1},{isTech: true});
-IDRegistry.genItemID("strawberry_ani2");
-Item.createFoodItem("strawberry_ani2", " ani1", {name: "strawberrycrop", meta: 2},{isTech: true});
-//------------------
-IDRegistry.genItemID("raspberry_ani0");
-Item.createFoodItem("raspberry_ani0", " ani1", {name: "raspberry_crop", meta: 0} ,{isTech: true} );
-IDRegistry.genItemID("raspberry_ani1");
-Item.createFoodItem("raspberry_ani1", " ani1", {name: "raspberry_crop", meta: 1},{isTech: true});
-IDRegistry.genItemID("raspberry_ani2");
-Item.createFoodItem("raspberry_ani2", " ani1", {name: "raspberry_crop", meta: 2},{isTech: true});
-//----------------
-IDRegistry.genItemID("cranberrycrop_ani0");
-Item.createFoodItem("cranberrycrop_ani0", " ani1", {name: "cranberrycrop", meta: 0} ,{isTech: true} );
-IDRegistry.genItemID("cranberrycrop_ani1");
-Item.createFoodItem("cranberrycrop_ani1", " ani1", {name: "cranberrycrop", meta: 1} ,{isTech: true} );
-IDRegistry.genItemID("cranberrycrop_ani2");
-Item.createFoodItem("cranberrycrop_ani2", " ani1", {name: "cranberrycrop", meta: 2} ,{isTech: true} );
-//----------------------
-IDRegistry.genItemID("blueberrycrop_ani0");
-Item.createFoodItem("blueberrycrop_ani0", " ani1", {name: "blueberrycrop", meta: 0} ,{isTech: true} );
-IDRegistry.genItemID("blueberrycrop_ani1");
-Item.createFoodItem("blueberrycrop_ani1", " ani1", {name: "blueberrycrop", meta: 1} ,{isTech: true} );
-IDRegistry.genItemID("blueberrycrop_ani2");
-Item.createFoodItem("blueberrycrop_ani2", " ani1", {name: "blueberrycrop", meta: 2} ,{isTech: true} );
-//--------------------
-IDRegistry.genItemID("blackberrycrop_ani0");
-Item.createFoodItem("blackberrycrop_ani0", " ani1", {name: "blackberrycrop", meta: 0} ,{isTech: true} );
-IDRegistry.genItemID("blackberrycrop_ani1");
-Item.createFoodItem("blackberrycrop_ani1", " ani1", {name: "blackberrycrop", meta: 1} ,{isTech: true} );
-IDRegistry.genItemID("blackberrycrop_ani2");
-Item.createFoodItem("blackberrycrop_ani2", " ani1", {name: "blackberrycrop", meta: 2} ,{isTech: true} );
-//------------------------
-IDRegistry.genItemID("grapecrop_ani0");
-Item.createFoodItem("grapecrop_ani0", " ani1", {name: "grapecrop", meta: 0} ,{isTech: true} );
-IDRegistry.genItemID("grapecrop_ani1");
-Item.createFoodItem("grapecrop_ani1", " ani1", {name: "grapecrop", meta: 1} ,{isTech: true} );
-IDRegistry.genItemID("grapecrop_ani2");
-Item.createFoodItem("grapecrop_ani2", " ani1", {name: "grapecrop", meta: 2} ,{isTech: true} );
-//----------------
-IDRegistry.genItemID("cucumbercrop_ani0");
-Item.createFoodItem("cucumbercrop_ani0", " ani1", {name: "cucumbercrop", meta: 0} ,{isTech: true} );
-IDRegistry.genItemID("cucumbercrop_ani1");
-Item.createFoodItem("cucumbercrop_ani1", " ani1", {name: "cucumbercrop", meta: 1} ,{isTech: true} );
-IDRegistry.genItemID("cucumbercrop_ani2");
-Item.createFoodItem("cucumbercrop_ani2", " ani1", {name: "cucumbercrop", meta: 2} ,{isTech: true} );
-//------------------
-IDRegistry.genItemID("onioncrop_ani0");
-Item.createFoodItem("onioncrop_ani0", " ani1", {name: "onioncrop", meta: 0} ,{isTech: true} );
-IDRegistry.genItemID("onioncrop_ani1");
-Item.createFoodItem("onioncrop_ani1", " ani1", {name: "onioncrop", meta: 1} ,{isTech: true} );
-IDRegistry.genItemID("onioncrop_ani2");
-Item.createFoodItem("onioncrop_ani2", " ani1", {name: "onioncrop", meta: 2} ,{isTech: true} );
-//--------------------
-IDRegistry.genItemID("cabbagecrop_ani0");
-Item.createFoodItem("cabbagecrop_ani0", " ani1", {name: "cabbagecrop", meta: 0} ,{isTech: true} );
-IDRegistry.genItemID("cabbagecrop_ani1");
-Item.createFoodItem("cabbagecrop_ani1", " ani1", {name: "cabbagecrop", meta: 1} ,{isTech: true} );
-IDRegistry.genItemID("cabbagecrop_ani2");
-Item.createFoodItem("cabbagecrop_ani2", " ani1", {name: "cabbagecrop", meta: 2} ,{isTech: true} );
-//--------------------
-IDRegistry.genItemID("tomatocrop_ani0");
-Item.createFoodItem("tomatocrop_ani0", " ani1", {name: "tomatocrop", meta: 0} ,{isTech: true} );
-IDRegistry.genItemID("tomatocrop_ani1");
-Item.createFoodItem("tomatocrop_ani1", " ani1", {name: "tomatocrop", meta: 1} ,{isTech: true} );
-IDRegistry.genItemID("tomatocrop_ani2");
-Item.createFoodItem("tomatocrop_ani2", " ani1", {name: "tomatocrop", meta: 2} ,{isTech: true} );
-//---------------------
-IDRegistry.genItemID("garliccrop_ani0");
-Item.createFoodItem("garliccrop_ani0", " ani1", {name: "garliccrop", meta: 0} ,{isTech: true} );
-IDRegistry.genItemID("garliccrop_ani1");
-Item.createFoodItem("garliccrop_ani1", " ani1", {name: "garliccrop", meta: 1} ,{isTech: true} );
-IDRegistry.genItemID("garliccrop_ani2");
-Item.createFoodItem("garliccrop_ani2", " ani1", {name: "garliccrop", meta: 2} ,{isTech: true} );
-//-------------------------
-IDRegistry.genItemID("bellpeppercrop_ani0");
-Item.createFoodItem("bellpeppercrop_ani0", " ani1", {name: "bellpeppercrop", meta: 0} ,{isTech: true} );
-IDRegistry.genItemID("bellpeppercrop_ani1");
-Item.createFoodItem("bellpeppercrop_ani1", " ani1", {name: "bellpeppercrop", meta: 1} ,{isTech: true} );
-IDRegistry.genItemID("bellpeppercrop_ani2");
-Item.createFoodItem("bellpeppercrop_ani2", " ani1", {name: "bellpeppercrop", meta: 2} ,{isTech: true} );
-//---------------------
-IDRegistry.genItemID("lettucecrop_ani0");
-Item.createFoodItem("lettucecrop_ani0", " ani1", {name: "lettucecrop", meta: 0} ,{isTech: true} );
-IDRegistry.genItemID("lettucecrop_ani1");
-Item.createFoodItem("lettucecrop_ani1", " ani1", {name: "lettucecrop", meta: 1} ,{isTech: true} );
-IDRegistry.genItemID("lettucecrop_ani2");
-Item.createFoodItem("lettucecrop_ani2", " ani1", {name: "lettucecrop", meta: 2} ,{isTech: true} );
-//--------------------
-IDRegistry.genItemID("coffeebeancrop_ani0");
-Item.createFoodItem("coffeebeancrop_ani0", " ani1", {name: "coffeebeancrop", meta: 0} ,{isTech: true} );
-IDRegistry.genItemID("coffeebeancrop_ani1");
-Item.createFoodItem("coffeebeancrop_ani1", " ani1", {name: "coffeebeancrop", meta: 1} ,{isTech: true} );
-IDRegistry.genItemID("coffeebeancrop_ani2");
-Item.createFoodItem("coffeebeancrop_ani2", " ani1", {name: "coffeebeancrop", meta: 2} ,{isTech: true} );
-//-----------------------
-IDRegistry.genItemID("peascrop_ani0");
-Item.createFoodItem("peascrop_ani0", " ani1", {name: "peascrop", meta: 0} ,{isTech: true} );
-IDRegistry.genItemID("peascrop_ani1");
-Item.createFoodItem("peascrop_ani1", " ani1", {name: "peascrop", meta: 1} ,{isTech: true} );
-IDRegistry.genItemID("peascrop_ani2");
-Item.createFoodItem("peascrop_ani2", " ani1", {name: "peascrop", meta: 2} ,{isTech: true} );
-//--------------------
-IDRegistry.genItemID("chilipeppercrop_ani0");
-Item.createFoodItem("chilipeppercrop_ani0", " ani1", {name: "chilipeppercrop", meta: 0} ,{isTech: true} );
-IDRegistry.genItemID("chilipeppercrop_ani1");
-Item.createFoodItem("chilipeppercrop_ani1", " ani1", {name: "chilipeppercrop", meta: 1} ,{isTech: true} );
-IDRegistry.genItemID("chilipeppercrop_ani2");
-Item.createFoodItem("chilipeppercrop_ani2", " ani1", {name: "chilipeppercrop", meta: 2} ,{isTech: true} );
-//-----------------------
-IDRegistry.genItemID("spiceleafcrop_ani0");
-Item.createFoodItem("spiceleafcrop_ani0", " ani1", {name: "spiceleafcrop", meta: 0} ,{isTech: true} );
-IDRegistry.genItemID("spiceleafcrop_ani1");
-Item.createFoodItem("spiceleafcrop_ani1", " ani1", {name: "spiceleafcrop", meta: 1} ,{isTech: true} );
-IDRegistry.genItemID("spiceleafcrop_ani2");
-Item.createFoodItem("spiceleafcrop_ani2", " ani1", {name: "spiceleafcrop", meta: 2} ,{isTech: true} );
-//--------------------
-IDRegistry.genItemID("corncrop_ani0");
-Item.createFoodItem("corncrop_ani0", " ani1", {name: "corncrop", meta: 0} ,{isTech: true} );
-IDRegistry.genItemID("corncrop_ani1");
-Item.createFoodItem("corncrop_ani1", " ani1", {name: "corncrop", meta: 1} ,{isTech: true} );
-IDRegistry.genItemID("corncrop_ani2");
-Item.createFoodItem("corncrop_ani2", " ani1", {name: "corncrop", meta: 2} ,{isTech: true} );
-//------------------------
-IDRegistry.genItemID("peppercorncrop_ani0");
-Item.createFoodItem("peppercorncrop_ani0", " ani1", {name: "peppercorncrop", meta: 0} ,{isTech: true} );
-IDRegistry.genItemID("peppercorncrop_ani1");
-Item.createFoodItem("peppercorncrop_ani1", " ani1", {name: "peppercorncrop", meta: 1} ,{isTech: true} );
-IDRegistry.genItemID("peppercorncrop_ani2");
-Item.createFoodItem("peppercorncrop_ani2", " ani1", {name: "peppercorncrop", meta: 2} ,{isTech: true} );
-//-------------
-IDRegistry.genItemID("candleberry_ani0");
-Item.createFoodItem("candleberry_ani0", " ani1", {name: "candleberrycrop", meta: 0} ,{isTech: true} );
-IDRegistry.genItemID("candleberry_ani1");
-Item.createFoodItem("candleberry_ani1", " ani1", {name: "candleberrycrop", meta: 1} ,{isTech: true} );
-IDRegistry.genItemID("candleberry_ani2");
-Item.createFoodItem("candleberry_ani2", " ani1", {name: "candleberrycrop", meta: 2} ,{isTech: true} );
-//-------------
-IDRegistry.genItemID("grassGarden_ani0");
-Item.createItem("grassGarden_ani0", "Grass garden", {name: "grassgarden", meta: 0} ,{isTech: true} );
-//--------------
-IDRegistry.genItemID("herbGarden_ani0");
-Item.createItem("herbGarden_ani0", "Herb garden", {name: "herbgarden", meta: 0} ,{isTech: true} );
-//--------------------
-IDRegistry.genItemID("berryGarden_ani");
-Item.createItem("berryGarden_ani", "Berry garden", {name: "berrygardenNEW", meta: 0} ,{isTech: true} );
+CropRegistry.registerWithID("strawberrycrop","strawberrycrop","strawberrycrop",ItemID.strawberry_seed);
+CropRegistry.fruitPush(BlockID.strawberrycrop,ItemID.strawberry);
+Harvest.registerDroppingBlock(BlockID.strawberrycrop);
+
+PlantModel.crop(BlockID.strawberrycrop);
+
+TileEntity.registerPrototype(BlockID.strawberrycrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.strawberry_seed,BlockID.strawberrycrop);
+
+
+
+
+// file: CROPS/raspberry.js
+
+CropRegistry.registerWithID("raspberrycrop","raspberrycrop","raspberry_crop",ItemID.raspberry_seed);
+CropRegistry.fruitPush(BlockID.raspberrycrop,ItemID.raspberry);
+Harvest.registerDroppingBlock(BlockID.raspberrycrop);
+
+PlantModel.crop(BlockID.raspberrycrop);
+
+TileEntity.registerPrototype(BlockID.raspberrycrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.raspberry_seed,BlockID.raspberrycrop);
+
+
+
+
+// file: CROPS/cranberry.js
+
+CropRegistry.registerWithID("cranberrycrop","cranberrycrop","cranberrycrop",ItemID.cranberry_seed);
+CropRegistry.fruitPush(BlockID.cranberrycrop,ItemID.cranberry);
+Harvest.registerDroppingBlock(BlockID.cranberrycrop);
+
+PlantModel.crop(BlockID.cranberrycrop);
+
+TileEntity.registerPrototype(BlockID.cranberrycrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.cranberry_seed,BlockID.cranberrycrop);
+
+
+
+
+// file: CROPS/blueberry.js
+
+CropRegistry.registerWithID("blueberrycrop","blueberrycrop","blueberrycrop",ItemID.blueberry_seed);
+CropRegistry.fruitPush(BlockID.blueberrycrop,ItemID.blueberry);
+Harvest.registerDroppingBlock(BlockID.blueberrycrop);
+
+PlantModel.crop(BlockID.blueberrycrop);
+
+TileEntity.registerPrototype(BlockID.blueberrycrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.blueberry_seed,BlockID.blueberrycrop);
+
+
+
+
+// file: CROPS/blackberry.js
+
+CropRegistry.registerWithID("blackberrycrop","blackberrycrop","blackberrycrop",ItemID.blackberry_seed);
+CropRegistry.fruitPush(BlockID.blackberrycrop,ItemID.blackberry);
+Harvest.registerDroppingBlock(BlockID.blackberrycrop);
+
+PlantModel.crop(BlockID.blackberrycrop);
+
+TileEntity.registerPrototype(BlockID.blackberrycrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.blackberry_seed,BlockID.blackberrycrop);
+
+
+
+
+// file: CROPS/grape.js
+
+CropRegistry.registerWithID("grapecrop","grapecrop","grapecrop",ItemID.grape_seed);
+CropRegistry.fruitPush(BlockID.grapecrop,ItemID.grape);
+Harvest.registerDroppingBlock(BlockID.grapecrop);
+
+PlantModel.crop(BlockID.grapecrop);
+
+TileEntity.registerPrototype(BlockID.grapecrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.grape_seed,BlockID.grapecrop);
+
+
+
+
+// file: CROPS/cucumber.js
+
+CropRegistry.registerWithID("cucumbercrop","cucumbercrop","cucumbercrop",ItemID.cucumber_seed);
+CropRegistry.fruitPush(BlockID.cucumbercrop,ItemID.cucumber);
+Harvest.registerDroppingBlock(BlockID.cucumbercrop);
+
+PlantModel.crop(BlockID.cucumbercrop);
+
+TileEntity.registerPrototype(BlockID.cucumbercrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.cucumber_seed,BlockID.cucumbercrop);
+
+
+
+
+// file: CROPS/onion.js
+
+CropRegistry.registerWithID("onioncrop","onioncrop","onioncrop",ItemID.onion_seed);
+CropRegistry.fruitPush(BlockID.onioncrop,ItemID.onion);
+Harvest.registerDroppingBlock(BlockID.onioncrop);
+
+PlantModel.crop(BlockID.onioncrop);
+
+TileEntity.registerPrototype(BlockID.onioncrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.onion_seed,BlockID.onioncrop);
+
+
+
+
+// file: CROPS/cabbage.js
+
+CropRegistry.registerWithID("cabbagecrop","cabbagecrop","cabbagecrop",ItemID.cabbage_seed);
+CropRegistry.fruitPush(BlockID.cabbagecrop,ItemID.cabbage);
+Harvest.registerDroppingBlock(BlockID.cabbagecrop);
+
+PlantModel.crop(BlockID.cabbagecrop);
+
+TileEntity.registerPrototype(BlockID.cabbagecrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.cabbage_seed,BlockID.cabbagecrop);
+
+
+
+
+// file: CROPS/tomato.js
+
+CropRegistry.registerWithID("tomatocrop","tomatocrop","tomatocrop",ItemID.tomato_seed);
+CropRegistry.fruitPush(BlockID.tomatocrop,ItemID.tomato);
+Harvest.registerDroppingBlock(BlockID.tomatocrop);
+
+PlantModel.crop(BlockID.tomatocrop);
+
+TileEntity.registerPrototype(BlockID.tomatocrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.tomato_seed,BlockID.tomatocrop);
+
+
+
+
+// file: CROPS/garlic.js
+
+CropRegistry.registerWithID("garliccrop","garliccrop","garliccrop",ItemID.garlic_seed);
+CropRegistry.fruitPush(BlockID.garliccrop,ItemID.garlic);
+Harvest.registerDroppingBlock(BlockID.garliccrop);
+
+PlantModel.crop(BlockID.garliccrop);
+
+TileEntity.registerPrototype(BlockID.garliccrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.garlic_seed,BlockID.garliccrop);
+
+
+
+
+// file: CROPS/bellpepper.js
+
+CropRegistry.registerWithID("bellpeppercrop","bellpeppercrop","bellpeppercrop",ItemID.bellpepper_seed);
+CropRegistry.fruitPush(BlockID.bellpeppercrop,ItemID.bellpepper);
+Harvest.registerDroppingBlock(BlockID.bellpeppercrop);
+
+PlantModel.crop(BlockID.bellpeppercrop);
+
+TileEntity.registerPrototype(BlockID.bellpeppercrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.bellpepper_seed,BlockID.bellpeppercrop);
+
+
+
+
+// file: CROPS/lettuce.js
+
+CropRegistry.registerWithID("lettucecrop","lettucecrop","lettucecrop",ItemID.lettuce_seed);
+CropRegistry.fruitPush(BlockID.lettucecrop,ItemID.lettuce);
+Harvest.registerDroppingBlock(BlockID.lettucecrop);
+
+PlantModel.crop(BlockID.lettucecrop);
+
+TileEntity.registerPrototype(BlockID.lettucecrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.lettuce_seed,BlockID.lettuce);
+
+
+
+
+// file: CROPS/coffeebean.js
+
+CropRegistry.registerWithID("coffeebeancrop","coffeebeancrop","coffeebeancrop",ItemID.coffee_seed);
+CropRegistry.fruitPush(BlockID.coffeebeancrop,ItemID.coffee_beans);
+Harvest.registerDroppingBlock(BlockID.coffeebeancrop);
+
+PlantModel.crop(BlockID.coffeebeancrop);
+
+TileEntity.registerPrototype(BlockID.coffeebeancrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.coffee_seed,BlockID.coffeebeancrop);
+
+
+
+
+// file: CROPS/peas.js
+
+CropRegistry.registerWithID("peascrop","peascrop","peascrop",ItemID.peas_seed);
+CropRegistry.fruitPush(BlockID.peascrop,ItemID.peas);
+Harvest.registerDroppingBlock(BlockID.peascrop);
+
+PlantModel.crop(BlockID.peascrop);
+
+TileEntity.registerPrototype(BlockID.peascrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.peas_seed,BlockID.peascrop);
+
+
+
+
+// file: CROPS/chilipepper.js
+
+CropRegistry.registerWithID("chilipeppercrop","chilipeppercrop","chilipeppercrop",ItemID.chili_pepper_seed);
+CropRegistry.fruitPush(BlockID.chilipeppercrop,ItemID.chili_pepper);
+Harvest.registerDroppingBlock(BlockID.chilipeppercrop);
+
+PlantModel.crop(BlockID.chilipeppercrop);
+
+TileEntity.registerPrototype(BlockID.chilipeppercrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.chili_pepper_seed,BlockID.chilipeppercrop);
+
+
+
+
+// file: CROPS/spiceleaf.js
+
+CropRegistry.registerWithID("spiceleafcrop","spiceleafcrop","spiceleafcrop",ItemID.spice_leaf_seed);
+CropRegistry.fruitPush(BlockID.spiceleafcrop,ItemID.spice_leaf_seed);
+Harvest.registerDroppingBlock(BlockID.spiceleafcrop);
+
+PlantModel.crop(BlockID.spiceleafcrop);
+
+TileEntity.registerPrototype(BlockID.spiceleafcrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.spice_leaf_seed,BlockID.spiceleafcrop);
+
+
+
+
+// file: CROPS/corn.js
+
+CropRegistry.registerWithID("corncrop","corncrop","corncrop",ItemID.corn_seed);
+CropRegistry.fruitPush(BlockID.corncrop,ItemID.corn);
+Harvest.registerDroppingBlock(BlockID.corncrop);
+
+PlantModel.crop(BlockID.corncrop);
+
+TileEntity.registerPrototype(BlockID.corncrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.corn_seed,BlockID.corncrop);
+
+
+
+
+// file: CROPS/peppercorn.js
+
+CropRegistry.registerWithID("peppercorncrop","peppercorncrop","peppercorncrop",ItemID.peppercorn_seed);
+CropRegistry.fruitPush(BlockID.peppercorncrop,ItemID.peppercorn);
+Harvest.registerDroppingBlock(BlockID.peppercorncrop);
+
+PlantModel.crop(BlockID.peppercorncrop);
+
+TileEntity.registerPrototype(BlockID.peppercorncrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.peppercorn_seed,BlockID.peppercorncrop);
+
+
+
+
+// file: CROPS/candleberry.js
+
+﻿CropRegistry.registerWithID("candleberrycrop","candleberrycrop","candleberrycrop",ItemID.candleberryseed);
+CropRegistry.fruitPush(BlockID.candleberrycrop,ItemID.candleberry);
+Harvest.registerDroppingBlock(BlockID.candleberrycrop);
+
+PlantModel.crop(BlockID.candleberrycrop);
+
+TileEntity.registerPrototype(BlockID.candleberrycrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.candleberryseed,BlockID.candleberrycrop);
+
+
+
+
+// file: CROPS/curryleaf.js
+
+CropRegistry.registerWithID("curryleaf","curryleaf","curryleafcrop",ItemID.curryleaf_seed);
+CropRegistry.fruitPush(BlockID.curryleaf,ItemID.curryleaf);
+Harvest.registerDroppingBlock(BlockID.curryleaf);
+
+PlantModel.crop(BlockID.curryleaf);
+
+TileEntity.registerPrototype(BlockID.curryleaf,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.curryleaf_seed,BlockID.curryleaf);
 
 
 
@@ -601,6 +612,43 @@ Recipes.addShaped({id: ItemID.mortar_bowl, count: 1, data: 0}, ["aba", " a "], [
 IDRegistry.genItemID("juicer");
 Item.createItem("juicer", "Juicer", {name: "juicer", meta: 0}, {stack: 1});
 Recipes.addShaped({id: ItemID.juicer, count: 1, data: 0}, ["a  ", "b  "], ["a", 1, 0, "b", 70, 0]);
+
+
+
+
+// file: ITEMS/baits.js
+
+IDRegistry.genItemID("graitBait");
+Item.createItem("graitBait", "Grain bait", {name: "grain_bait", meta: 0}, {});
+IDRegistry.genItemID("fruitBait");
+Item.createItem("fruitBait", "Fruit bait", {name: "fruit_bait", meta: 0}, {});
+IDRegistry.genItemID("veggieBait");
+Item.createItem("veggieBait", "Veggie bait", {name: "veggie_bait", meta: 0}, {});
+/*
+IDRegistry.genItemID("fishBait");
+Item.createItem("fishBait", "Fish bait", {name: "fish_bait", meta: 0}, {});*/
+
+Recipes.addShapeless({id: ItemID.graitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: 295, data: 0},{id: 295, data: 0},{id: 295, data: 0}]);
+Recipes.addShapeless({id: ItemID.fruitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: 260, data: 0},{id: 260, data: 0},{id: 260, data: 0}]);
+Recipes.addShapeless({id: ItemID.fruitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.strawberry, data: 0},{id: ItemID.strawberry, data: 0},{id: ItemID.strawberry, data: 0}]);
+Recipes.addShapeless({id: ItemID.fruitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.raspberry, data: 0},{id: ItemID.raspberry, data: 0},{id: ItemID.raspberry, data: 0}]);
+Recipes.addShapeless({id: ItemID.fruitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.cranberry, data: 0},{id: ItemID.cranberry, data: 0},{id: ItemID.cranberry, data: 0}]);
+Recipes.addShapeless({id: ItemID.fruitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.blueberry, data: 0},{id: ItemID.blueberry, data: 0},{id: ItemID.blueberry, data: 0}]);
+Recipes.addShapeless({id: ItemID.fruitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.blackberry, data: 0},{id: ItemID.blackberry, data: 0},{id: ItemID.blackberry, data: 0}]);
+Recipes.addShapeless({id: ItemID.fruitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.grape, data: 0},{id: ItemID.grape, data: 0},{id: ItemID.grape, data: 0}]);
+Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.cucumber, data: 0},{id: ItemID.cucumber, data: 0},{id: ItemID.cucumber, data: 0}]);
+Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.onion, data: 0},{id: ItemID.onion, data: 0},{id: ItemID.onion, data: 0}]);
+Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.cabbage, data: 0},{id: ItemID.cabbage, data: 0},{id: ItemID.cabbage, data: 0}]);
+Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.tomato, data: 0},{id: ItemID.tomato, data: 0},{id: ItemID.tomato, data: 0}]);
+Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.bellpepper, data: 0},{id: ItemID.bellpepper, data: 0},{id: ItemID.bellpepper, data: 0}]);
+Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.garlic, data: 0},{id: ItemID.garlic, data: 0},{id: ItemID.garlic, data: 0}]);
+Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.lettuce, data: 0},{id: ItemID.lettuce, data: 0},{id: ItemID.lettuce, data: 0}]);
+Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.peas, data: 0},{id: ItemID.peas, data: 0},{id: ItemID.peas, data: 0}]);
+Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.chili_pepper, data: 0},{id: ItemID.chili_pepper, data: 0},{id: ItemID.chili_pepper, data: 0}]);
+Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.corn, data: 0},{id: ItemID.corn, data: 0},{id: ItemID.corn, data: 0}]);
+//Recipes.addShapeless({id: ItemID.fishBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: 349, data: 0},{id: 349 data: 0},{id: 349, data: 0}]);
+//Recipes.addShapeless({id: ItemID.fishBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: 460, data: 0},{id: 460 data: 0},{id: 460, data: 0}]);
+//Recipes.addShapeless({id: ItemID.fishBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: 461, data: 0},{id: 461 data: 0},{id: 461, data: 0}]);
 
 
 
@@ -647,6 +695,8 @@ IDRegistry.genItemID("corn");
 Item.createFoodItem("corn", "Corn", {name: "corn", meta: 0}, {food: 1});
 IDRegistry.genItemID("peppercorn");
 Item.createFoodItem("peppercorn", "Peppercorn", {name: "pepper_corn", meta: 0}, {food: 1});
+IDRegistry.genItemID("curryleaf");
+Item.createFoodItem("curryleaf", "Curryleaf", {name: "curryleaf", meta: 0}, {food: 1});
 
 
 
@@ -654,85 +704,89 @@ Item.createFoodItem("peppercorn", "Peppercorn", {name: "pepper_corn", meta: 0}, 
 // file: ITEMS/seeds.js
 
 IDRegistry.genItemID("strawberry_seed");
-Item.createFoodItem("strawberry_seed", "Strawberry seed", {name: "strawberry_seed", meta: 0});
+Item.createItem("strawberry_seed", "Strawberry seed", {name: "strawberry_seed", meta: 0});
 Recipes.addShapeless({id: ItemID.strawberry_seed, count: 1, data: 0}, [{id: ItemID.strawberry, data: 0}]);
 
 IDRegistry.genItemID("raspberry_seed");
-Item.createFoodItem("raspberry_seed", "Raspberry seed", {name: "raspberry_seed", meta: 0});
+Item.createItem("raspberry_seed", "Raspberry seed", {name: "raspberry_seed", meta: 0});
 Recipes.addShapeless({id: ItemID.raspberry_seed, count: 1, data: 0}, [{id: ItemID.raspberry, data: 0}]);
 
 IDRegistry.genItemID("cranberry_seed");
-Item.createFoodItem("cranberry_seed", "Cranberry seed", {name: "cranberry_seed", meta: 0});
+Item.createItem("cranberry_seed", "Cranberry seed", {name: "cranberry_seed", meta: 0});
 Recipes.addShapeless({id: ItemID.cranberry_seed, count: 1, data: 0}, [{id: ItemID.cranberry, data: 0}]);
 
 IDRegistry.genItemID("blueberry_seed");
-Item.createFoodItem("blueberry_seed", "Blueberry seed", {name: "blueberry_seed", meta: 0});
+Item.createItem("blueberry_seed", "Blueberry seed", {name: "blueberry_seed", meta: 0});
 Recipes.addShapeless({id: ItemID.blueberry_seed, count: 1, data: 0}, [{id: ItemID.blueberry, data: 0}]);
 
 IDRegistry.genItemID("blackberry_seed");
-Item.createFoodItem("blackberry_seed", "Blackberry seed", {name: "blackberry_seed", meta: 0});
+Item.createItem("blackberry_seed", "Blackberry seed", {name: "blackberry_seed", meta: 0});
 Recipes.addShapeless({id: ItemID.blackberry_seed, count: 1, data: 0}, [{id: ItemID.blackberry, data: 0}]);
 
 IDRegistry.genItemID("candleberryseed");
-Item.createFoodItem("candleberryseed", "Candle berry seed", {name: "candleberryseedItem", meta: 0});
+Item.createItem("candleberryseed", "Candle berry seed", {name: "candleberryseedItem", meta: 0});
 Recipes.addShapeless({id: ItemID.candleberryseed, count: 1, data: 0}, [{id: ItemID.candleberry , data: 0}]);
 
 IDRegistry.genItemID("grape_seed");
-Item.createFoodItem("grape_seed", "Grape seed", {name: "grape_seed", meta: 0});
+Item.createItem("grape_seed", "Grape seed", {name: "grape_seed", meta: 0});
 Recipes.addShapeless({id: ItemID.grape_seed, count: 1, data: 0}, [{id: ItemID.grape, data: 0}]);
 
 IDRegistry.genItemID("cucumber_seed");
-Item.createFoodItem("cucumber_seed", "Cucumber seed", {name: "cucumber_seed", meta: 0});
+Item.createItem("cucumber_seed", "Cucumber seed", {name: "cucumber_seed", meta: 0});
 Recipes.addShapeless({id: ItemID.cucumber_seed, count: 1, data: 0}, [{id: ItemID.cucumber, data: 0}]);
 
 IDRegistry.genItemID("onion_seed");
-Item.createFoodItem("onion_seed", "Onion seed", {name: "onion_seed", meta: 0});
+Item.createItem("onion_seed", "Onion seed", {name: "onion_seed", meta: 0});
 Recipes.addShapeless({id: ItemID.onion_seed, count: 1, data: 0}, [{id: ItemID.onion, data: 0}]);
 
 IDRegistry.genItemID("cabbage_seed");
-Item.createFoodItem("cabbage_seed", "Cabbage seed", {name: "cabbage_seed", meta: 0});
+Item.createItem("cabbage_seed", "Cabbage seed", {name: "cabbage_seed", meta: 0});
 Recipes.addShapeless({id: ItemID.cabbage_seed, count: 1, data: 0}, [{id: ItemID.cabbage, data: 0}]);
 
 IDRegistry.genItemID("tomato_seed");
-Item.createFoodItem("tomato_seed", "Tomato seed", {name: "tomato_seed", meta: 0});
+Item.createItem("tomato_seed", "Tomato seed", {name: "tomato_seed", meta: 0});
 Recipes.addShapeless({id: ItemID.tomato_seed, count: 1, data: 0}, [{id: ItemID.tomato, data: 0}]);
 
 
 IDRegistry.genItemID("bellpepper_seed");
-Item.createFoodItem("bellpepper_seed", "Bellpepper seed", {name: "bellpepper_seed", meta: 0});
+Item.createItem("bellpepper_seed", "Bellpepper seed", {name: "bellpepper_seed", meta: 0});
 Recipes.addShapeless({id: ItemID.bellpepper_seed, count: 1, data: 0}, [{id: ItemID.bellpepper, data: 0}]);
 
 IDRegistry.genItemID("garlic_seed");
-Item.createFoodItem("garlic_seed", "Garlic seed", {name: "garlic_seed", meta: 0});
+Item.createItem("garlic_seed", "Garlic seed", {name: "garlic_seed", meta: 0});
 Recipes.addShapeless({id: ItemID.garlic_seed, count: 1, data: 0}, [{id: ItemID.garlic, data: 0}]);
 
 IDRegistry.genItemID("lettuce_seed");
-Item.createFoodItem("lettuce_seed", "Lettuce seed", {name: "lettuce_seed", meta: 0});
+Item.createItem("lettuce_seed", "Lettuce seed", {name: "lettuce_seed", meta: 0});
 Recipes.addShapeless({id: ItemID.lettuce_seed, count: 1, data: 0}, [{id: ItemID.lettuce, data: 0}]);
 
 IDRegistry.genItemID("coffee_seed");
-Item.createFoodItem("coffee_seed", "Coffee seed", {name: "coffee_seed", meta: 0});
+Item.createItem("coffee_seed", "Coffee seed", {name: "coffee_seed", meta: 0});
 Recipes.addShapeless({id: ItemID.coffee_seed, count: 1, data: 0}, [{id: ItemID.coffee_beans, data: 0}]);
 
 IDRegistry.genItemID("peas_seed");
-Item.createFoodItem("peas_seed", "Peas seed", {name: "peas_seed", meta: 0});
+Item.createItem("peas_seed", "Peas seed", {name: "peas_seed", meta: 0});
 Recipes.addShapeless({id: ItemID.peas_seed, count: 1, data: 0}, [{id: ItemID.peas, data: 0}]);
 
 IDRegistry.genItemID("chili_pepper_seed");
-Item.createFoodItem("chili_pepper_seed", "Chilli pepper seed", {name: "chili_pepper_seed", meta: 0});
+Item.createItem("chili_pepper_seed", "Chilli pepper seed", {name: "chili_pepper_seed", meta: 0});
 Recipes.addShapeless({id: ItemID.chili_pepper_seed, count: 1, data: 0}, [{id: ItemID.chili_pepper, data: 0}]);
 
 IDRegistry.genItemID("spice_leaf_seed");
-Item.createFoodItem("spice_leaf_seed", "Spice leaf seed", {name: "spice_leaf_seed", meta: 0});
+Item.createItem("spice_leaf_seed", "Spice leaf seed", {name: "spice_leaf_seed", meta: 0});
 Recipes.addShapeless({id: ItemID.spice_leaf_seed, count: 1, data: 0}, [{id: ItemID.spice_leaf, data: 0}]);
 
 IDRegistry.genItemID("corn_seed");
-Item.createFoodItem("corn_seed", "Corn seed", {name: "corn_seed", meta: 0});
+Item.createItem("corn_seed", "Corn seed", {name: "corn_seed", meta: 0});
 Recipes.addShapeless({id: ItemID.corn_seed, count: 1, data: 0}, [{id: ItemID.corn, data: 0}]);
 
 IDRegistry.genItemID("peppercorn_seed");
-Item.createFoodItem("peppercorn_seed", "Peppercorn seed", {name: "peppercorn_seed", meta: 0});
+Item.createItem("peppercorn_seed", "Peppercorn seed", {name: "peppercorn_seed", meta: 0});
 Recipes.addShapeless({id: ItemID.peppercorn_seed, count: 1, data: 0}, [{id: ItemID.peppercorn, data: 0}]);
+
+IDRegistry.genItemID("curryleaf_seed");
+Item.createItem("curryleaf_seed", "Curryleaf seed", {name: "curryleafseed", meta: 0});
+Recipes.addShapeless({id: ItemID.curryleaf_seed, count: 1, data: 0}, [{id: ItemID.curryleaf, data: 0}]);
 
 
 
@@ -1062,6 +1116,26 @@ Recipes.addShapeless({id: ItemID.spring_salad, count: 1, data: 0}, [{id: ItemID.
 	}
 });
 
+if(ItemID.pomidor!=null){
+	Recipes.addShapeless({id: ItemID.spring_salad, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.lettuce, data: 0}, {id: ItemID.pomidor, data: 0}], function(api, field, result){ 
+	for (var i in field){
+		if (field[i].id != ItemID.cutting_board){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+};
+
+if(ItemID.ogurec!=null){
+	Recipes.addShapeless({id: ItemID.spring_salad, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.lettuce, data: 0}, {id: ItemID.ogurec, data: 0}], function(api, field, result){ 
+	for (var i in field){
+		if (field[i].id != ItemID.cutting_board){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+};
+
 IDRegistry.genItemID("cucumber_salad");
 Item.createFoodItem("cucumber_salad", "Cucumber salad", {name: "cucumber_salad", meta: 0}, {food: 11});
 Recipes.addShapeless({id: ItemID.cucumber_salad, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.spring_salad, data: 0}, {id: ItemID.cucumber, data: 0}], function(api, field, result){ 
@@ -1081,6 +1155,25 @@ Recipes.addShapeless({id: ItemID.ceasar_salade, count: 1, data: 0}, [{id: ItemID
 		}
 	}
 });
+
+
+
+
+// file: ITEMS/FOOD/meat.js
+
+IDRegistry.genItemID("venisonRaw");
+Item.createFoodItem("venisonRaw", "Raw venison", {name: "venison", meta: 0}, {food:3});
+
+IDRegistry.genItemID("venisonCooked");
+Item.createFoodItem("venisonCooked", "Cooked venison", {name: "venison", meta: 1}, {food:8});
+Recipes.addFurnace(ItemID.venisonRaw, ItemID.venisonCooked, 0);
+
+IDRegistry.genItemID("turkeyRaw");
+Item.createFoodItem("turkeyRaw", "Raw turkey", {name: "turkey", meta: 0}, {food:2});
+
+IDRegistry.genItemID("turkeyCooked");
+Item.createFoodItem("turkeyCooked", "Cooked turkey", {name: "turkey", meta: 1}, {food:5});
+Recipes.addFurnace(ItemID.turkeyRaw, ItemID.turkeyCooked, 0);
 
 
 
@@ -1140,7 +1233,7 @@ Recipes.addShapeless({id: ItemID.vinegar, count: 1, data: 0}, [{id: ItemID.pot, 
 });
 
 IDRegistry.genItemID("cheese");
-Item.createFoodItem("cheese", "�heese", {name: "cheese", meta: 0}, {food: 2});
+Item.createFoodItem("cheese", "Cheese", {name: "cheese", meta: 0}, {food: 2});
 Recipes.addShapeless({id: ItemID.cheese, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.fresh_milk, data: 0}, {id: ItemID.salt, data: 0}], function(api, field, result){ 
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
@@ -1148,7 +1241,8 @@ Recipes.addShapeless({id: ItemID.cheese, count: 1, data: 0}, [{id: ItemID.pot, d
 		}
 	}
 });
-
+//BlockID.pomidor
+//BlockID.ogurec
 IDRegistry.genItemID("stock");
 Item.createFoodItem("stock", "Stock", {name: "stock", meta: 0}, {food: 3});
 Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 352, data: 0}], function(api, field, result){ 
@@ -1664,7 +1758,7 @@ IDRegistry.genItemID("salt");
 Item.createItem("salt", "Salt", {name: "salt", meta: 0});
 Recipes.addShapeless({id: ItemID.salt, count: 1, data: 0}, [{id: ItemID.fresh_water, data: 0}, {id: ItemID.pot, data: 0}], function(api, field, result){ 
 	for (var i in field){ 
-		if (field[i].id != pot){ 
+		if (field[i].id != ItemID.pot){ 
 			api.decreaseFieldSlot(i); 
 		}
 	} 
@@ -1687,13 +1781,321 @@ Recipes.addShapeless({id: ItemID.flour, count: 1, data: 0}, [{id: ItemID.mortar_
 	} 
 });
 
+IDRegistry.genItemID("spidereyesoup");
+Item.createFoodItem("spidereyesoup", "Spider Eye Soup", {name: "spidereyesoup", meta: 0}, {food: 8});
+Recipes.addShapeless({id: ItemID.spidereyesoup, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 375, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+
+IDRegistry.genItemID("zombiejerky");
+Item.createFoodItem("zombiejerky", "Zombie Jerky", {name: "zombiejerky", meta: 0}, {food: 4});
+Recipes.addShapeless({id: ItemID.zombiejerky, count: 1, data: 0}, [{id: ItemID.salt, data: 0}, {id: ItemID.salt, data: 0}, {id: 367, data: 0}]);
+
+IDRegistry.genItemID("currypowder");
+Item.createItem("currypowder", "Curry Powder", {name: "currypowder", meta: 0});
+Recipes.addShapeless({id: ItemID.currypowder, count: 1, data: 0}, [{id: ItemID.mortar_bowl, data: 0}, {id: ItemID.curryleaf, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.mortar_bowl){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+
+IDRegistry.genItemID("vindaloo");
+Item.createFoodItem("vindaloo", "Vindaloo", {name: "vindaloo", meta: 0}, {food: 10});
+Recipes.addShapeless({id: ItemID.vindaloo, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: 363, data: 0}, {id: ItemID.currypowder, data: 0}, {id: ItemID.butter, data: 0}, {id: 351, data: 0}, {id: ItemID.onion, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.saucepan){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+
+Recipes.addShapeless({id: ItemID.vindaloo, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: 365, data: 0}, {id: ItemID.currypowder, data: 0}, {id: ItemID.butter, data: 0}, {id: 351, data: 0}, {id: ItemID.onion, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.saucepan){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+
+Recipes.addShapeless({id: ItemID.vindaloo, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: 319, data: 0}, {id: ItemID.currypowder, data: 0}, {id: ItemID.butter, data: 0}, {id: 351, data: 0}, {id: ItemID.onion, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.saucepan){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+
+Recipes.addShapeless({id: ItemID.vindaloo, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: 411, data: 0}, {id: ItemID.currypowder, data: 0}, {id: ItemID.butter, data: 0}, {id: 351, data: 0}, {id: ItemID.onion, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.saucepan){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+
+Recipes.addShapeless({id: ItemID.vindaloo, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: 423, data: 0}, {id: ItemID.currypowder, data: 0}, {id: ItemID.butter, data: 0}, {id: 351, data: 0}, {id: ItemID.onion, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.saucepan){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+
+IDRegistry.genItemID("sausage");
+Item.createFoodItem("sausage", "Sausage", {name: "sausage", meta: 0}, {food: 6});
+Recipes.addShapeless({id: ItemID.sausage, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.salt, data: 0}, {id: ItemID.currypowder, data: 0}, {id: 363, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.saucepan){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+
+/*
+pot roast 
+spider eye soup 
+zombie jerky 
+vindaloo 
+sausage 
+
+meat pie 
+baked beans 
+maple sausage 
+hamburger 
+dim sum 
+cottage pie 
+cornish pasty 
+corned beef 
+beef wellington 
+beef jerky 
+shepards pie 
+lamb berley soup 
+honey lemon lamb 
+rabbit stew 
+spicy mustard pork 
+pork lo mein 
+pineapple ham 
+pea and ham soup 
+hot and sour soup 
+honey soy ribs 
+
+honey glazed ham 
+baked ham 
+bacon and eggs 
+teriyaki chicken 
+sweet and sour chicken 
+orange chicken 
+lemon chicken 
+kung pao chicken
+ginger chicken 
+general tso's chicken 
+garlic chicken 
+fired chicken 
+chicken sandwich 
+chicken pot pie 
+chicken noodle soup 
+chicken gumbo 
+chicken curry 
+chicken chow mein 
+chicken celery casserole 
+cashew chicken
+*/
+
+IDRegistry.genItemID("cashewChicken");
+Item.createFoodItem("cashewChicken", "Cashew chicken", {name: "cashewchicken", meta: 0}, {food: 6});
+Recipes.addShapeless({id: ItemID.cashewChicken, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: ItemID.peas, data: 0}, {id: ItemID.peppercorn, data: 0}, {id: ItemID.corn, data: 0},{id: 365, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.saucepan){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("chickenCeleryCasserole");
+Item.createFoodItem("chickenCeleryCasserole", "Chicken celery casserole", {name: "chickencelerycasserole", meta: 0}, {food: 12});
+Recipes.addShapeless({id: ItemID.chickenCeleryCasserole, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: 391, data: 0}, {id: ItemID.garlic, data: 0}, {id: 39, data: 0},{id: 365, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.bakeware){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("chickenChowmein");
+Item.createFoodItem("chickenChowmein", "Chicken chowmein", {name: "chickenchowmein", meta: 0}, {food: 10});
+Recipes.addShapeless({id: ItemID.chickenChowmein, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 391, data: 0}, {id: ItemID.peas, data: 0}, {id: ItemID.onion, data: 0},{id: ItemID.garlic, data: 0},{id: ItemID.stock, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.skillet){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("chickenCurry");
+Item.createFoodItem("chickenCurry", "Chicken curry", {name: "chickencurry", meta: 0}, {food: 14});
+Recipes.addShapeless({id: ItemID.chickenCurry, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 392, data: 0}, {id: ItemID.plain_yogurt, data: 0}, {id: ItemID.spice_leaf, data: 0},{id: ItemID.chili_pepper, data: 0},{id: 365, data: 0},{id: ItemID.lettuce, data: 0},{id: ItemID.peas, data: 0},{id: ItemID.garlic, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("chickenGumbo");
+Item.createFoodItem("chickenGumbo", "Chicken gumbo", {name: "chickengumbo", meta: 0}, {food: 16});
+Recipes.addShapeless({id: ItemID.chickenGumbo, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 392, data: 0}, {id: 391, data: 0}, {id: ItemID.onion, data: 0},{id: ItemID.stock, data: 0},{id: 365, data: 0},{id: ItemID.spice_leaf, data: 0},{id: ItemID.bellpepper, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("chickenNoodleSoup");
+Item.createFoodItem("chickenNoodleSoup", "Chicken noodle soup", {name: "chickennoodlesoup", meta: 0}, {food: 9});
+Recipes.addShapeless({id: ItemID.chickenNoodleSoup, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 296, data: 0}, {id: 391, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+//
+IDRegistry.genItemID("chickenPotPie");
+Item.createFoodItem("chickenPotPie", "Chicken pot pie", {name: "chickenpotpie", meta: 0}, {food: 10});
+Recipes.addShapeless({id: ItemID.chickenPotPie, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: 265, data: 0}, {id: 391, data: 0},{id: ItemID.dough, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.bakeware){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("chickenSandwich");
+Item.createFoodItem("chickenSandwich", "Chicken sandwich", {name: "chickensandwich", meta: 0}, {food: 11});
+Recipes.addShapeless({id: ItemID.chickenSandwich, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 365, data: 0}, {id: 297, data: 0}, {id: ItemID.mayo, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.skillet){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("friredChicken");
+Item.createFoodItem("friredChicken", "Fried chicken", {name: "friedchicken", meta: 0}, {food: 11});
+Recipes.addShapeless({id: ItemID.friredChicken, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 365, data: 0}, {id: ItemID.butter, data: 0}, {id: ItemID.spice_leaf, data: 0}, {id: ItemID.black_pepper, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("garlicChicken");
+Item.createFoodItem("garlicChicken", "Garlic chicken", {name: "garlicchicken", meta: 0}, {food: 12});
+Recipes.addShapeless({id: ItemID.garlicChicken, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: ItemID.garlic, data: 0}, {id: ItemID.garlic, data: 0},{id: 365, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.bakeware){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("generalTsoChicken");
+Item.createFoodItem("generalTsoChicken", "General tso chicken", {name: "generaltsochicken", meta: 0}, {food: 12});
+Recipes.addShapeless({id: ItemID.generalTsoChicken, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 365, data: 0}, {id: ItemID.lettuce, data: 0}, {id: 353, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.skillet){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("gingerChicken");
+Item.createFoodItem("gingerChicken", "Ginger chicken", {name: "gingerchicken", meta: 0}, {food: 12});
+Recipes.addShapeless({id: ItemID.gingerChicken, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: ItemID.garlic, data: 0}, {id: 365, data: 0}, {id: ItemID.onion, data: 0}, {id: 353, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.saucepan){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("kungPaoCkicken");
+Item.createFoodItem("kungPaoCkicken", "Kung pao chicken", {name: "kungpaochicken", meta: 0}, {food: 12});
+Recipes.addShapeless({id: ItemID.kungPaoCkicken, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:365, data: 0}, {id: ItemID.grape, data: 0}, {id: ItemID.garlic, data: 0}, {id: ItemID.onion, data: 0},{id:353 ,data:0},{id:ItemID.butter ,data:0},{id:ItemID.peppercorn ,data:0},{id:ItemID.cucumber ,data:0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.saucepan){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("lemonChicken");
+Item.createFoodItem("lemonChicken", "Lemon chicken", {name: "lemonchicken", meta: 0}, {food: 9});
+Recipes.addShapeless({id: ItemID.lemonChicken, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id:365, data: 0}, {id: ItemID.grape, data: 0},{id:ItemID.butter ,data:0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.bakeware){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("orangeChicken");
+Item.createFoodItem("orangeChicken", "Orange chicken", {name: "orangechicken", meta: 0}, {food: 12});
+Recipes.addShapeless({id: ItemID.orangeChicken, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:365, data: 0}, {id: ItemID.grape, data: 0},{id:353 ,data:0},{id:ItemID.lettuce ,data:0},{id:ItemID.cabbage ,data:0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.saucepan){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("sweetAndSourChicken");
+Item.createFoodItem("sweetAndSourChicken", "Sweet and sour chicken", {name: "sweetandsourchicken", meta: 0}, {food: 10});
+Recipes.addShapeless({id: ItemID.sweetAndSourChicken, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:365, data: 0}, {id: ItemID.butter, data: 0},{id:ItemID.grape ,data:0},{id:ItemID.bellpepper ,data:0},{id:ItemID.onion ,data:0},{id:ItemID.tomato ,data:0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.saucepan){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("teriyakiChicken");
+Item.createFoodItem("teriyakiChicken", "Teriyaki chicken", {name: "teriyakichicken", meta: 0}, {food: 10});
+Recipes.addShapeless({id: ItemID.teriyakiChicken, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id:365, data: 0}, {id: ItemID.peas, data: 0},{id:ItemID.sausage ,data:0},{id:ItemID.candleberry ,data:0},{id:ItemID.onion ,data:0},{id:ItemID.garlic ,data:0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.skillet){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("baconAndEggs");
+Item.createFoodItem("baconAndEggs", "Bacon and eggs", {name: "baconandeggs", meta: 0}, {food: 10});
+Recipes.addShapeless({id: ItemID.baconAndEggs, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id:319, data: 0}, {id: 344, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.skillet){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("bakedHam");
+Item.createFoodItem("bakedHam", "Baked ham", {name: "bakedham", meta: 0}, {food: 9});
+Recipes.addShapeless({id: ItemID.bakedHam, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id:319, data: 0}, {id: 260, data: 0}, {id: 353, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.bakeware){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("honeyGlazedHam");
+Item.createFoodItem("honeyGlazedHam", "Honey glazed ham", {name: "honeyglazedham", meta: 0}, {food: 10});
+Recipes.addShapeless({id: ItemID.honeyGlazedHam, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:319, data: 0}, {id: 353, data: 0}, {id: ItemID.black_pepper, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.saucepan){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
 
 
 
-// file: ITEMS/ARMOR/wax.js
 
-﻿IDRegistry.genItemID("pressedWax");
-Item.createItem("pressedWax", "Wax", {name: "wax", meta: 0}, {stack: 1});
+// file: ITEMS/wax.js
+
+IDRegistry.genItemID("pressedWax");
+Item.createItem("pressedWax", "Wax", {name: "wax", meta: 0}, {});
 Recipes.addShapeless({id: ItemID.pressedWax, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0}], function(api, field, result){ 
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
@@ -1701,57 +2103,196 @@ Recipes.addShapeless({id: ItemID.pressedWax, count: 1, data: 0}, [{id: ItemID.po
 		}
 	}
 });
-/*
+
+if(ItemID[ItemID.beeswax]){
+	Recipes.addShapeless({id: ItemID.pressedWax, count: 1, data: 0}, [{id: ItemID.beeswax, data: 0}]);
+};
+
 IDRegistry.genBlockID("pressedWaxBlock"); 
 Block.createBlock("pressedWaxBlock", [
 	{name: "Pressed wax", texture: [["pressedwax", 0]], inCreative: true}
 ]);
-Recipes.addShaped({id: BlockID.pressedWaxBlock, count: 1, data: 0}, ["bbb", "bbb"," bbb"], [ "b", ItemID.pressedWax, 0]);*/
+Recipes.addShaped({id: BlockID.pressedWaxBlock, count: 1, data: 0}, ["bbb", "bbb"," bbb"], [ "b", ItemID.pressedWax, 0]);
 
 
 
 
-// file: ITEMS/ARMOR/leather.js
+// file: ITEMS/armor.js
 
 IDRegistry.genItemID("hardedLeather");
 Item.createItem("hardedLeather", "Harded leather", {name: "hardenedleatherItem", meta: 0}, {stack: 64});
 Recipes.addShapeless({id: ItemID.hardedLeather, count: 1, data: 0}, [{id: 334, data: 0}, {id: ItemID.pressedWax, data: 0}]);
 
+IDRegistry.genItemID("hardedHelm");
+IDRegistry.genItemID("hardedChestplate");
+IDRegistry.genItemID("hardedLegging");
+IDRegistry.genItemID("hardedFoots");
+
+Item.createArmorItem("hardedHelm", "Harded Leather Helmet", {name: "hardenedleatherhelmItem"}, {type: "helmet", armor: 2, durability: 149, texture: "armor/hardenedleather_1.png"});
+Item.createArmorItem("hardedChestplate", "Harded Leather Chestplate", {name: "hardenedleatherchestItem"}, {type: "chestplate", armor: 6, durability: 216, texture: "armor/hardenedleather_1.png"});
+Item.createArmorItem("hardedLegging", "Harded Leather Leggings", {name: "hardenedleatherleggingsItem"}, {type: "leggings", armor: 5, durability: 203, texture: "armor/hardenedleather_2.png"});
+Item.createArmorItem("hardedFoots", "Harded Leather Boots", {name: "hardenedleatherbootsItem"}, {type: "boots", armor: 2, durability: 176, texture: "armor/hardenedleather_1.png"});
+
+Recipes.addShaped({id: ItemID.hardedHelm, count: 1, data: 0}, [
+	"xxx",
+	"x x"
+], ['x', ItemID.hardedLeather, 0]);
+
+Recipes.addShaped({id: ItemID.hardedChestplate, count: 1, data: 0}, [
+	"x x",
+	"xxx",
+	"xxx"
+], ['x', ItemID.hardedLeather, 0]);
+
+Recipes.addShaped({id: ItemID.hardedLegging, count: 1, data: 0}, [
+	"xxx",
+	"x x",
+	"x x"
+], ['x', ItemID.hardedLeather, 0]);
+
+Recipes.addShaped({id: ItemID.hardedFoots, count: 1, data: 0}, [
+	"x x",
+	"x x"
+], ['x', ItemID.hardedLeather, 0]);
 
 
 
-// file: ITEMS/ARMOR/helm.js
 
-IDRegistry.genItemID("hardenedLeatherHelm");
-Item.createArmorItem("hardenedLeatherHelm", "Harded leather helm", {name: "hardenedleatherhelmItem"}, {type: "helmet", armor: 2, durability: 149, texture: "armor/hardenedleather_1.png"});
-Recipes.addShaped({id: ItemID.hardenedLeatherHelm, count: 1, data: 0}, ["aaa", " a a"], ["a", ItemID.hardedLeather, 0]);
+// file: ITEMS/candles.js
 
+for(var i = 0;i<16;i++){
+	IDRegistry.genItemID("candleItem"+i);
+	Item.createItem("candleItem"+i, "Candle", {name: "candle", meta: i},{});
+};
+Item.registerUseFunction("candleItem1", function(coords, item, block){
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,1);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem1, item.count - 1, 0)
+	}
+});
+Item.registerUseFunction("candleItem2", function(coords, item, block){
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,2);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem2, item.count - 1, 0)
+	}
+});
+Item.registerUseFunction("candleItem3", function(coords, item, block){
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,3);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem3, item.count - 1, 0)
+	}
+});
+Item.registerUseFunction("candleItem4", function(coords, item, block){
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,4);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem4, item.count - 1, 0)
+	}
+});
+Item.registerUseFunction("candleItem5", function(coords, item, block){
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,5);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem5, item.count - 1, 0)
+	}
+});
+Item.registerUseFunction("candleItem6", function(coords, item, block){
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,6);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem6, item.count - 1, 0)
+	}
+});
+Item.registerUseFunction("candleItem7", function(coords, item, block){
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,7);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem7, item.count - 1, 0)
+	}
+});
+Item.registerUseFunction("candleItem8", function(coords, item, block){
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,8);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem8, item.count - 1, 0)
+	}
+});
+Item.registerUseFunction("candleItem9", function(coords, item, block){
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,9);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem9, item.count - 1, 0)
+	}
+});
+Item.registerUseFunction("candleItem10", function(coords, item, block){
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,10);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem10, item.count - 1, 0)
+	}
+});
+Item.registerUseFunction("candleItem11", function(coords, item, block){
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,11);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem11, item.count - 1, 0)
+	}
+});
+Item.registerUseFunction("candleItem12", function(coords, item, block){
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,12);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem12, item.count - 1, 0)
+	}
+});
+Item.registerUseFunction("candleItem13", function(coords, item, block){
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,13);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem13, item.count - 1, 0)
+	}
+});
+Item.registerUseFunction("candleItem14", function(coords, item, block){
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,14);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem14, item.count - 1, 0)
+	}
+});
+Item.registerUseFunction("candleItem15", function(coords, item, block){
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,15);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem15, item.count - 1, 0)
+	}
+});
+Item.registerUseFunction("candleItem0", function(coords, item, block){
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,0);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem0, item.count - 1, 0)
+	}
+});
 
-
-
-// file: ITEMS/ARMOR/chest.js
-
-IDRegistry.genItemID("hardenedLeatherChest");
-Item.createArmorItem("hardenedLeatherChest", "Hardened leather chest", {name: "hardenedleatherchestItem"}, {type: "chestplate", armor: 6, durability: 216, texture: "armor/hardenedleather_1.png"});
-Recipes.addShaped({id: ItemID.hardenedLeatherChest, count: 1, data: 0}, ["a a", " aaa"," aaa"], ["a", ItemID.hardedLeather, 0]);
-
-
-
-
-// file: ITEMS/ARMOR/leggins.js
-
-IDRegistry.genItemID("hardenedLeatherLeggings");
-Item.createArmorItem("hardenedLeatherLeggings", "Harded leather leggins", {name: "hardenedleatherleggingsItem"}, {type: "leggings", armor: 5, durability: 203, texture: "hardenedleather_2"});
-Recipes.addShaped({id: ItemID.hardenedLeatherLeggings, count: 1, data: 0}, ["aaa", " a a"," a a"], ["a", ItemID.hardedLeather, 0]);
-
-
-
-
-// file: ITEMS/ARMOR/foots.js
-
-IDRegistry.genItemID("hardenedLeatherBoots");
-Item.createArmorItem("hardenedLeatherBoots", "Hardened leather boots", {name: "hardenedleatherbootsItem"}, {type: "boots", armor: 2, durability: 176, texture: "armor/hardenedleather_1.png"});
-Recipes.addShaped({id: ItemID.hardenedLeatherBoots, count: 1, data: 0}, ["   ", " a a"," a a"], ["a", ItemID.hardedLeather, 0]);
+Recipes.addShapeless({id: ItemID.candleItem0, count: 4, data: 0}, [{id: 287, data: 0},{id: ItemID.pressedWax, data: 0}]);
+Recipes.addShapeless({id: ItemID.candleItem1, count: 4, data: 0}, [{id: 351, data: 14},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
+Recipes.addShapeless({id: ItemID.candleItem2, count: 4, data: 0}, [{id: 351, data: 13},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
+Recipes.addShapeless({id: ItemID.candleItem3, count: 4, data: 0}, [{id: 351, data: 12},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
+Recipes.addShapeless({id: ItemID.candleItem4, count: 4, data: 0}, [{id: 351, data: 11},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
+Recipes.addShapeless({id: ItemID.candleItem5, count: 4, data: 0}, [{id: 351, data: 10},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
+Recipes.addShapeless({id: ItemID.candleItem6, count: 4, data: 0}, [{id: 351, data: 9},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
+Recipes.addShapeless({id: ItemID.candleItem7, count: 4, data: 0}, [{id: 351, data: 8},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
+Recipes.addShapeless({id: ItemID.candleItem8, count: 4, data: 0}, [{id: 351, data: 7},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
+Recipes.addShapeless({id: ItemID.candleItem9, count: 4, data: 0}, [{id: 351, data: 6},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
+Recipes.addShapeless({id: ItemID.candleItem10, count: 4, data: 0}, [{id: 351, data: 5},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
+Recipes.addShapeless({id: ItemID.candleItem11, count: 4, data: 0}, [{id: 351, data: 4},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
+Recipes.addShapeless({id: ItemID.candleItem12, count: 4, data: 0}, [{id: 351, data: 3},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
+Recipes.addShapeless({id: ItemID.candleItem13, count: 4, data: 0}, [{id: 351, data: 2},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
+Recipes.addShapeless({id: ItemID.candleItem14, count: 4, data: 0}, [{id: 351, data: 1},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
+Recipes.addShapeless({id: ItemID.candleItem15, count: 4, data: 0}, [{id: 351, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
 
 
 
@@ -1764,9 +2305,7 @@ Block.createBlock("salt", [
 ]);
 Block.registerDropFunction("salt", function(coords, blockID, blockData, level){
 	var drop = [];
-	if(Math.random() < 1){
-		drop.push([ItemID.salt, 2 + parseInt(Math.random() * 5), 0]);
-	}	
+		drop.push([ItemID.salt, Random.Int(2,5), 0]);	
 	return drop;
 });
 
@@ -1791,18 +2330,19 @@ Block.createBlock("sink_2", [
 Block.createBlock("sink_3", [
 {name: "Sink 3", texture: [["sinkbottom", 3], ["sinktop", 3], ["sinkside", 3], ["sinkside", 3], ["sinkside", 3], ["sinkside", 3]], inCreative: true}
 ]);   
- Callback.addCallback("ItemUse", function(coords,item,block){
- var pl = Player.getCarriedItem();   if((pl.id==325)){
- switch(block.id){
- case BlockID.sink_0:
- case BlockID.sink_1:
- case BlockID.sink_2:
- case BlockID.sink_3:
-    Player.setCarriedItem(item.id, item.count - 1, item.data);
-  Player.addItemToInventory(325, 1, 8);
-break;
-}}
- } );       
+Callback.addCallback("ItemUse", function(coords,item,block){
+	if((item.id==325&&item.data==0)){
+		switch(block.id){
+			case BlockID.sink_0:
+			case BlockID.sink_1:
+			case BlockID.sink_2:
+			case BlockID.sink_3:				
+				Player.setCarriedItem(item.id, item.count - 1, item.data);
+				Player.addItemToInventory(325, 1, 8);			
+					break;
+		}	
+	}
+});       
 Callback.addCallback("PostLoaded", function(){
 	Recipes.addShaped({id: BlockID.sink_0, count: 1, data: 0}, [
 		"ara",
@@ -1829,16 +2369,19 @@ Callback.addCallback("PostLoaded", function(){
 
 
 
-// file: BLOCKS/animalTrap.js
+// file: BLOCKS/TRAP/ANIMAL/block.js
 
-﻿IDRegistry.genBlockID("animalTrap"); 
+IDRegistry.genBlockID("animalTrap"); 
 Block.createBlock("animalTrap", [
 	{name: "Animal trap", texture: [["animaltrap", 0]], inCreative: true}
 ]);
-var fruitBaitDrop = [52,334,344,288,411,365];
-var grainBaitDrop = [52,334,344,288,365];
-var veggieBaitDrop = [52,334,344,288,365];
-/*
+Recipes.addShaped({id: BlockID.animalTrap, count: 1, data: 0}, ["aba", "sds","asa"], ["a", 280, 0, "b", 96, 0,"d",54,0,"s",287,0]);
+
+
+
+
+// file: BLOCKS/TRAP/ANIMAL/gui.js
+
 var animalTrapGUI = new UI.StandartWindow({
 	standart: {
         header: {
@@ -1854,49 +2397,192 @@ var animalTrapGUI = new UI.StandartWindow({
         }
     },
     drawing: [
-		{type: "bitmap", bitmap: "groundtrap", x: 350, y: 100, scale: 4}
+		{type: "bitmap", bitmap: "groundtrap", x: 320, y: 70, scale: 4}
     ],
     elements: {
-		
+	
+		"slotBait":{type:"slot",x:408,y:173,size:71,bitmap:"slot",isTransparentBackground:true},
+	
+	    "slot0":{type:"slot",x:553,y:103,size:71,bitmap:"slot",isTransparentBackground:true},
+		"slot1":{type:"slot",x:625,y:103,size:71,bitmap:"slot",isTransparentBackground:true},
+		"slot2":{type:"slot",x:697,y:103,size:71,bitmap:"slot",isTransparentBackground:true},
+		"slot3":{type:"slot",x:769,y:103,size:71,bitmap:"slot",isTransparentBackground:true},
+		"slot4":{type:"slot",x:841,y:103,size:71,bitmap:"slot",isTransparentBackground:true},
+		"slot5":{type:"slot",x:913,y:103,size:71,bitmap:"slot",isTransparentBackground:true},
+		 
+		"slot6":{type:"slot",x:553,y:175,size:71,bitmap:"slot",isTransparentBackground:true},
+		"slot7":{type:"slot",x:625,y:175,size:71,bitmap:"slot",isTransparentBackground:true},
+		"slot8":{type:"slot",x:697,y:175,size:71,bitmap:"slot",isTransparentBackground:true},
+		"slot9":{type:"slot",x:769,y:175,size:71,bitmap:"slot",isTransparentBackground:true},
+		"slot10":{type:"slot",x:841,y:175,size:71,bitmap:"slot",isTransparentBackground:true},
+		"slot11":{type:"slot",x:913,y:175,size:71,bitmap:"slot",isTransparentBackground:true},
+		 
+		"slot12":{type:"slot",x:553,y:247,size:71,bitmap:"slot",isTransparentBackground:true},
+		"slot13":{type:"slot",x:625,y:247,size:71,bitmap:"slot",isTransparentBackground:true},
+		"slot14":{type:"slot",x:697,y:247,size:71,bitmap:"slot",isTransparentBackground:true},
+		"slot15":{type:"slot",x:769,y:247,size:71,bitmap:"slot",isTransparentBackground:true},
+		"slot16":{type:"slot",x:841,y:247,size:71,bitmap:"slot",isTransparentBackground:true},
+		"slot17":{type:"slot",x:913,y:247,size:71,bitmap:"slot",isTransparentBackground:true}
     }
 });
-UI.testUI(animalTrapGUI); */
-TileEntity.registerPrototype(BlockID.animalTrap,{
-	defaultValues: {
-		scanedBlocks:0,
-		progress:0
-	},	
-	getGuiScreen: function(){
-		return animalTrapGUI;
-	},
-	putResult:function(type){
-		
-	},
-	tick:function(){
-		if(this.data.scanedBlocks==120){
-			
-		}
-	},
-	checkGround:function(){
-		for(var x = this.x-5; x<this.x+5; x++){
-			for(var z = this.z-5; z<this.z+5; z++){
-				if(World.getBlockID(x,this.y,z)==(2||3)){
-					this.data.scanedBlocks++;
+//UI.testUI(animalTrapGUI); 
+
+
+
+
+// file: BLOCKS/TRAP/ANIMAL/TileEntity.js
+
+if(__config__.access("traps.animal.TileEntity")){
+	TileEntity.registerPrototype(BlockID.animalTrap,{
+		defaultValues: {
+			progress:0,
+			drop:[]
+		},	
+		getGuiScreen: function(){
+			return animalTrapGUI;
+		},
+		checker:function(){
+			if(World.getBlockID(this.x+1,this.y,this.z)==2&&
+			   World.getBlockID(this.x-1,this.y,this.z)==2&&
+			   World.getBlockID(this.x,this.y,this.z+1)==2&&
+			   World.getBlockID(this.x,this.y,this.z-1)==2&&
+			   World.getBlockID(this.x-1,this.y,this.z-1)==2&&
+			   World.getBlockID(this.x+1,this.y,this.z-1)==2&&
+			   World.getBlockID(this.x+1,this.y,this.z+1)==2&&
+			   World.getBlockID(this.x-1,this.y,this.z+1)==2){
+				this.data.progress++;
+			}
+		},
+		tick:function(){
+			var nnumber = __config__.access("traps.animal.number");
+			var slot = this.container.getSlot("slotBait").id;
+			if((this.data.progress<100)&&((slot==ItemID.graitBait)||(slot==ItemID.fruitBait)||(slot==ItemID.veggieBait))&&(Math.random()<nnumber)){
+				this.checker();
+			}
+			if((this.data.progress==100)&&((slot==ItemID.graitBait)||(slot==ItemID.fruitBait)||(slot==ItemID.veggieBait))){
+				var slot = this.container.getSlot("slotBait");
+				slot.count-=1;
+				this.data.progress=0;
+				this.swither();
+				var tt = Random.Int(1,3);
+				for(var u = 0; u < tt; u++){
+					var targetItem = this.data.drop[Random.Int(0,this.data.drop.length-1)];
+					this.addResult("slot",targetItem, 1, 0);
+				}	
+				this.container.validateAll();
+			}
+		},
+		addResult: function(area, id, count, data){
+			for (var i = 0; i < 18; i++){
+				var slot = this.container.getSlot(area + i);
+				if (slot.id == 0){
+					var add = Math.min(64 - slot.count, count);
+					slot.count += add;
+					slot.id = id;
+					slot.data = data;
+					count -= add;
+					if (count == 0){
+						break;
+					}
 				}
 			}
+			if (count > 0){
+				World.drop(this.x + .5, this.y + 1, this.z + .5, id, count, data);
+			}
+		},
+		swither:function(){
+			switch(this.container.getSlot("slotBait").id){
+				case ItemID.graitBait :
+					this.data.drop= [352,334,344,ItemID.turkeyRaw,288,365];
+						break;
+				case ItemID.fruitBait :
+					this.data.drop=[352,334,344,288,411,365];
+						break;
+				case ItemID.veggieBait :
+					this.data.drop=[352,334,344,ItemID.venisonRaw,288,365];
+						break;
+			}
 		}
-	}
-});
+	});
+};
 
 
 
 
 // file: BLOCKS/fishTrap.js
 
-IDRegistry.genBlockID("fishTrap"); 
+/*IDRegistry.genBlockID("fishTrap"); 
 Block.createBlock("fishTrap", [
 	{name: "Fish trap", texture: [["fishtrap", 0]], inCreative: true}
-]);
+]);*/
+
+
+
+
+// file: BLOCKS/CANDLES/block.js
+
+var candleVariations = [];
+for(var e = 0;e<16;e++){
+	candleVariations.push({name: "Candle", texture: [["empty", 0],["empty", 0],["candle", e]], inCreative: false})
+};
+IDRegistry.genBlockID("candle"); 
+Block.createBlock("candle", candleVariations,BLOCK_TYPE_CANDLE);
+
+PlantModel.tree(BlockID.candle,0);
+
+Block.registerDropFunction("candle", function(coords, blockID, blockData, level){
+	switch(blockData){
+		case 0 : 
+			return[[ ItemID.candleItem0,1,0 ]];
+				break;
+		case 1 : 
+			return[[ ItemID.candleItem1,1,0 ]];
+				break;
+		case 2 : 
+			return[[ ItemID.candleItem2,1,0 ]];
+				break;
+		case 3 : 
+			return[[ ItemID.candleItem3,1,0 ]];
+				break;
+		case 4 : 
+			return[[ ItemID.candleItem4,1,0 ]];
+				break;
+		case 5 : 
+			return[[ ItemID.candleItem5,1,0 ]];
+				break;
+		case 6 : 
+			return[[ ItemID.candleItem6,1,0 ]];
+				break;
+		case 7 : 
+			return[[ ItemID.candleItem7,1,0 ]];
+				break;
+		case 8 : 
+			return[[ ItemID.candleItem8,1,0 ]];
+				break;
+		case 9 : 
+			return[[ ItemID.candleItem9,1,0 ]];
+				break;
+		case 10 : 
+			return[[ ItemID.candleItem10,1,0 ]];
+				break;
+		case 11 : 
+			return[[ ItemID.candleItem11,1,0 ]];
+				break;
+		case 12 : 
+			return[[ ItemID.candleItem12,1,0 ]];
+				break;
+		case 13 : 
+			return[[ ItemID.candleItem13,1,0 ]];
+				break;
+		case 14 : 
+			return[[ ItemID.candleItem14,1,0 ]];
+				break;
+		case 15 : 
+			return[[ ItemID.candleItem15,1,0 ]];
+				break;		
+	}
+	//return[[ ItemID.candleItem+blockData,1,0 ]];
+});
 
 
 
@@ -1905,64 +2591,39 @@ Block.createBlock("fishTrap", [
 
 IDRegistry.genBlockID("berrygarden"); 
 Block.createBlock("berrygarden", [
-	{name: "Berry garden", texture: [["empty", 0]], inCreative: false}
-]);
-Harvest.plantShape( BlockID.berrygarden );
+	{name: "Berry garden", texture: [["empty", 0],["empty", 0],["berrygardenBlock", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+
+Harvest.registerDroppingBlock(BlockID.berrygarden);
+
+PlantModel.tree(BlockID.berrygarden,0);
+
+CropRegistry.fruitPush(BlockID.berrygarden,ItemID.berryGardenITEM);
+
 Block.registerDropFunction("berrygarden", function(coords, blockID, blockData, level){
 	var drop = [];
 	if(Math.random() < .5){
-		drop.push([ItemID.blackberry, 1 + parseInt(Math.random() * 2), 0]);
+		drop.push([ItemID.blackberry,rrd, 0]);
+	}
+	if(Math.random() < .5){
+		drop.push([ItemID.candleberry,rrd, 0]);
 	}	
 	if(Math.random() < .5){
-		drop.push([ItemID.strawberry, 1 + parseInt(Math.random() * 2), 0]);
+		drop.push([ItemID.strawberry,rrd, 0]);
 	}	
 	if(Math.random() < .5){
-		drop.push([ItemID.raspberry, 1 + parseInt(Math.random() * 2), 0]);
+		drop.push([ItemID.raspberry,rrd, 0]);
 	}	
 	if(Math.random() < .5){
-		drop.push([ItemID.blueberry, 1 + parseInt(Math.random() * 2), 0]);
+		drop.push([ItemID.blueberry,rrd, 0]);
 	}	
 	if(Math.random() < .5){
-		drop.push([ItemID.cranberry, 1 + parseInt(Math.random() * 2), 0]);
+		drop.push([ItemID.cranberry,rrd, 0]);
 	}	
 	if(Math.random() < .5){
-		drop.push([ItemID.grape, 1 + parseInt(Math.random() * 2), 0]);
+		drop.push([ItemID.grape, rrd, 0]);
 	}	
 	return drop;
-});
-TileEntity.registerPrototype( BlockID.berrygarden , {
-	initAnimation:function(){
-		this.animation1 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-		this.animation2 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-	},
-	describeAnimation:function(){
-		Harvest.animationSaplingSet( ItemID.berryGarden_ani ,this.animation1,this.animation2);
-	},
-	animationLoad:function(){
-		this.initAnimation();
-		this.describeAnimation();
-		this.animation1.load();
-		this.animation2.load();
-	},
-	animationDelete:function(){
-	this.animation1.destroy();
-	this.animation2.destroy();
-	},
-	init:function(){
-		this.animationLoad();
-	},
-	Selfdestroy:function(){
-		this.animationDelete();
-		World.setBlock(this.x,this.y,this.z,0,0);
-		World.removeTileEntity(this.x,this.y,this.z);
-		},
-	destroy:function(){
-		this.animationDelete();
-	},
-	click:function( id, count, data ){
-		Harvest.dropPlant(ItemID.berryGarden_ani,this.x,this.y,this.z);
-		this.Selfdestroy();
-	}
 });
 
 
@@ -1971,14 +2632,13 @@ TileEntity.registerPrototype( BlockID.berrygarden , {
 // file: GARDENS/BERRYGARDEN/item.js
 
 IDRegistry.genItemID("berryGardenITEM");
-Item.createItem("berryGardenITEM", "Berry garden", {name: "berrygardenNEW", meta: 0} ,{isTech: false} );
+Item.createItem("berryGardenITEM", "Berry garden", {name: "berrygardenBlock", meta: 0} ,{isTech: false} );
 Item.registerUseFunction("berryGardenITEM", function(coords, item, tile){
 	var place = coords.relative;
 	var tile1 = World.getBlock(place.x, place.y, place.z);
 	var tile2 = World.getBlock(place.x, place.y - 1, place.z);	
 	if (GenerationUtils.isTransparentBlock(tile1.id) && TREE_SAPLING_GROUND_TILES[tile2.id]){
 		World.setBlock(place.x, place.y, place.z, BlockID.berrygarden);
-		World.addTileEntity(place.x, place.y, place.z);
 		Player.setCarriedItem(item.id, item.count - 1, item.data);
 	}
 });
@@ -1988,40 +2648,9 @@ Item.registerUseFunction("berryGardenITEM", function(coords, item, tile){
 
 // file: GARDENS/BERRYGARDEN/TileEntity.js
 
-TileEntity.registerPrototype( BlockID.berrygarden , {
-	initAnimation:function(){
-		this.animation1 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-		this.animation2 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-	},
-	describeAnimation:function(){
-		Harvest.animationSaplingSet( ItemID.berryGarden_ani ,this.animation1,this.animation2);
-	},
-	animationLoad:function(){
-		this.initAnimation();
-		this.describeAnimation();
-		this.animation1.load();
-		this.animation2.load();
-	},
-	animationDelete:function(){
-	this.animation1.destroy();
-	this.animation2.destroy();
-	},
-	init:function(){
-		this.animationLoad();
-	},
-	Selfdestroy:function(){
-		this.animationDelete();
-		World.setBlock(this.x,this.y,this.z,0,0);
-		World.removeTileEntity(this.x,this.y,this.z);
-		},
-	destroy:function(){
-		this.animationDelete();
-	},
-	click:function( id, count, data ){
-		Harvest.dropPlant(ItemID.berryGarden_ani,this.x,this.y,this.z);
-		this.Selfdestroy();
-	}
-});
+if(__config__.access("debug.TileEntity.garden.berry")){
+	TileEntity.registerPrototype(BlockID.berrygarden,gardenPROTO);
+};
 
 
 
@@ -2030,40 +2659,46 @@ TileEntity.registerPrototype( BlockID.berrygarden , {
 
 IDRegistry.genBlockID("grassgarden"); 
 Block.createBlock("grassgarden", [
-	{name: "Grass garden", texture: [["empty", 0]], inCreative: false}
-]);
-Harvest.plantShape( BlockID.grassgarden );
+	{name: "Grass garden", texture: [["empty", 0],["empty", 0],["grassgardenBlock", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+
+Harvest.registerDroppingBlock(BlockID.grassgarden);
+
+PlantModel.tree(BlockID.grassgarden,0);
+
+CropRegistry.fruitPush(BlockID.grassgarden,ItemID.grassGardenITEM);
+
 Block.registerDropFunction("grassgarden", function(coords, blockID, blockData, level){
 	var drop = [];
 	if(Math.random() < .5){
-		drop.push([ItemID.cucumber, 1 + parseInt(Math.random() * 2), 0]);
+		drop.push([ItemID.cucumber, rrd, 0]);
 	}	
 	if(Math.random() < .5){
-		drop.push([ItemID.onion, 1 + parseInt(Math.random() * 2), 0]);
+		drop.push([ItemID.onion,rrd, 0]);
 	}	
 	if(Math.random() < .5){
-		drop.push([ItemID.cabbage, 1 + parseInt(Math.random() * 2), 0]);
+		drop.push([ItemID.cabbage,rrd, 0]);
 	}	
 	if(Math.random() < .5){
-		drop.push([ItemID.tomato, 1 + parseInt(Math.random() * 2), 0]);
+		drop.push([ItemID.tomato,rrd, 0]);
 	}	
 	if(Math.random() < .5){
-		drop.push([ItemID.bellpepper, 1 + parseInt(Math.random() * 2), 0]);
+		drop.push([ItemID.bellpepper,rrd, 0]);
 	}	
 	if(Math.random() < .5){
-		drop.push([ItemID.lettuce, 1 + parseInt(Math.random() * 2), 0]);
+		drop.push([ItemID.lettuce, rrd, 0]);
 	}	
 	if(Math.random() < .5){
-		drop.push([ItemID.peas, 1 + parseInt(Math.random() * 2), 0]);
+		drop.push([ItemID.peas,rrd, 0]);
 	}	
 	if(Math.random() < .5){
-		drop.push([ItemID.chilli_pepper, 1 + parseInt(Math.random() * 2), 0]);
+		drop.push([ItemID.chilli_pepper,rrd, 0]);
 	}	
 	if(Math.random() < .5){
-		drop.push([ItemID.corn, 1 + parseInt(Math.random() * 2), 0]);
+		drop.push([ItemID.corn,rrd, 0]);
 	}	
 	if(Math.random() < .5){
-		drop.push([ItemID.peppercorn, 1 + parseInt(Math.random() * 2), 0]);
+		drop.push([ItemID.peppercorn, rrd, 0]);
 	}	
 	return drop;
 });
@@ -2074,14 +2709,13 @@ Block.registerDropFunction("grassgarden", function(coords, blockID, blockData, l
 // file: GARDENS/GRASSGARDEN/item.js
 
 IDRegistry.genItemID("grassGardenITEM");
-Item.createItem("grassGardenITEM", "Grass garden", {name: "grassgarden", meta: 0} ,{isTech: false} );
+Item.createItem("grassGardenITEM", "Grass garden", {name: "grassgardenBlock", meta: 0} ,{isTech: false} );
 Item.registerUseFunction("grassGardenITEM", function(coords, item, tile){
 	var place = coords.relative;
 	var tile1 = World.getBlock(place.x, place.y, place.z);
 	var tile2 = World.getBlock(place.x, place.y - 1, place.z);	
 	if (GenerationUtils.isTransparentBlock(tile1.id) && TREE_SAPLING_GROUND_TILES[tile2.id]){
 		World.setBlock(place.x, place.y, place.z, BlockID.grassgarden);
-		World.addTileEntity(place.x, place.y, place.z);
 		Player.setCarriedItem(item.id, item.count - 1, item.data);
 	}
 });
@@ -2091,40 +2725,9 @@ Item.registerUseFunction("grassGardenITEM", function(coords, item, tile){
 
 // file: GARDENS/GRASSGARDEN/TileEntity.js
 
-TileEntity.registerPrototype( BlockID.grassgarden , {
-	initAnimation:function(){
-		this.animation1 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-		this.animation2 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-	},
-	describeAnimation:function(){
-		Harvest.animationSaplingSet( ItemID.grassGarden_ani0 ,this.animation1,this.animation2);
-	},
-	animationLoad:function(){
-		this.initAnimation();
-		this.describeAnimation();
-		this.animation1.load();
-		this.animation2.load();
-	},
-	animationDelete:function(){
-		this.animation1.destroy();
-		this.animation2.destroy();
-	},
-	init:function(){
-		this.animationLoad();
-	},
-	Selfdestroy:function(){
-		this.animationDelete();
-		World.setBlock(this.x,this.y,this.z,0,0);
-		World.removeTileEntity(this.x,this.y,this.z);
-	},
-	destroy:function(){
-		this.animationDelete();
-	},
-	click:function( id, count, data ){
-		Harvest.dropPlant(ItemID.grassGarden_ani0,this.x,this.y,this.z);
-		this.Selfdestroy();
-	}
-});
+if(__config__.access("debug.TileEntity.garden.grass")){
+	TileEntity.registerPrototype(BlockID.grassgarden,gardenPROTO);
+};
 
 
 
@@ -2133,19 +2736,25 @@ TileEntity.registerPrototype( BlockID.grassgarden , {
 
 IDRegistry.genBlockID("herbgarden"); 
 Block.createBlock("herbgarden", [
-	{name: "Herb garden", texture: [["empty", 0]], inCreative: false}
-]);
-Harvest.plantShape( BlockID.herbgarden );
+	{name: "Herb garden", texture: [["empty", 0],["empty", 0],["herbgardenBlock", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+
+Harvest.registerDroppingBlock(BlockID.herbgarden);
+
+PlantModel.tree(BlockID.herbgarden,0);
+
+CropRegistry.fruitPush(BlockID.herbgarden,ItemID.herbGardenITEM);
+
 Block.registerDropFunction("herbgarden", function(coords, blockID, blockData, level){
 	var drop = [];
 	if(Math.random() < .8){
-		drop.push([ItemID.spice_leaf, 1 + parseInt(Math.random() * 3), 0]);
+		drop.push([ItemID.spice_leaf,rrr, 0]);
 	}	
 	if(Math.random() < .8){
-		drop.push([ItemID.coffee_beans, 1 + parseInt(Math.random() * 3), 0]);
+		drop.push([ItemID.coffee_beans,rrr, 0]);
 	}	
 	if(Math.random() < .8){
-		drop.push([ItemID.garlic, 1 + parseInt(Math.random() * 3), 0]);
+		drop.push([ItemID.garlic,rrr, 0]);
 	}	
 	return drop;
 });
@@ -2156,14 +2765,13 @@ Block.registerDropFunction("herbgarden", function(coords, blockID, blockData, le
 // file: GARDENS/HERBGARDEN/item.js
 
 IDRegistry.genItemID("herbGardenITEM");
-Item.createItem("herbGardenITEM", "Herb garden", {name: "herbgarden", meta: 0} ,{isTech: false} );
+Item.createItem("herbGardenITEM", "Herb garden", {name: "herbgardenBlock", meta: 0} ,{isTech: false} );
 Item.registerUseFunction("herbGardenITEM", function(coords, item, tile){
 	var place = coords.relative;
 	var tile1 = World.getBlock(place.x, place.y, place.z);
 	var tile2 = World.getBlock(place.x, place.y - 1, place.z);	
 	if (GenerationUtils.isTransparentBlock(tile1.id) && TREE_SAPLING_GROUND_TILES[tile2.id]){
 		World.setBlock(place.x, place.y, place.z, BlockID.herbgarden);
-		World.addTileEntity(place.x, place.y, place.z);
 		Player.setCarriedItem(item.id, item.count - 1, item.data);
 	}
 });
@@ -2173,133 +2781,77 @@ Item.registerUseFunction("herbGardenITEM", function(coords, item, tile){
 
 // file: GARDENS/HERBGARDEN/TileEntity.js
 
-TileEntity.registerPrototype( BlockID.herbgarden , {
-	initAnimation:function(){
-		this.animation1 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-		this.animation2 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-	},
-	describeAnimation:function(){
-		Harvest.animationSaplingSet( ItemID.herbGarden_ani0 ,this.animation1,this.animation2);
-	},
-	animationLoad:function(){
-		this.initAnimation();
-		this.describeAnimation();
-		this.animation1.load();
-		this.animation2.load();
-	},
-	animationDelete:function(){
-		this.animation1.destroy();
-		this.animation2.destroy();
-	},
-	init:function(){
-		this.animationLoad();
-	},
-	Selfdestroy:function(){
-		this.animationDelete();
-		World.setBlock(this.x,this.y,this.z,0,0);
-		World.removeTileEntity(this.x,this.y,this.z);
-	},
-	destroy:function(){
-		this.animationDelete();
-	},
-	click:function( id, count, data ){
-		Harvest.dropPlant(ItemID.herbGarden_ani0,this.x,this.y,this.z);
-		this.Selfdestroy();
+if(__config__.access("debug.TileEntity.garden.herb")){
+	TileEntity.registerPrototype(BlockID.herbgarden,gardenPROTO);
+};
+
+
+
+
+// file: GARDENS/CANDLEBERRYGARDEN/block.js
+
+IDRegistry.genBlockID("candleberrygarden"); 
+Block.createBlock("candleberrygarden", [
+	{name: "Candleberry garden", texture: [["empty", 0],["empty", 0],["candleberrycrop", 2]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+
+Harvest.registerDroppingBlock(BlockID.candleberrygarden);
+
+PlantModel.tree(BlockID.candleberrygarden,0);
+
+CropRegistry.fruitPush(BlockID.candleberrygarden,ItemID.candleberrygardenITEM);
+
+Block.registerDropFunction("candleberrygarden", function(coords, blockID, blockData, level){
+	var drop = [];
+	drop.push([ItemID.candleberry,rrr, 0]);
+	return drop;
+});
+
+
+
+
+// file: GARDENS/CANDLEBERRYGARDEN/item.js
+
+IDRegistry.genItemID("candleberrygardenITEM");
+Item.createItem("candleberrygardenITEM", "Candleberry garden", {name: "candleberrycrop", meta: 2} ,{isTech: false} );
+Item.registerUseFunction("candleberrygardenITEM", function(coords, item, tile){
+	var place = coords.relative;
+	var tile1 = World.getBlock(place.x, place.y, place.z);
+	var tile2 = World.getBlock(place.x, place.y - 1, place.z);	
+	if (GenerationUtils.isTransparentBlock(tile1.id) && TREE_SAPLING_GROUND_TILES[tile2.id]){
+		World.setBlock(place.x, place.y, place.z, BlockID.candleberrygarden);
+		Player.setCarriedItem(item.id, item.count - 1, item.data);
 	}
 });
 
 
 
 
+// file: GARDENS/CANDLEBERRYGARDEN/TileEntity.js
+
+if(__config__.access("debug.TileEntity.garden.candleberry")){
+	TileEntity.registerPrototype(BlockID.candleberrygarden,gardenPROTO);
+};
+
+
+
+
 // file: TREES/APPLE/appleBlock.js
 
-IDRegistry.genBlockID("appleBlock"); 
-Block.createBlock("appleBlock", [
-	{name: "appleBlock", texture: [["empty", 0]], inCreative: false}
-]);
+CropRegistry.registerWithID("appleBlock","appleBlock","appleBlock",0);
+CropRegistry.fruitPush(BlockID.appleBlock,260);
+
+TileEntity.registerPrototype(BlockID.appleBlock,fruitPROTO);
+
+PlantModel.tree(BlockID.appleBlock,0);
+
 Block.setBlockShape(BlockID.appleBlock, {x: 0.001, y: 0.001, z: 0.001}, {x: 0.999, y: 0.999, z: 0.999});
-Block.registerDropFunction("appleBlock", function(coords, blockID, blockData, level){
-	return [[0,0,0]]
-});
-TileEntity.registerPrototype(BlockID.appleBlock, {
-	defaultValues: {
-		age: 0
-	},
-	 createAnimations:function(){
-		this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-		this.ani1 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-	},
-	destroyAnimations:function(){
-		this.ani0.destroy();
-		this.ani1.destroy();
-	},
-	 anim0:function(){	
-		Harvest.animationSaplingSet(ItemID.apple_ani0 ,this.ani0,this.ani1);
-	},
-	anim1:function(){	
-		Harvest.animationSaplingSet(ItemID.apple_ani1 ,this.ani0,this.ani1);
-	},
-	anim2:function(){	   
-		Harvest.animationSaplingSet(ItemID.apple_ani2 ,this.ani0,this.ani1);
-	},
-	switcher:function(){
-		switch(this.data.age){
-			case 0 : 
-				this.anim0();
-					break;			
-			case 1 : 
-				this.anim1();
-					break;			
-			case 2 :
-				this.anim2();
-					break;
-		}
-	},
-	tick:function(){
-		if(World.getBlockID(this.x,this.y+1,this.z)==0){
-		this.destroy();
-		}	
-		var number = 0.0002;
-		if((Math.random()<number)&&(this.data.age<2)){
-			this.data.age++;
-			this.switcher();  
-			if(World.getBlockID(this.x,this.y+1,this.z)==0){
-				this.destroy();
-			}	
-		}
-	},
-	init:function(){
-		this.createAnimations();
-		this.switcher();
-	},
-	destroy:function(){
-		World.destroyBlock(this.x, this.y, this.z, false);	 
-		this.destroyAnimations();
-	},
-	click: function(id, count, data, coords){
-		var pl = Player.getCarriedItem();
-		if((pl.id==351)&&(pl.data==15)&&this.data.age<2){
-			this.data.age++;
-			this.switcher();
-		}
-		if(this.data.age==2){
-			this.data.age=0;
-			this.switcher();
-			World.drop(	this.x,		this.y,		this.z ,	260, 1 , 0	)
-		}
-	} 	
-});
 
 
 
 
 // file: TREES/APPLE/sapling.js
 
-var TREE_SAPLING_GROUND_TILES = {
-	2: true,
-	3: true,
-	60: true
-};
 IDRegistry.genItemID("appleSapling");
 Item.createItem("appleSapling", "Apple Tree Sapling", {name: "appleSapling", data: 0});
 Item.registerUseFunction("appleSapling", function(coords, item, tile){
@@ -2313,82 +2865,27 @@ Item.registerUseFunction("appleSapling", function(coords, item, tile){
 		Player.setCarriedItem(item.id, item.count - 1, item.data);
 	}
 });
+
+PlantModel.tree(BlockID.appleTreeSapling,0);
+
 IDRegistry.genItemID("appleMini");
-Item.createItem("appleMini", " Apple", {name: "applee", meta: 0} ,{isTech: false} );
+Item.createItem("appleMini", " Apple", {name: "appleBlock", meta: 0},{});
+
 Item.registerUseFunction("appleMini", function(coords, item, tile){
 	var place = coords.relative;
 	World.setBlock(place.x,place.y,place.z,BlockID.appleBlock);
 	World.addTileEntity(place.x,place.y,place.z);
 });
+
 IDRegistry.genBlockID("appleTreeSapling");
 Block.createBlock("appleTreeSapling", [
-	{name: "Apple Tree Sapling", texture: [["empty", 0], ["empty", 0], ["empty", 0], ["empty", 0], ["empty", 0], ["empty", 0]], inCreative: false}
-]);
-Block.setBlockShape(BlockID.appleTreeSapling, {x: 0.001, y: 0.001, z: 0.001}, {x: 0.999, y: 0.1, z: 0.999});
-Block.registerDropFunction("appleTreeSapling", function(){
-	return [[ItemID.appleSapling, 1, 0]];
-});
-TileEntity.registerPrototype( BlockID.appleTreeSapling , {
-	defaultValues: {
-		size: 0,
-		growth: 0,
-		lastGrowth: 0
-	},
-	created: function(){
-		this.data.size = .85 + Math.random() * .25;
-	},	
-	initAnimation: function(){
-		this.animation1 = new Animation.Item(this.x + .5, this.y + this.data.size / 2 - .02, this.z + .5);
-		this.animation2 = new Animation.Item(this.x + .5, this.y + this.data.size / 2 - .02, this.z + .5);
-		Harvest.animationSaplingSet( ItemID.appleSapling ,this.animation1,this.animation2);
-	},	
-	destroyAnimation: function(){
-		if (this.animation1){
-			this.animation1.destroy();
-		}
-		if (this.animation2){
-			this.animation2.destroy();
-		}
-	},	
-	updateAnimation: function(){
-		this.destroyAnimation();
-		this.initAnimation();
-	},	
-	init: function(){
-		this.initAnimation();
-	},	
-	destroy: function(){
-		this.destroyAnimation();
-	},	
-	tick: function(){
-		if (World.getThreadTime() % 20 == 0){
-			this.data.growth += Math.random() * 2;
-			this.checkGrowth();
-			if (!TREE_SAPLING_GROUND_TILES[World.getBlockID(this.x, this.y - 1, this.z)]){
-				World.destroyBlock(this.x, this.y, this.z, true);
-				this.selfDestroy();
-			}
-		}
-	},	
-	click: function(id, count, data){
-		if (id == 351 && data == 15){
-			this.data.growth += 256 + Math.random() * 128;
-			this.checkGrowth();
-			Player.setCarriedItem(id, count - 1, data);
-		}
-	},	
-	checkGrowth: function(){
-		if (this.data.growth - 56 > this.data.lastGrowth){
-			this.data.size += (this.data.growth - this.data.lastGrowth) / 480;
-			this.data.lastGrowth = this.data.growth;
-			this.updateAnimation();
-		}
-		if (this.data.growth > 512){
-			this.selfDestroy();
-			Harvest.addTree(0,BlockID.appleBlock,4,this.x,this.y-1,this.z);
-		}
-	}
-});
+	{name: "Apple Tree Sapling", texture: [["empty", 0], ["empty", 0], ["appleSapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+
+TileEntity.registerPrototype(BlockID.appleTreeSapling,saplingPROTO);
+
+Harvest.registerDestroy("appleTreeSapling",ItemID.appleSapling);
+
 Callback.addCallback("PostLoaded", function(){
 	Recipes.addShaped({id: ItemID.appleSapling, count: 1, data: 0}, [
 		"yx",
@@ -2403,6 +2900,7 @@ Callback.addCallback("PostLoaded", function(){
 // file: WORLD/grassdrop.js
 
  var seedsArray = [
+ ItemID.curryleaf_seed,
  ItemID.candleberryseed,
  ItemID.strawberry_seed,
  ItemID.raspberry_seed,
@@ -2424,23 +2922,44 @@ Callback.addCallback("PostLoaded", function(){
  ItemID.corn_seed,
  ItemID.peppercorn_seed
  ];
- var iid = 290;
- Callback.addCallback("DestroyBlock", function(coords, block, player){
-	if(((block.id==31)&&(block.data==1)||(block.id==175)&&(block.data==10)||(block.data==2))){
-		var nn = Harvest.number(0, 400);
-		if(nn<seedsArray.length ){  
-		Harvest.dropPlant(seedsArray[nn],coords.x,coords.y,coords.z);
+Callback.addCallback("DestroyBlock", function(coords, block, player){
+	var trueIDs = {
+		31:true,
+		175:true
+	};
+	var trueMetaS = {
+		1:true,
+		2:true,
+		10:true
+	};
+	if(trueIDs[block.id]&&trueMetaS[block.data]){
+		var nnn =__config__.access("other.grassDrop");
+		var nn = Random.Int(0,nnn);
+		//Debug.m(nn);
+		if(nn<seedsArray.length-1){  
+			Harvest.dropPlant(seedsArray[nn],coords.x,coords.y,coords.z);
 		}
 	}
- });
- Callback.addCallback("ItemUse", function(coords, item, block){
- if((block.id==2)&&(Player.getCarriedItem()==(290||291||292||293||294))){
-	var nn = Harvest.number(0, 400);
-	if(nn<seedsArray.length ){  
-			World.drop(coords.x, coords.y+1, coords.z, seedsArray[nn], 1, 0) 
+});
+Callback.addCallback("ItemUse", function(coords, item, block){
+ 
+	var trueTool = {
+		290:true,
+		291:true,
+		292:true,
+		293:true,
+		294:true
+	};
+	
+	if(block.id==2&&trueTool[item.id]){
+		var nnn =__config__.access("other.grassDrop");
+		var nn = Random.Int(0,nnn);
+		//Debug.m(nn);
+		if(nn<seedsArray.length-1){  
+			Harvest.dropPlant(seedsArray[nn],coords.x,coords.y+1,coords.z);
 		}
 	}
- });
+});
 
 
 
@@ -2449,6 +2968,7 @@ Callback.addCallback("PostLoaded", function(){
 
 var SaltBiomes = [0,24,10];
 var BerryGardenBiomes = [1,4, 18, 27, 28,13];
+var CandleberryGardenBiomes = [1,4, 18, 27, 28,13];
 var DesertGardenBiomes =[2,35,37];
 var GourdGardenBiomes = [1,4, 18, 27, 28,13];
 var GrassGardenBiomes = [1,4, 18, 27, 28];
@@ -2467,10 +2987,12 @@ var WaterGardenBiomes = [24,0];
 // file: WORLD/GENERATION/GARDENS/berryGarden.js
 
 Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
-	if(Math.random() <1){
+	var nnumber = __config__.access("genNumbers.gardens.berry");
+	if(Math.random() <nnumber){
 		var coords = GenerationUtils.randomCoords(chunkX, chunkZ, 64, 128);
 		coords = GenerationUtils.findSurface(coords.x, coords.y, coords.z);
-		for(var id in BerryGardenBiomes ){
+		for(var idd in BerryGardenBiomes ){
+			var id = BerryGardenBiomes[idd];
 			if((World.getBiome((chunkX + 0.5) * 16, (chunkZ + 0.5) * 16)==id)&&(World.getBlockID(coords.x, coords.y, coords.z) == 2)){
 				World.setBlock(coords.x, coords.y + 1, coords.z, BlockID.berrygarden, 0);
 				World.addTileEntity(coords.x, coords.y + 1, coords.z);
@@ -2486,10 +3008,12 @@ Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
 // file: WORLD/GENERATION/GARDENS/herbGarden.js
 
 Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
-	if(Math.random() <1){
+	var nnumber = __config__.access("genNumbers.gardens.herb");
+	if(Math.random() <nnumber){
 		var coords = GenerationUtils.randomCoords(chunkX, chunkZ, 64, 128);
 		coords = GenerationUtils.findSurface(coords.x, coords.y, coords.z);
-		for(var id in HerbGardenBiomes ){
+		for(var idd in HerbGardenBiomes ){
+			var id = HerbGardenBiomes[idd];
 			if((World.getBiome((chunkX + 0.5) * 16, (chunkZ + 0.5) * 16)==id)&&(World.getBlockID(coords.x, coords.y, coords.z) == 2)){
 				World.setBlock(coords.x, coords.y + 1, coords.z, BlockID.herbgarden , 0);
 				 	World.addTileEntity(coords.x, coords.y + 1, coords.z);
@@ -2505,13 +3029,36 @@ Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
 // file: WORLD/GENERATION/GARDENS/grassGarden.js
 
 Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
-	if(Math.random() <1){
+	var nnumber = __config__.access("genNumbers.gardens.grass");
+	if(Math.random() <nnumber){
 		var coords = GenerationUtils.randomCoords(chunkX, chunkZ, 64, 128);
 		coords = GenerationUtils.findSurface(coords.x, coords.y, coords.z);
-		for(var id in GrassGardenBiomes ){
+		for(var idd in GrassGardenBiomes ){
+			var id = GrassGardenBiomes[idd];			
 			if((World.getBiome((chunkX + 0.5) * 16, (chunkZ + 0.5) * 16)==id)&&(World.getBlockID(coords.x, coords.y, coords.z) == 2)){
 				World.setBlock(coords.x, coords.y + 1, coords.z, BlockID.grassgarden, 0);
 				 World.addTileEntity(coords.x, coords.y + 1, coords.z);				 	
+			}
+		}
+	}
+});
+
+
+
+
+// file: WORLD/GENERATION/GARDENS/candleberry.js
+
+Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
+	var nnumber = __config__.access("genNumbers.gardens.candleberry");
+	if(Math.random() <nnumber){
+		var coords = GenerationUtils.randomCoords(chunkX, chunkZ, 64, 128);
+		coords = GenerationUtils.findSurface(coords.x, coords.y, coords.z);
+		for(var idd in CandleberryGardenBiomes ){
+			var id = CandleberryGardenBiomes[idd];
+			if((World.getBiome((chunkX + 0.5) * 16, (chunkZ + 0.5) * 16)==id)&&(World.getBlockID(coords.x, coords.y, coords.z) == 2)){
+				World.setBlock(coords.x, coords.y + 1, coords.z, BlockID.candleberryGarden, 0);
+				World.addTileEntity(coords.x, coords.y + 1, coords.z);
+						
 			}
 		}
 	}
@@ -2525,8 +3072,9 @@ Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
 Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
 	var coords = GenerationUtils.randomCoords(chunkX, chunkZ, 64, 128);
 	coords = GenerationUtils.findSurface(coords.x, coords.y, coords.z);
-	if(Math.random()< __config__.access("saltGenNumber") ){
-		 for(var id in SaltBiomes ){
+	if(Math.random()< __config__.access("genNumbers.other.salt")){
+		 for(var idd in SaltBiomes ){
+			var id = SaltBiomes[idd];
 			if((World.getBiome((chunkX + 0.5) * 16, (chunkZ + 0.5) * 16)==id)){
 				World.setBlock(coords.x, coords.y + 1, coords.z, BlockID.salt, 0);
 				if (Math.random() < .5){ // top
@@ -2550,7 +3098,7 @@ Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
 });
 Callback.addCallback("GenerateChunkUnderground", function(chunkX, chunkZ){
 	var coords = GenerationUtils.randomCoords(chunkX, chunkZ, 64, 128);
-	if(Math.random()< __config__.access("saltGenNumber") ){
+	if(Math.random()< __config__.access("genNumbers.other.salt") ){
 		if(World.getBlockID(coords.x,coords.y,coords.z)!=0){
 			World.setBlock(coords.x, coords.y , coords.z, BlockID.salt, 0);
 		}
@@ -2563,1900 +3111,13 @@ Callback.addCallback("GenerateChunkUnderground", function(chunkX, chunkZ){
 // file: WORLD/GENERATION/TREES/AppleTree.js
 
 Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
-	var coords = GenerationUtils.randomCoords(chunkX, chunkZ, 64, 128);
-	coords = GenerationUtils.findSurface(coords.x, coords.y, coords.z);
-	if((World.getBlockID(coords.x, coords.y, coords.z) == 2)){			
-		Harvest.addTree(0,BlockID.appleBlock,4,this.x,this.y,this.z);
-	}
-});
-
-
-
-
-// file: CROPS/strawberry.js
-
-IDRegistry.genBlockID("strawberrycrop"); 
-Block.createBlock("strawberrycrop", [
-	{name: "strawberrycrop", texture: [["empty", 0]], inCreative: false}
-]);
-Harvest.plantShape( BlockID.strawberrycrop );
-Harvest.registerDestroy("strawberrycrop",ItemID.strawberry_seed);
-TileEntity.registerPrototype(BlockID.strawberrycrop, {
-	defaultValues: {
-		age: 0
-	},
-	createAnimations:function(){
-		if( __config__.access("advanced_item_models")==true){
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
+	var nnumber = __config__.access("genNumbers.trees.apple");
+	if(Math.random()<nnumber){
+		var coords = GenerationUtils.randomCoords(chunkX, chunkZ, 64, 128);
+		coords = GenerationUtils.findSurface(coords.x, coords.y, coords.z);
+		if((World.getBlockID(coords.x, coords.y, coords.z) == 2)){			
+			Harvest.addTree(0,BlockID.appleBlock,4,this.x,this.y,this.z);
 		}
-		else{
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.3);
-		}
-		this.ani1 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.7);
-		this.ani2 = new Animation.Item(this.x+0.7,this.y+0.6,this.z+0.5);
-		this.ani3 = new Animation.Item(this.x+0.3,this.y+0.6,this.z+0.5);
-	},
-	destroyAnimations:function(){
-		this.ani0.destroy();
-		this.ani1.destroy();
-		this.ani2.destroy();
-		this.ani3.destroy(); 	
-	},
-	anim0:function(){
-		Harvest.animationPlantDescribe(ItemID.strawberry_ani0 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim1:function(){	
-		Harvest.animationPlantDescribe(ItemID.strawberry_ani1 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim2:function(){	
-		Harvest.animationPlantDescribe(ItemID.strawberry_ani2 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	switcher:function(){
-		switch(this.data.age){
-			case 0 : 
-				this.anim0();
-					break;
-        			case 1 : 
-				this.anim1();
-					break;      
-			case 2 :
-				this.anim2();
-					break;
-		}
-	},		 	
-	tick:function(){
-		if(World.getBlockID(this.x,this.y-1,this.z)==0){
-				this.destroy();	
-		}	
-		var number = 0.0002;
-		if((Math.random()<number)&&(this.data.age<2)){    
-			this.data.age++;
-			this.switcher();  
-		}	
-	},
-	init:function(){   	
-		this.createAnimations();
-    	this.switcher();
-	},
-	destroy:function(){
-		World.destroyBlock(this.x, this.y, this.z, false);
-		World.setBlock(this.x,this.y-1,this.z,60,0);    
-    	this.destroyAnimations();
-	},
-	click: function(id, count, data, coords){
-		var pl = Player.getCarriedItem();
-		if((pl.id==351)&&(pl.data==15)&&this.data.age<2){
-			this.data.age++;
-			this.switcher();
-		}
-		if(this.data.age==2){
-			this.data.age=0;
-			this.switcher();
-			Harvest.dropFruit(ItemID.strawberry,this.x,this.y,this.z);
-		}
-	} 	
-});
-Item.registerUseFunctionForID(ItemID.strawberry_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z,BlockID.strawberrycrop,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.strawberry_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/raspberry.js
-
-IDRegistry.genBlockID("raspberrycrop"); 
-Block.createBlock("raspberrycrop", [
-	{name: "raspberrycrop", texture: [["empty", 0]], inCreative: false}
-]);
-Harvest.plantShape( BlockID.raspberrycrop );
-Harvest.registerDestroy("raspberrycrop",ItemID.raspberry_seed);
-TileEntity.registerPrototype(BlockID.raspberrycrop, {
-	defaultValues: {
-		age: 0
-	},
-	createAnimations:function(){
-	if( __config__.access("advanced_item_models")==true){
-		this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-	}
-	else{
-		this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.3);
-	}
-		this.ani1 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.7);
-		this.ani2 = new Animation.Item(this.x+0.7,this.y+0.6,this.z+0.5);
-		this.ani3 = new Animation.Item(this.x+0.3,this.y+0.6,this.z+0.5);
-	},
-	destroyAnimations:function(){
-		this.ani0.destroy();
-		this.ani1.destroy();
-		this.ani2.destroy();
-		this.ani3.destroy(); 	
-	},
-	anim0:function(){
-		Harvest.animationPlantDescribe(ItemID.raspberry_ani0 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim1:function(){
-		Harvest.animationPlantDescribe(ItemID.raspberry_ani1 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim2:function(){	
-		Harvest.animationPlantDescribe(ItemID.raspberry_ani2 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	switcher:function(){
-		switch(this.data.age){
-			case 0 : 
-				this.anim0();
-					break; 
-			case 1 : 
-				this.anim1();
-					break;       
-			case 2 :
-				this.anim2();
-					break;
-		}
-	},		 	
-	tick:function(){
-		if(World.getBlockID(this.x,this.y-1,this.z)==0){
-			this.destroy();	
-		}	
-		var number = 0.0002;
-		if((Math.random()<number)&&(this.data.age<2)){   
-			this.data.age++;
-			this.switcher();  
-		}	
-	},
-	init:function(){    	
-		this.createAnimations();
-    	this.switcher();
-	},
-	destroy:function(){
-		World.destroyBlock(this.x, this.y, this.z, false);
-		World.setBlock(this.x,this.y-1,this.z,60,0);	 
-    	this.destroyAnimations();
-	},
-	click: function(id, count, data, coords){
-		var pl = Player.getCarriedItem();
-		if((pl.id==351)&&(pl.data==15)&&this.data.age<2){
-			this.data.age++;
-			this.switcher();
-		}
-		if(this.data.age==2){
-			this.data.age=0;
-			this.switcher();
-			Harvest.dropFruit(ItemID.raspberry,this.x,this.y,this.z);
-		}
-	} 	
-});
-Item.registerUseFunctionForID(ItemID.raspberry_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.raspberrycrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.raspberry_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/cranberry.js
-
-IDRegistry.genBlockID("cranberrycrop"); 
-Block.createBlock("cranberrycrop", [
-	{name: "cranberrycrop", texture: [["empty", 0]], inCreative: false}
-]);
-Harvest.plantShape( BlockID.cranberrycrop );
-Harvest.registerDestroy("cranberrycrop",ItemID.cranberry_seed);
-TileEntity.registerPrototype(BlockID.cranberrycrop, {
-	defaultValues: {
-		age: 0
-	},
-	createAnimations:function(){
-		if( __config__.access("advanced_item_models")==true){
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-		}
-		else{
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.3);
-		}
-		this.ani1 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.7);
-		this.ani2 = new Animation.Item(this.x+0.7,this.y+0.6,this.z+0.5);
-		this.ani3 = new Animation.Item(this.x+0.3,this.y+0.6,this.z+0.5);
-	},
-	destroyAnimations:function(){
-		this.ani0.destroy();
-		this.ani1.destroy();
-		this.ani2.destroy();
-		this.ani3.destroy(); 	
-	},
-	anim0:function(){
-		Harvest.animationPlantDescribe(ItemID.cranberrycrop_ani0 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim1:function(){
-		Harvest.animationPlantDescribe(ItemID.cranberrycrop_ani1 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim2:function(){	    
-		Harvest.animationPlantDescribe(ItemID.cranberrycrop_ani2 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	switcher:function(){
-		switch(this.data.age){
-			case 0 : 
-				this.anim0();
-					break;        
-			case 1 : 
-				this.anim1();
-					break;       
-			case 2 :
-				this.anim2();
-					break;
-		}
-	},
-		 	
-	tick:function(){
-		if(World.getBlockID(this.x,this.y-1,this.z)==0){
-			this.destroy();	
-		}	
-		var number = 0.0002;
-		if((Math.random()<number)&&(this.data.age<2)){   
-			this.data.age++;
-			this.switcher();  
-		}	
-	},
-	init:function(){    	
-		this.createAnimations();
-    	this.switcher();
-	},
-	destroy:function(){
-		World.destroyBlock(this.x, this.y, this.z, false);
-		World.setBlock(this.x,this.y-1,this.z,60,0);	 
-    	this.destroyAnimations();
-	},
-	click: function(id, count, data, coords){
-		var pl = Player.getCarriedItem();
-		if((pl.id==351)&&(pl.data==15)&&this.data.age<2){
-			this.data.age++;
-			this.switcher();
-		}
-		if(this.data.age==2){
-			this.data.age=0;
-			this.switcher();
-			Harvest.dropFruit(ItemID.cranberry,this.x,this.y,this.z);
-		}
-	} 	
-});
-Item.registerUseFunctionForID(ItemID.cranberry_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.cranberrycrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.cranberry_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/blueberry.js
-
-IDRegistry.genBlockID("blueberrycrop"); 
-Block.createBlock("blueberrycrop", [
-	{name: "blueberrycrop", texture: [["empty", 0]], inCreative: false}
-]);
-Harvest.plantShape( BlockID.blueberrycrop );
-Harvest.registerDestroy("blueberrycrop",ItemID.blueberry_seed);
-TileEntity.registerPrototype(BlockID.blueberrycrop, {
-	defaultValues: {
-		age: 0
-	},
-	createAnimations:function(){
-		if( __config__.access("advanced_item_models")==true){
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-		}
-		else{
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.3);
-		}
-		this.ani1 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.7);
-		this.ani2 = new Animation.Item(this.x+0.7,this.y+0.6,this.z+0.5);
-		this.ani3 = new Animation.Item(this.x+0.3,this.y+0.6,this.z+0.5);
-	},
-	destroyAnimations:function(){
-		this.ani0.destroy();
-		this.ani1.destroy();
-		this.ani2.destroy();
-		this.ani3.destroy(); 	
-	},
-	anim0:function(){
-		Harvest.animationPlantDescribe(ItemID.blueberrycrop_ani0 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim1:function(){
-		Harvest.animationPlantDescribe(ItemID.blueberrycrop_ani1 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim2:function(){
-	    Harvest.animationPlantDescribe(ItemID.blueberrycrop_ani2 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	switcher:function(){
-		switch(this.data.age){
-			case 0 : 
-				this.anim0();
-					break;    
-			case 1 : 
-				this.anim1();
-					break;       
-			case 2 :
-				this.anim2();
-					break;
-		}
-	},		 	
-	tick:function(){
-		if(World.getBlockID(this.x,this.y-1,this.z)==0){
-			this.destroy();	
-		}	
-		var number = 0.0002;
-		if((Math.random()<number)&&(this.data.age<2)){   
-			this.data.age++;
-			this.switcher();  
-		}	
-	},
-	init:function(){    	
-		this.createAnimations();
-		this.switcher();
-	},
-	destroy:function(){
-		World.destroyBlock(this.x, this.y, this.z, false);
-		World.setBlock(this.x,this.y-1,this.z,60,0);	 
-    	this.destroyAnimations();
-	},
-	click: function(id, count, data, coords){
-		var pl = Player.getCarriedItem();
-		if((pl.id==351)&&(pl.data==15)&&this.data.age<2){
-			this.data.age++;
-			this.switcher();
-		}
-		if(this.data.age==2){
-			this.data.age=0;
-			this.switcher();
-			Harvest.dropFruit(ItemID.blueberry,this.x,this.y,this.z);
-		}
-	} 	
-});
-Item.registerUseFunctionForID(ItemID.blueberryseedItem, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.blueberrycrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.blueberry_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/blackberry.js
-
-IDRegistry.genBlockID("blackberrycrop"); 
-Block.createBlock("blackberrycrop", [
-	{name: "blackberrycrop", texture: [["empty", 0]], inCreative: false}
-]);
-Harvest.plantShape( BlockID.blackberrycrop );
-Harvest.registerDestroy("blackberrycrop",ItemID.blackberry_seed);
-TileEntity.registerPrototype(BlockID.blackberrycrop, {
-	defaultValues: {
-		age: 0
-	},
-	createAnimations:function(){
-		if( __config__.access("advanced_item_models")==true){
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-		}
-		else{
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.3);
-		}
-		this.ani1 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.7);
-		this.ani2 = new Animation.Item(this.x+0.7,this.y+0.6,this.z+0.5);
-		this.ani3 = new Animation.Item(this.x+0.3,this.y+0.6,this.z+0.5);
-	},
-	destroyAnimations:function(){
-		this.ani0.destroy();
-		this.ani1.destroy();
-		this.ani2.destroy();
-		this.ani3.destroy(); 	
-	},
-	anim0:function(){
-		Harvest.animationPlantDescribe(ItemID.blackberrycrop_ani0 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim1:function(){
-		Harvest.animationPlantDescribe(ItemID.blackberrycrop_ani1 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim2:function(){
-		Harvest.animationPlantDescribe(ItemID.blackberrycrop_ani2 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	switcher:function(){
-		switch(this.data.age){
-			case 0 : 
-				this.anim0();
-					break;
-        
-			case 1 : 
-				this.anim1();
-					break;
-        
-			case 2 :
-				this.anim2();
-					break;
-		}
-	},		 	
-	tick:function(){
-		if(World.getBlockID(this.x,this.y-1,this.z)==0){
-			this.destroy();	
-		}	
-		var number = 0.0002;
-		if((Math.random()<number)&&(this.data.age<2)){   
-			this.data.age++;
-			this.switcher();  
-		}	
-	},
-	init:function(){  	
-		this.createAnimations();
-		this.switcher();
-	},
-	destroy:function(){
-		World.destroyBlock(this.x, this.y, this.z, false);
-		World.setBlock(this.x,this.y-1,this.z,60,0);	 
-    	this.destroyAnimations();
-	},
-	click: function(id, count, data, coords){
-		var pl = Player.getCarriedItem();
-		if((pl.id==351)&&(pl.data==15)&&this.data.age<2){
-			this.data.age++;
-			this.switcher();
-		}
-		if(this.data.age==2){
-			this.data.age=0;
-			this.switcher();
-			Harvest.dropFruit(ItemID.blackberry,this.x,this.y,this.z);
-		}
-	} 	
-});
-Item.registerUseFunctionForID(ItemID.blackberryseedItem, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.blackberrycrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.blackberry_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/grape.js
-
-IDRegistry.genBlockID("grapecrop"); 
-Block.createBlock("grapecrop", [
-	{name: "grapecrop", texture: [["empty", 0]], inCreative: false}
-]);
-Harvest.plantShape( BlockID.grapecrop );
-Harvest.registerDestroy("grapecrop",ItemID.grape_seed);
-TileEntity.registerPrototype(BlockID.grapecrop, {
-	defaultValues: {
-		age: 0
-	},
-	createAnimations:function(){
-		if( __config__.access("advanced_item_models")==true){
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-		}
-		else{
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.3);
-		}
-		this.ani1 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.7);
-		this.ani2 = new Animation.Item(this.x+0.7,this.y+0.6,this.z+0.5);
-		this.ani3 = new Animation.Item(this.x+0.3,this.y+0.6,this.z+0.5);
-	},
-	destroyAnimations:function(){
-		this.ani0.destroy();
-		this.ani1.destroy();
-		this.ani2.destroy();
-		this.ani3.destroy(); 	
-	},
-	anim0:function(){
-		Harvest.animationPlantDescribe(ItemID.grapecrop_ani0 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim1:function(){
-		Harvest.animationPlantDescribe(ItemID.grapecrop_ani1 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim2:function(){	
-		Harvest.animationPlantDescribe(ItemID.grapecrop_ani2 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	switcher:function(){
-		switch(this.data.age){
-			case 0 : 
-				this.anim0();
-					break;        
-			case 1 : 
-				this.anim1();
-					break;        
-			case 2 :
-				this.anim2();
-					break;
-		}
-	},		 	
-	tick:function(){
-		if(World.getBlockID(this.x,this.y-1,this.z)==0){
-			this.destroy();	
-		}	
-		var number = 0.0002;
-		if((Math.random()<number)&&(this.data.age<2)){    
-			this.data.age++;
-			this.switcher();  
-		}	
-	},
-	init:function(){   	
-		this.createAnimations();
-    	this.switcher();
-	},
-	destroy:function(){
-		World.destroyBlock(this.x, this.y, this.z, false);
-		World.setBlock(this.x,this.y-1,this.z,60,0);	 
-    	this.destroyAnimations();
-	},
-	click: function(id, count, data, coords){
-		var pl = Player.getCarriedItem();
-		if((pl.id==351)&&(pl.data==15)&&this.data.age<2){
-			this.data.age++;
-			this.switcher();
-		}
-		if(this.data.age==2){
-			this.data.age=0;
-			this.switcher();
-			Harvest.dropFruit(ItemID.grape,this.x,this.y,this.z);
-		}
-	} 	
-});
-Item.registerUseFunctionForID(ItemID.grape_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.grapecrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.grape_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/cucumber.js
-
-IDRegistry.genBlockID("cucumbercrop"); 
-Block.createBlock("cucumbercrop", [
-	{name: "cucumbercrop", texture: [["empty", 0]], inCreative: false}
-]);
-Harvest.plantShape( BlockID.cucumbercrop );
-Harvest.registerDestroy("cucumbercrop",ItemID.cucumber_seed);
-TileEntity.registerPrototype(BlockID.cucumbercrop, {
-	defaultValues: {
-		age: 0
-	},
-	createAnimations:function(){
-		if( __config__.access("advanced_item_models")==true){
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-		}
-		else{
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.3);
-		}
-		this.ani1 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.7);
-		this.ani2 = new Animation.Item(this.x+0.7,this.y+0.6,this.z+0.5);
-		this.ani3 = new Animation.Item(this.x+0.3,this.y+0.6,this.z+0.5);
-	},
-	destroyAnimations:function(){
-		this.ani0.destroy();
-		this.ani1.destroy();
-		this.ani2.destroy();
-		this.ani3.destroy(); 	
-	},
-	anim0:function(){
-		Harvest.animationPlantDescribe(ItemID.cucumbercrop_ani0 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim1:function(){
-		Harvest.animationPlantDescribe(ItemID.cucumbercrop_ani1 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim2:function(){	
-		Harvest.animationPlantDescribe(ItemID.cucumbercrop_ani2 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	switcher:function(){
-		switch(this.data.age){
-			case 0 : 
-				this.anim0();
-					break;       
-			case 1 : 
-				this.anim1();
-					break;     
-			case 2 :
-				this.anim2();
-					break;
-		}
-	},		 	
-	tick:function(){
-		if(World.getBlockID(this.x,this.y-1,this.z)==0){
-			this.destroy();	
-		}	
-		var number = 0.0002;
-		if((Math.random()<number)&&(this.data.age<2)){   
-			this.data.age++;
-			this.switcher();  
-		}	
-	},
-	init:function(){    	
-		this.createAnimations();
-    	this.switcher();
-	},
-	destroy:function(){
-		World.destroyBlock(this.x, this.y, this.z, false);
-		World.setBlock(this.x,this.y-1,this.z,60,0);	 
-    	this.destroyAnimations();
-	},
-	click: function(id, count, data, coords){
-		var pl = Player.getCarriedItem();
-		if((pl.id==351)&&(pl.data==15)&&this.data.age<2){
-			this.data.age++;
-			this.switcher();
-		}
-		if(this.data.age==2){
-			this.data.age=0;
-			this.switcher();
-			Harvest.dropFruit(ItemID.cucumber,this.x,this.y,this.z);
-		}
-	} 	
-});
-Item.registerUseFunctionForID(ItemID.cucumber_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.cucumbercrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.cucumber_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/onion.js
-
-IDRegistry.genBlockID("onioncrop"); 
-Block.createBlock("onioncrop", [
-	{name: "onioncrop", texture: [["empty", 0]], inCreative: false}
-]);
-Harvest.plantShape( BlockID.onioncrop );
-Harvest.registerDestroy("onioncrop",ItemID.onion_seed);
-TileEntity.registerPrototype(BlockID.onioncrop, {
-	defaultValues: {
-		age: 0
-	},
-	createAnimations:function(){
-		if( __config__.access("advanced_item_models")==true){
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-		}
-		else{
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.3);
-		}
-		this.ani1 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.7);
-		this.ani2 = new Animation.Item(this.x+0.7,this.y+0.6,this.z+0.5);
-		this.ani3 = new Animation.Item(this.x+0.3,this.y+0.6,this.z+0.5);
-	},
-	destroyAnimations:function(){
-		this.ani0.destroy();
-		this.ani1.destroy();
-		this.ani2.destroy();
-		this.ani3.destroy(); 	
-	},
-	anim0:function(){
-		Harvest.animationPlantDescribe(ItemID.onioncrop_ani0 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim1:function(){
-		Harvest.animationPlantDescribe(ItemID.onioncrop_ani1 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim2:function(){	 
-		Harvest.animationPlantDescribe(ItemID.onioncrop_ani2 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	switcher:function(){
-		switch(this.data.age){
-			case 0 : 
-				this.anim0();
-					break;      
-			case 1 : 
-				this.anim1();
-					break;       
-			case 2 :
-				this.anim2();
-					break;
-		}
-	},		 	
-	tick:function(){
-		if(World.getBlockID(this.x,this.y-1,this.z)==0){
-			this.destroy();	
-		}	
-		var number = 0.0002;
-		if((Math.random()<number)&&(this.data.age<2)){    
-			this.data.age++;
-			this.switcher();  
-		}	
-	},
-	init:function(){
-		this.createAnimations();
-    	this.switcher();
-	},
-	destroy:function(){
-		World.destroyBlock(this.x, this.y, this.z, false);
-		World.setBlock(this.x,this.y-1,this.z,60,0);	 
-    	this.destroyAnimations();
-	},
-	click: function(id, count, data, coords){
-		var pl = Player.getCarriedItem();
-		if((pl.id==351)&&(pl.data==15)&&this.data.age<2){
-			this.data.age++;
-			this.switcher();
-		}
-		if(this.data.age==2){
-			this.data.age=0;
-			this.switcher();
-			Harvest.dropFruit(ItemID.onion,this.x,this.y,this.z);
-		}
-	} 	
-});
-Item.registerUseFunctionForID(ItemID.onion_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.onioncrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.onion_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/cabbage.js
-
-IDRegistry.genBlockID("cabbagecrop"); 
-Block.createBlock("cabbagecrop", [
-	{name: "cabbagecrop", texture: [["empty", 0]], inCreative: false}
-]);
-Harvest.plantShape( BlockID.cabbagecrop );
-Harvest.registerDestroy("cabbagecrop",ItemID.cabbage_seed);
-TileEntity.registerPrototype(BlockID.cabbagecrop, {
-	defaultValues: {
-		age: 0
-	},
-	createAnimations:function(){
-		if( __config__.access("advanced_item_models")==true){
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-		}
-		else{
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.3);
-		}
-		this.ani1 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.7);
-		this.ani2 = new Animation.Item(this.x+0.7,this.y+0.6,this.z+0.5);
-		this.ani3 = new Animation.Item(this.x+0.3,this.y+0.6,this.z+0.5);
-	},
-	destroyAnimations:function(){
-		this.ani0.destroy();
-		this.ani1.destroy();
-		this.ani2.destroy();
-		this.ani3.destroy(); 	
-	},
-	anim0:function(){
-		Harvest.animationPlantDescribe(ItemID.cabbagecrop_ani0 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim1:function(){
-		Harvest.animationPlantDescribe(ItemID.cabbagecrop_ani1 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim2:function(){
-		Harvest.animationPlantDescribe(ItemID.cabbagecrop_ani2 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	switcher:function(){
-		switch(this.data.age){
-			case 0 : 
-				this.anim0();
-					break;       
-			case 1 : 
-				this.anim1();
-					break;       
-			case 2 :
-				this.anim2();
-					break;
-		}
-	},
-		 	
-	tick:function(){
-		if(World.getBlockID(this.x,this.y-1,this.z)==0){
-			this.destroy();	
-		}	
-		var number = 0.0002;
-		if((Math.random()<number)&&(this.data.age<2)){    
-			this.data.age++;
-			this.switcher();  
-		}	
-	},
-	init:function(){   	
-		this.createAnimations();
-		this.switcher();
-	},
-	destroy:function(){
-		World.destroyBlock(this.x, this.y, this.z, false);
-		World.setBlock(this.x,this.y-1,this.z,60,0);	 
-    	this.destroyAnimations();
-	},
-	click: function(id, count, data, coords){
-		var pl = Player.getCarriedItem();
-		if((pl.id==351)&&(pl.data==15)&&this.data.age<2){
-			this.data.age++;
-			this.switcher();
-		}
-		if(this.data.age==2){
-			this.data.age=0;
-			this.switcher();
-			Harvest.dropFruit(ItemID.cabbage,this.x,this.y,this.z);
-		}
-	} 	
-});
-Item.registerUseFunctionForID(ItemID.cabbageseedItem, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.cabbagecrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.cabbage_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/tomato.js
-
-IDRegistry.genBlockID("tomatocrop"); 
-Block.createBlock("tomatocrop", [
-	{name: "tomatocrop", texture: [["empty", 0]], inCreative: false}
-]);
-Harvest.plantShape( BlockID.tomatocrop );
-Harvest.registerDestroy("tomatocrop",ItemID.tomato_seed);
-TileEntity.registerPrototype(BlockID.tomatocrop, {
-	defaultValues: {
-		age: 0
-	},
-	createAnimations:function(){
-		if( __config__.access("advanced_item_models")==true){
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-		}
-		else{
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.3);
-		}
-		this.ani1 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.7);
-		this.ani2 = new Animation.Item(this.x+0.7,this.y+0.6,this.z+0.5);
-		this.ani3 = new Animation.Item(this.x+0.3,this.y+0.6,this.z+0.5);
-	},
-	destroyAnimations:function(){
-		this.ani0.destroy();
-		this.ani1.destroy();
-		this.ani2.destroy();
-		this.ani3.destroy(); 	
-	},
-	anim0:function(){
-		Harvest.animationPlantDescribe(ItemID.tomatocrop_ani0 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim1:function(){	
-		Harvest.animationPlantDescribe(ItemID.tomatocrop_ani1 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim2:function(){
-		Harvest.animationPlantDescribe(ItemID.tomatocrop_ani2 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	switcher:function(){
-		switch(this.data.age){
-			case 0 : 
-				this.anim0();
-					break;
-        
-			case 1 : 
-				this.anim1();
-					break;
-        
-			case 2 :
-				this.anim2();
-					break;
-		}
-	},		 	
-	tick:function(){
-		if(World.getBlockID(this.x,this.y-1,this.z)==0){
-			this.destroy();	
-		}	
-		var number = 0.0002;
-		if((Math.random()<number)&&(this.data.age<2)){    
-			this.data.age++;
-			this.switcher();  
-		}	
-	},
-	init:function(){   	
-		this.createAnimations();
-    	this.switcher();
-	},
-	destroy:function(){
-		World.destroyBlock(this.x, this.y, this.z, false);
-		World.setBlock(this.x,this.y-1,this.z,60,0);	 
-    	this.destroyAnimations();
-	},
-	click: function(id, count, data, coords){
-		var pl = Player.getCarriedItem();
-		if((pl.id==351)&&(pl.data==15)&&this.data.age<2){
-			this.data.age++;
-			this.switcher();
-		}
-		if(this.data.age==2){
-			this.data.age=0;
-			this.switcher();
-			Harvest.dropFruit(ItemID.tomato,this.x,this.y,this.z);
-		}
-	} 	
-});
-Item.registerUseFunctionForID(ItemID.tomato_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.tomatocrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.tomato_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/garlic.js
-
-IDRegistry.genBlockID("garliccrop"); 
-Block.createBlock("garliccrop", [
-	{name: "garliccrop", texture: [["empty", 0]], inCreative: false}
-]);
-Harvest.plantShape( BlockID.garliccrop );
-Harvest.registerDestroy("garliccrop",ItemID.garlic_seed);
-TileEntity.registerPrototype(BlockID.garliccrop, {
-	defaultValues: {
-		age: 0
-	},
-	createAnimations:function(){
-		if( __config__.access("advanced_item_models")==true){
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-		}
-		else{
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.3);
-		}
-		this.ani1 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.7);
-		this.ani2 = new Animation.Item(this.x+0.7,this.y+0.6,this.z+0.5);
-		this.ani3 = new Animation.Item(this.x+0.3,this.y+0.6,this.z+0.5);
-	},
-	destroyAnimations:function(){
-		this.ani0.destroy();
-		this.ani1.destroy();
-		this.ani2.destroy();
-		this.ani3.destroy(); 	
-	},
-	anim0:function(){
-		Harvest.animationPlantDescribe(ItemID.garliccrop_ani0 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim1:function(){
-		Harvest.animationPlantDescribe(ItemID.garliccrop_ani1 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim2:function(){	
-		Harvest.animationPlantDescribe(ItemID.garliccrop_ani2 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	switcher:function(){
-		switch(this.data.age){
-			case 0 : 
-				this.anim0();
-					break;       
-			case 1 : 
-				this.anim1();
-					break;        
-			case 2 :
-				this.anim2();
-					break;
-		}
-	},		 	
-	tick:function(){
-		if(World.getBlockID(this.x,this.y-1,this.z)==0){
-			this.destroy();	
-		}	
-		var number = 0.0002;
-		if((Math.random()<number)&&(this.data.age<2)){    
-			this.data.age++;
-			this.switcher();  
-		}	
-	},
-	init:function(){   	
-		this.createAnimations();
-    	this.switcher();
-	},
-	destroy:function(){
-		World.destroyBlock(this.x, this.y, this.z, false);
-		World.setBlock(this.x,this.y-1,this.z,60,0);	 
-    	this.destroyAnimations();
-	},
-	click: function(id, count, data, coords){
-		var pl = Player.getCarriedItem();
-		if((pl.id==351)&&(pl.data==15)&&this.data.age<2){
-			this.data.age++;
-			this.switcher();
-		}
-		if(this.data.age==2){
-			this.data.age=0;
-			this.switcher();
-			Harvest.dropFruit(ItemID.garlic,this.x,this.y,this.z);
-		}
-	} 	
-});
-Item.registerUseFunctionForID(ItemID.garlic_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.garliccrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.garlic_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/bellpepper.js
-
-IDRegistry.genBlockID("bellpeppercrop"); 
-Block.createBlock("bellpeppercrop", [
-	{name: "bellpeppercrop", texture: [["empty", 0]], inCreative: false}
-]);
-Harvest.plantShape( BlockID.bellpeppercrop );
-Harvest.registerDestroy("bellpeppercrop",ItemID.bellpepper_seed);
-TileEntity.registerPrototype(BlockID.bellpeppercrop, {
-	defaultValues: {
-		age: 0
-	},
-	createAnimations:function(){
-		if( __config__.access("advanced_item_models")==true){
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-		}
-		else{
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.3);
-		}
-			this.ani1 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.7);
-			this.ani2 = new Animation.Item(this.x+0.7,this.y+0.6,this.z+0.5);
-			this.ani3 = new Animation.Item(this.x+0.3,this.y+0.6,this.z+0.5);
-	},
-	destroyAnimations:function(){
-		this.ani0.destroy();
-		this.ani1.destroy();
-		this.ani2.destroy();
-		this.ani3.destroy(); 	
-	},
-	 anim0:function(){
-		Harvest.animationPlantDescribe(ItemID.bellpeppercrop_ani0 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim1:function(){
-		Harvest.animationPlantDescribe(ItemID.bellpeppercrop_ani1 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim2:function(){	
-		Harvest.animationPlantDescribe(ItemID.bellpeppercrop_ani2 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	switcher:function(){
-		switch(this.data.age){
-			case 0 : 
-				this.anim0();
-					break;       
-			case 1 : 
-				this.anim1();
-					break;       
-			case 2 :
-				this.anim2();
-					break;
-		}
-	},		 	
-	tick:function(){
-		if(World.getBlockID(this.x,this.y-1,this.z)==0){
-			this.destroy();	
-		}	
-		var number = 0.0002;
-		if((Math.random()<number)&&(this.data.age<2)){    
-			this.data.age++;
-			this.switcher();  
-		}	
-	},
-	init:function(){  	
-		this.createAnimations();
-		this.switcher();
-	},
-	destroy:function(){
-		World.destroyBlock(this.x, this.y, this.z, false);
-		World.setBlock(this.x,this.y-1,this.z,60,0); 
-		this.destroyAnimations();
-	},
-	click: function(id, count, data, coords){
-		var pl = Player.getCarriedItem();
-		if((pl.id==351)&&(pl.data==15)&&this.data.age<2){
-			this.data.age++;
-			this.switcher();
-		}
-		if(this.data.age==2){
-			this.data.age=0;
-			this.switcher();
-			Harvest.dropFruit(ItemID.bellpepper,this.x,this.y,this.z);
-		}
-	} 	
-});
-Item.registerUseFunctionForID(ItemID.bellpepperseedItem, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.bellpeppercrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.bellpepper_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/lettuce.js
-
-IDRegistry.genBlockID("lettucecrop"); 
-Block.createBlock("lettucecrop", [
-	{name: "lettucecrop", texture: [["empty", 0]], inCreative: false}
-]);
-Harvest.plantShape( BlockID.lettucecrop );
-Harvest.registerDestroy("lettucecrop",ItemID.lettuce_seed);
-TileEntity.registerPrototype(BlockID.lettucecrop, {
-	defaultValues: {
-		age: 0
-	},
-	createAnimations:function(){
-		if( __config__.access("advanced_item_models")==true){
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-		}
-		 else{
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.3);
-		 }
-		this.ani1 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.7);
-		this.ani2 = new Animation.Item(this.x+0.7,this.y+0.6,this.z+0.5);
-		this.ani3 = new Animation.Item(this.x+0.3,this.y+0.6,this.z+0.5);
-	},
-	destroyAnimations:function(){
-		this.ani0.destroy();
-		this.ani1.destroy();
-		this.ani2.destroy();
-		this.ani3.destroy(); 	
-	},
-	anim0:function(){
-		Harvest.animationPlantDescribe(ItemID.lettucecrop_ani0 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-		anim1:function(){
-	Harvest.animationPlantDescribe(ItemID.lettucecrop_ani1 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim2:function(){	  
-		Harvest.animationPlantDescribe(ItemID.lettucecrop_ani2 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	switcher:function(){
-		switch(this.data.age){
-			case 0 : 
-				this.anim0();
-					break;
-        
-			case 1 : 
-				this.anim1();
-					break;
-        
-			case 2 :
-				this.anim2();
-					break;
-		}	
-	},		 	
-	tick:function(){
-		if(World.getBlockID(this.x,this.y-1,this.z)==0){
-			this.destroy();	
-		}	
-		var number = 0.0002;
-		if((Math.random()<number)&&(this.data.age<2)){    
-			this.data.age++;
-			this.switcher();  
-		}	
-	},
-	init:function(){    	
-		this.createAnimations();
-    	this.switcher();
-	},
-	destroy:function(){
-		World.destroyBlock(this.x, this.y, this.z, false);
-		World.setBlock(this.x,this.y-1,this.z,60,0);	 
-    	this.destroyAnimations();
-	},
-	click: function(id, count, data, coords){
-		var pl = Player.getCarriedItem();
-		if((pl.id==351)&&(pl.data==15)&&this.data.age<2){
-			this.data.age++;
-			this.switcher();
-		}
-		if(this.data.age==2){
-			this.data.age=0;
-			this.switcher();
-			Harvest.dropFruit(ItemID.lettuce,this.x,this.y,this.z);
-		}
-	} 	
-});
-Item.registerUseFunctionForID(ItemID.lettuce_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.lettucecrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.lettuce_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/coffeebean.js
-
-IDRegistry.genBlockID("coffeebeancrop"); 
-Block.createBlock("coffeebeancrop", [
-	{name: "coffeebeancrop", texture: [["empty", 0]], inCreative: false}
-]);
-Harvest.plantShape( BlockID.coffeebeancrop );
-Harvest.registerDestroy("coffeebeancrop",ItemID.coffee_seed);
-TileEntity.registerPrototype(BlockID.coffeebeancrop, {
-	defaultValues: {
-		age: 0
-	},
-	createAnimations:function(){
-		if( __config__.access("advanced_item_models")==true){
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-		}
-		else{
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.3);
-		}
-		this.ani1 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.7);
-		this.ani2 = new Animation.Item(this.x+0.7,this.y+0.6,this.z+0.5);
-		this.ani3 = new Animation.Item(this.x+0.3,this.y+0.6,this.z+0.5);
-	},
-	destroyAnimations:function(){
-		this.ani0.destroy();
-		this.ani1.destroy();
-		this.ani2.destroy();
-		this.ani3.destroy(); 	
-	},
-	anim0:function(){
-		Harvest.animationPlantDescribe(ItemID.coffeebeancrop_ani0 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim1:function(){
-		Harvest.animationPlantDescribe(ItemID.coffeebeancrop_ani1 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim2:function(){	
-		Harvest.animationPlantDescribe(ItemID.coffeebeancrop_ani2 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	switcher:function(){
-		switch(this.data.age){
-			case 0 : 
-				this.anim0();
-					break;      
-			case 1 : 
-				this.anim1();
-					break;       
-			case 2 :
-				this.anim2();
-					break;
-		}
-	},		 	
-	tick:function(){
-		if(World.getBlockID(this.x,this.y-1,this.z)==0){
-			this.destroy();	
-		}	
-		var number = 0.0002;
-		if((Math.random()<number)&&(this.data.age<2)){
-			this.data.age++;
-			this.switcher();  
-		}	
-	},
-	init:function(){    	
-		this.createAnimations();
-    	this.switcher();
-	},
-	destroy:function(){
-		World.destroyBlock(this.x, this.y, this.z, false);
-		World.setBlock(this.x,this.y-1,this.z,60,0);	 
-    	this.destroyAnimations();
-	},
-	click: function(id, count, data, coords){
-		var pl = Player.getCarriedItem();
-		if((pl.id==351)&&(pl.data==15)&&this.data.age<2){
-			this.data.age++;
-			this.switcher();
-		}
-		if(this.data.age==2){
-			this.data.age=0;
-			this.switcher();
-			Harvest.dropFruit(ItemID.coffee_beans,this.x,this.y,this.z);
-		}
-	} 	
-});
-Item.registerUseFunctionForID(ItemID.coffee_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.coffeebeancrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.coffee_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/peas.js
-
-IDRegistry.genBlockID("peascrop"); 
-Block.createBlock("peascrop", [
-	{name: "peascrop", texture: [["empty", 0]], inCreative: false}
-]);
-Harvest.plantShape( BlockID.peascrop );
-Harvest.registerDestroy("peascrop",ItemID.peas_seed);
-TileEntity.registerPrototype(BlockID.peascrop, {
-	defaultValues: {
-		age: 0
-	},
-	createAnimations:function(){
-		if( __config__.access("advanced_item_models")==true){
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-		}
-		else{
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.3);
-		}
-		this.ani1 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.7);
-		this.ani2 = new Animation.Item(this.x+0.7,this.y+0.6,this.z+0.5);
-		this.ani3 = new Animation.Item(this.x+0.3,this.y+0.6,this.z+0.5);
-	},
-	destroyAnimations:function(){
-		this.ani0.destroy();
-		this.ani1.destroy();
-		this.ani2.destroy();
-		this.ani3.destroy(); 	
-	},
-	anim0:function(){
-		Harvest.animationPlantDescribe(ItemID.peascrop_ani0 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim1:function(){	
-		Harvest.animationPlantDescribe(ItemID.peascrop_ani1 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim2:function(){
-		Harvest.animationPlantDescribe(ItemID.peascrop_ani2 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	switcher:function(){
-		switch(this.data.age){
-			case 0 : 
-				this.anim0();
-					break;       
-			case 1 : 
-				this.anim1();
-					break;       
-			case 2 :
-				this.anim2();
-					break;
-		}
-	},		 	
-	tick:function(){
-		if(World.getBlockID(this.x,this.y-1,this.z)==0){
-			this.destroy();	
-		}	
-		var number = 0.0002;
-		if((Math.random()<number)&&(this.data.age<2)){   
-			this.data.age++;
-			this.switcher();  
-		}	
-	},
-	init:function(){    	
-		this.createAnimations();
-    	this.switcher();
-	},
-	destroy:function(){
-		World.destroyBlock(this.x, this.y, this.z, false);
-		World.setBlock(this.x,this.y-1,this.z,60,0);	 
-    	this.destroyAnimations();
-	},
-	click: function(id, count, data, coords){
-		var pl = Player.getCarriedItem();
-		if((pl.id==351)&&(pl.data==15)&&this.data.age<2){
-			this.data.age++;
-			this.switcher();
-		}
-		if(this.data.age==2){
-			this.data.age=0;
-			this.switcher();
-			Harvest.dropFruit(ItemID.peas,this.x,this.y,this.z);
-		}
-	} 	
-});
-Item.registerUseFunctionForID(ItemID.peas_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.peascrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.peas_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/chilipepper.js
-
-IDRegistry.genBlockID("chilipeppercrop"); 
-Block.createBlock("chilipeppercrop", [
-	{name: "chilipeppercrop", texture: [["empty", 0]], inCreative: false}
-]);
-Harvest.plantShape( BlockID.chilipeppercrop );
-Harvest.registerDestroy("chilipeppercrop",ItemID.chili_pepper_seed);
-TileEntity.registerPrototype(BlockID.chilipeppercrop, {
-	defaultValues: {
-		age: 0
-	},
-	createAnimations:function(){
-		if( __config__.access("advanced_item_models")==true){
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-		}
-		else{
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.3);
-		}
-		this.ani1 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.7);
-		this.ani2 = new Animation.Item(this.x+0.7,this.y+0.6,this.z+0.5);
-		this.ani3 = new Animation.Item(this.x+0.3,this.y+0.6,this.z+0.5);
-	},
-	destroyAnimations:function(){
-		this.ani0.destroy();
-		this.ani1.destroy();
-		this.ani2.destroy();
-		this.ani3.destroy(); 	
-	},
-	anim0:function(){
-		Harvest.animationPlantDescribe(ItemID.chilipeppercrop_ani0 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim1:function(){
-		Harvest.animationPlantDescribe(ItemID.chilipeppercrop_ani1 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim2:function(){
-		Harvest.animationPlantDescribe(ItemID.chilipeppercrop_ani2 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	switcher:function(){
-		switch(this.data.age){
-			case 0 : 
-				this.anim0();
-					break;        
-			case 1 : 
-				this.anim1();
-					break;        
-			case 2 :
-				this.anim2();
-					break;
-		}
-	},		 	
-	tick:function(){
-		if(World.getBlockID(this.x,this.y-1,this.z)==0){
-			this.destroy();	
-		}	
-		var number = 0.0002;
-		if((Math.random()<number)&&(this.data.age<2)){    
-			this.data.age++;
-			this.switcher();  
-		}	
-	},
-	init:function(){    	
-		this.createAnimations();
-    	this.switcher();
-	},
-	destroy:function(){
-		World.destroyBlock(this.x, this.y, this.z, false);
-		World.setBlock(this.x,this.y-1,this.z,60,0);
-		this.destroyAnimations();
-	},
-	click: function(id, count, data, coords){
-		var pl = Player.getCarriedItem();
-		if((pl.id==351)&&(pl.data==15)&&this.data.age<2){
-			this.data.age++;
-			this.switcher();
-		}
-		if(this.data.age==2){
-			this.data.age=0;
-			this.switcher();
-			Harvest.dropFruit(ItemID.chili_pepper,this.x,this.y,this.z);
-		}
-	} 	
-});
-Item.registerUseFunctionForID(ItemID.chili_pepper_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.chilipeppercrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.chili_pepper_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/spiceleaf.js
-
-IDRegistry.genBlockID("spiceleafcrop"); 
-Block.createBlock("spiceleafcrop", [
-	{name: "spiceleafcrop", texture: [["empty", 0]], inCreative: false}
-]);
-Harvest.plantShape( BlockID.spiceleafcrop );
-Harvest.registerDestroy("spiceleafcrop", ItemID.spice_leaf_seed );
-TileEntity.registerPrototype(BlockID.spiceleafcrop, {
-	defaultValues: {
-		age: 0
-	},
-	createAnimations:function(){
-		if( __config__.access("advanced_item_models")==true){
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-		}
-		else{
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.3);
-		}
-		this.ani1 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.7);
-		this.ani2 = new Animation.Item(this.x+0.7,this.y+0.6,this.z+0.5);
-		this.ani3 = new Animation.Item(this.x+0.3,this.y+0.6,this.z+0.5);
-	},
-	destroyAnimations:function(){
-		this.ani0.destroy();
-		this.ani1.destroy();
-		this.ani2.destroy();
-		this.ani3.destroy(); 	
-	},
-	anim0:function(){
-		Harvest.animationPlantDescribe(ItemID.spiceleafcrop_ani0 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim1:function(){
-		Harvest.animationPlantDescribe(ItemID.spiceleafcrop_ani1 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim2:function(){	
-		Harvest.animationPlantDescribe(ItemID.spiceleafcrop_ani2 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	switcher:function(){
-		switch(this.data.age){
-			case 0 : 
-				this.anim0();
-					break;
-        
-			case 1 : 
-				this.anim1();
-					break;
-        
-			case 2 :
-				this.anim2();
-					break;
-		}
-	},	 	
-	tick:function(){
-		if(World.getBlockID(this.x,this.y-1,this.z)==0){
-			this.destroy();	
-		}	
-		var number = 0.0002;
-		if((Math.random()<number)&&(this.data.age<2)){   
-			this.data.age++;
-			this.switcher();  
-		}	
-	},
-	init:function(){  	
-		this.createAnimations();
-    	this.switcher();
-	},
-	destroy:function(){
-		World.destroyBlock(this.x, this.y, this.z, false);
-		World.setBlock(this.x,this.y-1,this.z,60,0);	 
-    	this.destroyAnimations();
-	},
-	click: function(id, count, data, coords){
-		var pl = Player.getCarriedItem();
-		if((pl.id==351)&&(pl.data==15)&&this.data.age<2){
-			this.data.age++;
-			this.switcher();
-		}
-		if(this.data.age==2){
-			this.data.age=0;
-			this.switcher();
-			Harvest.dropFruit( ItemID.spice_leaf ,this.x,this.y,this.z);
-		}
-	} 	
-});
-Item.registerUseFunctionForID( ItemID.spice_leaf_seed , function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.spiceleafcrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem( ItemID.spice_leaf_seed , item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/corn.js
-
-IDRegistry.genBlockID("corncrop"); 
-Block.createBlock("corncrop", [
-	{name: "corncrop", texture: [["empty", 0]], inCreative: false}
-]);
-Harvest.plantShape( BlockID.corncrop );
-Harvest.registerDestroy("corncrop", ItemID.corn_seed );
-TileEntity.registerPrototype(BlockID.corncrop, {
-	defaultValues: {
-		age: 0
-	},
-	createAnimations:function(){
-		if( __config__.access("advanced_item_models")==true){
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-		}
-		else{
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.3);
-		}
-		this.ani1 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.7);
-		this.ani2 = new Animation.Item(this.x+0.7,this.y+0.6,this.z+0.5);
-		this.ani3 = new Animation.Item(this.x+0.3,this.y+0.6,this.z+0.5);
-	},
-	destroyAnimations:function(){
-		this.ani0.destroy();
-		this.ani1.destroy();
-		this.ani2.destroy();
-		this.ani3.destroy(); 	
-	},
-	anim0:function(){
-		Harvest.animationPlantDescribe(ItemID.corncrop_ani0 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim1:function(){
-		Harvest.animationPlantDescribe(ItemID.corncrop_ani1 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim2:function(){
-		Harvest.animationPlantDescribe(ItemID.corncrop_ani2 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	switcher:function(){
-		switch(this.data.age){
-			case 0 : 
-				this.anim0();
-					break;       
-			case 1 : 
-				this.anim1();
-					break;      
-			case 2 :
-				this.anim2();
-					break;
-		}
-	},		 	
-	tick:function(){
-		if(World.getBlockID(this.x,this.y-1,this.z)==0){
-			this.destroy();	
-		}	
-		var number = 0.0002;
-		if((Math.random()<number)&&(this.data.age<2)){    
-			this.data.age++;
-			this.switcher();  
-		}	
-	},
-	init:function(){   	
-		this.createAnimations();
-    	this.switcher();
-	},
-	destroy:function(){
-		World.destroyBlock(this.x, this.y, this.z, false);
-		World.setBlock(this.x,this.y-1,this.z,60,0);	 
-    	this.destroyAnimations();
-	},
-	click: function(id, count, data, coords){
-		var pl = Player.getCarriedItem();
-		if((pl.id==351)&&(pl.data==15)&&this.data.age<2){
-			this.data.age++;
-			this.switcher();
-		}
-		if(this.data.age==2){
-			this.data.age=0;
-			this.switcher();
-			Harvest.dropFruit( ItemID.corn ,this.x,this.y,this.z);
-		}
-	} 	
-});
-Item.registerUseFunctionForID( ItemID.corn_seed , function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.corncrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem( ItemID.corn_seed , item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/peppercorn.js
-
-IDRegistry.genBlockID("peppercorncrop"); 
-Block.createBlock("peppercorncrop", [
-	{name: "peppercorncrop", texture: [["empty", 0]], inCreative: false}
-]);
-Harvest.plantShape( BlockID.peppercorncrop );
-Harvest.registerDestroy("peppercorncrop", ItemID.peppercorn_seed );
-TileEntity.registerPrototype(BlockID.peppercorncrop, {
-	defaultValues: {
-		age: 0
-	},
-	createAnimations:function(){
-		if( __config__.access("advanced_item_models")==true){
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-		}
-		else{
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.3);
-		}
-		this.ani1 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.7);
-		this.ani2 = new Animation.Item(this.x+0.7,this.y+0.6,this.z+0.5);
-		this.ani3 = new Animation.Item(this.x+0.3,this.y+0.6,this.z+0.5);
-	},
-	destroyAnimations:function(){
-		this.ani0.destroy();
-		this.ani1.destroy();
-		this.ani2.destroy();
-		this.ani3.destroy(); 	
-	},
-	anim0:function(){
-		Harvest.animationPlantDescribe(ItemID.peppercorncrop_ani0 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim1:function(){
-		Harvest.animationPlantDescribe(ItemID.peppercorncrop_ani1 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim2:function(){
-		Harvest.animationPlantDescribe(ItemID.peppercorncrop_ani2 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	switcher:function(){
-		switch(this.data.age){
-			case 0 : 
-				this.anim0();
-					break;       
-			case 1 : 
-				this.anim1();
-					break;        
-			case 2 :
-				this.anim2();
-					break;
-		}
-	},		 	
-	tick:function(){
-		if(World.getBlockID(this.x,this.y-1,this.z)==0){
-			this.destroy();	
-		}	
-		var number = 0.0002;
-		if((Math.random()<number)&&(this.data.age<2)){    
-			this.data.age++;
-			this.switcher();  
-		}	
-	},
-	init:function(){  	
-		this.createAnimations();
-    	this.switcher();
-	},
-	destroy:function(){
-		World.destroyBlock(this.x, this.y, this.z, false);
-		World.setBlock(this.x,this.y-1,this.z,60,0);	 
-    	this.destroyAnimations();
-	},
-	click: function(id, count, data, coords){
-		var pl = Player.getCarriedItem();
-		if((pl.id==351)&&(pl.data==15)&&this.data.age<2){
-			this.data.age++;
-			this.switcher();
-		}
-		if(this.data.age==2){
-			this.data.age=0;
-			this.switcher();
-			Harvest.dropFruit( ItemID.peppercorn ,this.x,this.y,this.z);
-		}
-	} 	
-});
-Item.registerUseFunctionForID( ItemID.peppercorn_seed , function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.peppercorncrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.peppercorn_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/candleberry.js
-
-﻿IDRegistry.genBlockID("candleberrycrop"); 
-Block.createBlock("candleberrycrop", [
-	{name: "Candleberrycrop", texture: [["empty", 0]], inCreative: false}
-]);
-Harvest.plantShape( BlockID.candleberrycrop );
-
-TileEntity.registerPrototype(BlockID.candleberrycrop, {
-	defaultValues: {
-		age: 0
-	},
-	createAnimations:function(){
-		if( __config__.access("advanced_item_models")==true){
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.5);
-		}
-		else{
-			this.ani0 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.3);
-		}
-		this.ani1 = new Animation.Item(this.x+0.5,this.y+0.6,this.z+0.7);
-		this.ani2 = new Animation.Item(this.x+0.7,this.y+0.6,this.z+0.5);
-		this.ani3 = new Animation.Item(this.x+0.3,this.y+0.6,this.z+0.5);
-	},
-	destroyAnimations:function(){
-		this.ani0.destroy();
-		this.ani1.destroy();
-		this.ani2.destroy();
-		this.ani3.destroy(); 	
-	},
-	anim0:function(){	
-		Harvest.animationPlantDescribe(ItemID.candleberry_ani0 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim1:function(){	
-		Harvest.animationPlantDescribe(ItemID.candleberry_ani1 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	anim2:function(){	
-		Harvest.animationPlantDescribe(ItemID.candleberry_ani2 ,this.ani0,this.ani1,this.ani2,this.ani3);
-	},
-	switcher:function(){
-		switch(this.data.age){
-			case 0 : 
-				this.anim0();
-					break;       
-			case 1 : 
-				this.anim1();
-					break;        
-			case 2 :
-				this.anim2();
-					break;
-		}
-	},		 	
-	tick:function(){
-		if(World.getBlockID(this.x,this.y-1,this.z)==0){
-			this.destroy();	
-		}	
-		var number = 0.0002;
-		if((Math.random()<number)&&(this.data.age<2)){    
-				this.data.age++;
-				this.switcher();  
-		}	
-	},
-	init:function(){    	
-		this.createAnimations();
-    	this.switcher();
-	},
-	destroy:function(){
-		World.destroyBlock(this.x, this.y, this.z, false);
-		World.setBlock(this.x,this.y-1,this.z,60,0);	 
-    	this.destroyAnimations();
-	},
-	click: function(id, count, data, coords){
-		var pl = Player.getCarriedItem();
-		if((pl.id==351)&&(pl.data==15)&&this.data.age<2){
-			this.data.age++;
-			this.switcher();
-		}
-		if(this.data.age==2){
-			this.data.age=0;
-			this.switcher();
-			Harvest.dropFruit(ItemID.candleberry,this.x,this.y,this.z);
-		}
-	} 	
-});
-Item.registerUseFunctionForID(ItemID.candleberryseed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candleberrycrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleberryseed, item.count - 1, 0);
 	}
 });
 

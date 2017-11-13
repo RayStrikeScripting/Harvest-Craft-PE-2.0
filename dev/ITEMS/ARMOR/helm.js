@@ -1,1 +1,0 @@
-IDRegistry.genItemID("hardenedLeatherHelm");Item.createArmorItem("hardenedLeatherHelm", "Harded leather helm", {name: "hardenedleatherhelmItem"}, {type: "helmet", armor: 2, durability: 149, texture: "armor/hardenedleather_1.png"});Recipes.addShaped({id: ItemID.hardenedLeatherHelm, count: 1, data: 0}, ["aaa", " a a"], ["a", ItemID.hardedLeather, 0]);

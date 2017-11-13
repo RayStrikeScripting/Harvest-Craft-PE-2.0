@@ -1,6 +1,42 @@
 {
   "enabled":true,
-  "show_resource_errors":true,
-  "advanced_item_models":false,
-  "saltGenNumber":0.2
+  "genNumbers":{
+    "gardens":{
+      "herb":0.4,
+      "grass":0.4,
+      "berry":0.4,
+      "candleberry":0.2
+    },
+    "trees":{
+      "apple":1
+    },
+    "other":{
+      "salt":0.2
+    }
+  },
+  "other":{
+    "plantAge":1.0E-4,
+    "treeAge":1.0E-4,
+    "grassDrop":400,
+    "candleBurning":0.08
+  },
+  "debug":{
+    "TileEntity":{
+      "garden":{
+        "berry":true,
+        "herb":true,
+        "grass":true,
+        "candleberry":true
+      },
+      "other":{
+        "candle":true
+      }
+    }
+  },
+  "traps":{
+    "animal":{
+      "TileEntity":true,
+      "number":0.02
+    }
+  }
 }
