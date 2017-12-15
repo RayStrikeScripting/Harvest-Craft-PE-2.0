@@ -1,0 +1,1 @@
+if(__config__.access("debug.TileEntity.garden.candleberry")){	TileEntity.registerPrototype(BlockID.candleberrygarden,gardenPROTO);};

@@ -1,0 +1,1 @@
+CropRegistry.registerWithID("cottoncrop","cottoncrop","cottoncrop",ItemID.cotton_seed);CropRegistry.fruitPush(BlockID.cottoncrop,ItemID.cotton);Harvest.registerDroppingBlock(BlockID.cottoncrop);PlantModel.crop(BlockID.cottoncrop);TileEntity.registerPrototype(BlockID.cottoncrop,cropPROTO);CropRegistry.registerSeed(ItemID.cotton_seed,BlockID.cottoncrop);

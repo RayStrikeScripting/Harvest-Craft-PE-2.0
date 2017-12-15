@@ -1,0 +1,1 @@
+if(__config__.access("debug.TileEntity.garden.grass")){	TileEntity.registerPrototype(BlockID.grassgarden,gardenPROTO);};

@@ -2,7 +2,7 @@
 BUILD INFO:
   dir: dev
   target: main.js
-  files: 69
+  files: 72
 */
 
 
@@ -28,39 +28,143 @@ BUILD INFO:
 // file: OTHER/header.js
 
 Callback.addCallback("LevelLoaded", function(){
-	Game.message(ChatColor.GREEN + "HarvestCraft PE v2.3.1 by Nikolay Savenko");
+	Game.message(ChatColor.GREEN + "HarvestCraft Pe v2.3 by Nikolay Savenko");
 });	
 
 
 
 
-// file: API/importLib.js
+// file: API/HarvestAPI.js
 
-importLib("PlantModel", "*");
+﻿importLib("PlantModel", "*");
+importLib("rnd_Lib", "*");
 importLib("Harvest_Core", "*");
 
-
-
-
-// file: API/Prototypes.js
-
-﻿var rrr = Random.Int(1,3);
+var rrr = Random.Int(1,3);
 var rrd = Random.Int(1,2);
-// Супер костыль!
-/*Callback.addCallback("DestroyBlock", function(coords, block, player){
-	//Это необходимо из за игнорирования if в cropPROTO
-	if(Harvest.dropWithoutDirt[World.getBlockID(coords.x,coords.y+1,coords.z)]){
-		World.destroyBlock(coords.x, coords.y+1, coords.z,true);
-		World.removeTileEntity(coords.x, coords.y+1, coords.z);
-	}
-});*/
 
-var BLOCK_TYPE_CANDLE = Block.createSpecialType({
-	base: 50,
-	opaque: false,
-	lightopacity: 0,
-	lightlevel: 10 
-});
+var cropPROTO = {
+	defaultValues: {
+		age: 0,
+		fruit:280
+	},	 	
+	tick:function(){
+		if(World.getBlockID(this.x,this.y-1,this.z)!=60){
+			World.destroyBlock(this.x, this.y, this.z, false);
+		}	
+		var number = __config__.access("other.plantAge");
+		if(this.data.age<2){  
+			if(Math.random()<number){
+				this.data.age++;
+				World.setBlock(this.x,this.y,this.z,World.getBlockID(this.x,this.y,this.z),this.data.age);
+				Debug.m("age++ and now are "+this.data.age);
+			}
+		}	
+	},
+	created:function(){
+		this.data.fruit = CropRegistry.cropsDrop[World.getBlockID(this.x,this.y,this.z)];
+	},
+	click: function(id, count, data, coords){
+		if((id==351)&&(data==15)){
+			if(this.data.age==2){
+				this.data.age=0;
+				Harvest.dropFruit(this.data.fruit,this.x,this.y,this.z);	
+				World.setBlock(this.x,this.y,this.z,World.getBlockID(this.x,this.y,this.z),this.data.age);
+			}
+			else{
+				this.data.age++;
+				World.setBlock(this.x,this.y,this.z,World.getBlockID(this.x,this.y,this.z),this.data.age);
+			}
+		}
+		else{
+			if(this.data.age==2){
+				this.data.age=0;
+				Harvest.dropFruit(this.data.fruit,this.x,this.y,this.z);
+				World.setBlock(this.x,this.y,this.z,World.getBlockID(this.x,this.y,this.z),this.data.age);
+			}
+		}
+	} 	
+};
+
+var fruitPROTO = {
+	defaultValues: {
+		age: 0,
+		fruit:280
+	},	 	
+	tick:function(){
+		if(World.getBlockID(this.x,this.y+1,this.z)!=18){
+			World.destroyBlock(this.x, this.y, this.z, false);
+		}	
+		var number = __config__.access("other.treeAge");
+		if((Math.random()<number)&&(this.data.age<2)){   
+			this.data.age++;
+			World.setBlock(this.x,this.y,this.z,World.getBlockID(this.x,this.y,this.z),this.data.age);
+		}	
+	},
+	created:function(){
+		this.data.fruit = CropRegistry.cropsDrop[World.getBlockID(this.x,this.y,this.z)];
+	},
+	click: function(id, count, data, coords){
+		if((id==351)&&(data==15)){
+			if(this.data.age==2){
+				this.data.age=0;
+				Harvest.dropFruit(this.data.fruit,this.x,this.y,this.z);	
+				World.setBlock(this.x,this.y,this.z,World.getBlockID(this.x,this.y,this.z),this.data.age);
+			}
+			else{
+				this.data.age++;
+				World.setBlock(this.x,this.y,this.z,World.getBlockID(this.x,this.y,this.z),this.data.age);
+			}
+		}
+		else{
+			if(this.data.age==2){
+				this.data.age=0;
+				Harvest.dropFruit(this.data.fruit,this.x,this.y,this.z);
+				World.setBlock(this.x,this.y,this.z,World.getBlockID(this.x,this.y,this.z),this.data.age);
+			}
+		}
+	} 	
+};
+
+var gardenPROTO = {
+	defaultValues: {
+		drop:280
+	},
+	created:function(){
+		this.data.drop = CropRegistry.cropsDrop[World.getBlockID(this.x,this.y,this.z)];
+	},
+	click: function(id, count, data, coords){
+		World.destroyBlock(this.x, this.y, this.z, false);
+		Harvest.dropPlant(this.data.drop,this.x,this.y,this.z);
+	}
+};
+
+var saplingPROTO = {
+	tick: function(){
+				if (!TREE_SAPLING_GROUND_TILES[World.getBlockID(this.x, this.y - 1, this.z)]){
+					World.destroyBlock(this.x, this.y, this.z, true);
+				}
+				var nnumber = __config__.access("other.treeAge");
+				if (Math.random() < nnumber){
+					World.destroyBlock(this.x, this.y, this.z, false);
+					Harvest.addTree(0,BlockID.appleBlock,4,this.x,this.y-1,this.z);
+				}
+			},	
+			click: function(id, count, data){
+				if (id == 351 && data == 15){
+					if(Math.random()<0.6){
+						Harvest.addTree(0,BlockID.appleBlock,4,this.x,this.y-1,this.z);
+					}
+					Player.setCarriedItem(id, count - 1, data);
+				}
+			}
+};
+
+var TREE_SAPLING_GROUND_TILES = {
+	2: true,
+	3: true,
+	60: true
+};
 
 
 
@@ -195,15 +299,14 @@ Translation.addTranslation("Sink 2", {ru:"Глиняный кувшин",zh:"水
 Translation.addTranslation("Sink 3", {ru:"Кирпичный колодец",zh:"水槽3"});
 Translation.addTranslation("Fish trap", {ru:"Ловушка для рыбы",zh:"鱼陷阱"});
 Translation.addTranslation("Animal trap", {ru:"Ловушка для зверей",zh:"动物陷阱"});
-Translation.addTranslation("Harded Leather Helmet", {ru:"Шлем из прочной кожи",zh:"坚硬皮革头盔"});
-Translation.addTranslation("Harded Leather Chestplate", {ru:"Кираса из прочной кожи",zh:"坚硬皮革胸甲"});
-Translation.addTranslation("Harded Leather Leggings", {ru:"Поножи из прочной кожи",zh:"坚硬皮革护腿"});
-Translation.addTranslation("Harded Leather Boots", {ru:"Ботинки из прочной кожи",zh:"坚硬皮革鞋子"});
+Translation.addTranslation("Harded leather helm", {ru:"Шлем из прочной кожи",zh:"坚硬皮革头盔"});
+Translation.addTranslation("Hardened leather chest", {ru:"Кираса из прочной кожи",zh:"坚硬皮革胸甲"});
+Translation.addTranslation("Harded leather leggins", {ru:"Поножи из прочной кожи",zh:"坚硬皮革护腿"});
+Translation.addTranslation("Hardened leather boots", {ru:"Ботинки из прочной кожи",zh:"坚硬皮革鞋子"});
 Translation.addTranslation("Grain bait", {ru: "Семечковая приманка"});
 Translation.addTranslation("Fruit bait", {ru: "Фруктовая приманка"});
 Translation.addTranslation("Veggie bait", {ru: "Овощная приманка"});
 Translation.addTranslation("Curryleaf", {ru: "Японское карри"});
-Translation.addTranslation("Curry Powder", {ru: "Порошок карри"});
 Translation.addTranslation("Curryleaf seed", {ru: "Семя японского карри"});
 Translation.addTranslation("Raw venison", {ru: "Сырая оленина"});
 Translation.addTranslation("Cooked venison", {ru: "Приготовленная оленина"});
@@ -220,361 +323,71 @@ Translation.addTranslation("Candle", {ru: "Свеча"});
 Translation.addTranslation("Candleberry garden", {ru: "Куст свечной ягоды"});
 Translation.addTranslation("Apple", {ru: "Яблоко"});
 Translation.addTranslation("Pressed wax", {ru: "Прессованный воск"});
-Translation.addTranslation("Candle berry", {ru: "Свечная ягода"});
-Translation.addTranslation("Cashew chicken", {ru: "Курица кешью"});
-Translation.addTranslation("Chicken celery casserole", {ru: "Куриная запеканка с сельдереем"});
-Translation.addTranslation("Chicken chowmein", {ru: "Китайское рагу из курицы"});
-Translation.addTranslation("Chicken curry", {ru: "Куриное карри"});
-Translation.addTranslation("Chicken gumbo", {ru: "Куриное гамбо"});
-Translation.addTranslation("Chicken noodle soup", {ru: "Куриный суп с лапшой"});
-Translation.addTranslation("Chicken pot pie", {ru: "Куриный пирог в горшочке"});
-Translation.addTranslation("Chicken sandwich", {ru: "Куриный сэндвич"});
-Translation.addTranslation("Fried chicken", {ru: "Курица фри"});
-Translation.addTranslation("Garlic chicken", {ru: "Курица с чесноком"});
-Translation.addTranslation("General tso chicken", {ru: "Курица генерала ЦО"});
-Translation.addTranslation("Ginger chicken", {ru: "Имбирная курица"});
 
 
 
 
 // file: DEBUG/debugItems.js
 
-﻿IDRegistry.genItemID("Atree");
+﻿/*
+IDRegistry.genItemID("Atree");
 Item.createItem("Atree", "Spawn Tree", {name: "stick", data: 0});
-Item.registerUseFunction("Atree",function(coords, item, block){
-	Debug.m("Item");	
-	Harvest.addTree(0,BlockID.appleBlock,8,coords.x,coords.y,coords.z);
-});
-
+Item.registerUseFunction("Atree",
+ function(coords, item, block){
+ Debug.m("Item");	
+ Harvest.addTree(0,BlockID.appleBlock,8,coords.x,coords.y,coords.z);
+ });
 IDRegistry.genItemID("AGE");
 Item.createItem("AGE", "AGE", {name: "stick", data: 0});
-Item.registerUseFunction("AGE",function(coords, item, block){
+Item.registerUseFunction("AGE",
+ function(coords, item, block){
+	if(CropRegistry.cropsIDs[World.getBlockID(coords.x,coords.y,coords.z)]){
+		Debug.m("Это растение");
+	}
 	var te = World.getTileEntity(coords.x,coords.y,coords.z);
-	Game.message(te.isCrop);
+	Game.message(te.data.age);
  });
- 
+ IDRegistry.genItemID("PROGRESS");
+Item.createItem("PROGRESS", "PROGRESS", {name: "stick", data: 0});
+Item.registerUseFunction("PROGRESS",
+ function(coords, item, block){
+	var te = World.getTileEntity(coords.x,coords.y,coords.z);
+	Game.message("progress is:"+te.data.progress+";");
+ });
 IDRegistry.genItemID("data");
 Item.createItem("data", "data", {name: "stick", data: 0});
-Item.registerUseFunction("data",function(coords, item, block){
-	Debug.m("ID:"+World.getBlockID(coords.x,coords.y,coords.z));
-	Debug.m("DATA:"+World.getBlockData(coords.x,coords.y,coords.z)); 	
-});
+Item.registerUseFunction("data",
+ function(coords, item, block){
+ Debug.m("ID:"+World.getBlockID(coords.x,coords.y,coords.z));
+ Debug.m("DATA:"+World.getBlockData(coords.x,coords.y,coords.z)); 	
+ });
  
-
-
-
-
-// file: CROPS/strawberry.js
-
-CropRegistry.registerWithID("strawberrycrop","strawberrycrop","strawberrycrop",ItemID.strawberry_seed);
-CropRegistry.fruitPush(BlockID.strawberrycrop,ItemID.strawberry);
-Harvest.registerDroppingBlock(BlockID.strawberrycrop);
-
-PlantModel.crop(BlockID.strawberrycrop);
-
-TileEntity.registerPrototype(BlockID.strawberrycrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.strawberry_seed,BlockID.strawberrycrop);
-
-
-
-
-// file: CROPS/raspberry.js
-
-CropRegistry.registerWithID("raspberrycrop","raspberrycrop","raspberry_crop",ItemID.raspberry_seed);
-CropRegistry.fruitPush(BlockID.raspberrycrop,ItemID.raspberry);
-Harvest.registerDroppingBlock(BlockID.raspberrycrop);
-
-PlantModel.crop(BlockID.raspberrycrop);
-
-TileEntity.registerPrototype(BlockID.raspberrycrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.raspberry_seed,BlockID.raspberrycrop);
-
-
-
-
-// file: CROPS/cranberry.js
-
-CropRegistry.registerWithID("cranberrycrop","cranberrycrop","cranberrycrop",ItemID.cranberry_seed);
-CropRegistry.fruitPush(BlockID.cranberrycrop,ItemID.cranberry);
-Harvest.registerDroppingBlock(BlockID.cranberrycrop);
-
-PlantModel.crop(BlockID.cranberrycrop);
-
-TileEntity.registerPrototype(BlockID.cranberrycrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.cranberry_seed,BlockID.cranberrycrop);
-
-
-
-
-// file: CROPS/blueberry.js
-
-CropRegistry.registerWithID("blueberrycrop","blueberrycrop","blueberrycrop",ItemID.blueberry_seed);
-CropRegistry.fruitPush(BlockID.blueberrycrop,ItemID.blueberry);
-Harvest.registerDroppingBlock(BlockID.blueberrycrop);
-
-PlantModel.crop(BlockID.blueberrycrop);
-
-TileEntity.registerPrototype(BlockID.blueberrycrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.blueberry_seed,BlockID.blueberrycrop);
-
-
-
-
-// file: CROPS/blackberry.js
-
-CropRegistry.registerWithID("blackberrycrop","blackberrycrop","blackberrycrop",ItemID.blackberry_seed);
-CropRegistry.fruitPush(BlockID.blackberrycrop,ItemID.blackberry);
-Harvest.registerDroppingBlock(BlockID.blackberrycrop);
-
-PlantModel.crop(BlockID.blackberrycrop);
-
-TileEntity.registerPrototype(BlockID.blackberrycrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.blackberry_seed,BlockID.blackberrycrop);
-
-
-
-
-// file: CROPS/grape.js
-
-CropRegistry.registerWithID("grapecrop","grapecrop","grapecrop",ItemID.grape_seed);
-CropRegistry.fruitPush(BlockID.grapecrop,ItemID.grape);
-Harvest.registerDroppingBlock(BlockID.grapecrop);
-
-PlantModel.crop(BlockID.grapecrop);
-
-TileEntity.registerPrototype(BlockID.grapecrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.grape_seed,BlockID.grapecrop);
-
-
-
-
-// file: CROPS/cucumber.js
-
-CropRegistry.registerWithID("cucumbercrop","cucumbercrop","cucumbercrop",ItemID.cucumber_seed);
-CropRegistry.fruitPush(BlockID.cucumbercrop,ItemID.cucumber);
-Harvest.registerDroppingBlock(BlockID.cucumbercrop);
-
-PlantModel.crop(BlockID.cucumbercrop);
-
-TileEntity.registerPrototype(BlockID.cucumbercrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.cucumber_seed,BlockID.cucumbercrop);
-
-
-
-
-// file: CROPS/onion.js
-
-CropRegistry.registerWithID("onioncrop","onioncrop","onioncrop",ItemID.onion_seed);
-CropRegistry.fruitPush(BlockID.onioncrop,ItemID.onion);
-Harvest.registerDroppingBlock(BlockID.onioncrop);
-
-PlantModel.crop(BlockID.onioncrop);
-
-TileEntity.registerPrototype(BlockID.onioncrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.onion_seed,BlockID.onioncrop);
-
-
-
-
-// file: CROPS/cabbage.js
-
-CropRegistry.registerWithID("cabbagecrop","cabbagecrop","cabbagecrop",ItemID.cabbage_seed);
-CropRegistry.fruitPush(BlockID.cabbagecrop,ItemID.cabbage);
-Harvest.registerDroppingBlock(BlockID.cabbagecrop);
-
-PlantModel.crop(BlockID.cabbagecrop);
-
-TileEntity.registerPrototype(BlockID.cabbagecrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.cabbage_seed,BlockID.cabbagecrop);
-
-
-
-
-// file: CROPS/tomato.js
-
-CropRegistry.registerWithID("tomatocrop","tomatocrop","tomatocrop",ItemID.tomato_seed);
-CropRegistry.fruitPush(BlockID.tomatocrop,ItemID.tomato);
-Harvest.registerDroppingBlock(BlockID.tomatocrop);
-
-PlantModel.crop(BlockID.tomatocrop);
-
-TileEntity.registerPrototype(BlockID.tomatocrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.tomato_seed,BlockID.tomatocrop);
-
-
-
-
-// file: CROPS/garlic.js
-
-CropRegistry.registerWithID("garliccrop","garliccrop","garliccrop",ItemID.garlic_seed);
-CropRegistry.fruitPush(BlockID.garliccrop,ItemID.garlic);
-Harvest.registerDroppingBlock(BlockID.garliccrop);
-
-PlantModel.crop(BlockID.garliccrop);
-
-TileEntity.registerPrototype(BlockID.garliccrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.garlic_seed,BlockID.garliccrop);
-
-
-
-
-// file: CROPS/bellpepper.js
-
-CropRegistry.registerWithID("bellpeppercrop","bellpeppercrop","bellpeppercrop",ItemID.bellpepper_seed);
-CropRegistry.fruitPush(BlockID.bellpeppercrop,ItemID.bellpepper);
-Harvest.registerDroppingBlock(BlockID.bellpeppercrop);
-
-PlantModel.crop(BlockID.bellpeppercrop);
-
-TileEntity.registerPrototype(BlockID.bellpeppercrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.bellpepper_seed,BlockID.bellpeppercrop);
-
-
-
-
-// file: CROPS/lettuce.js
-
-CropRegistry.registerWithID("lettucecrop","lettucecrop","lettucecrop",ItemID.lettuce_seed);
-CropRegistry.fruitPush(BlockID.lettucecrop,ItemID.lettuce);
-Harvest.registerDroppingBlock(BlockID.lettucecrop);
-
-PlantModel.crop(BlockID.lettucecrop);
-
-TileEntity.registerPrototype(BlockID.lettucecrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.lettuce_seed,BlockID.lettuce);
-
-
-
-
-// file: CROPS/coffeebean.js
-
-CropRegistry.registerWithID("coffeebeancrop","coffeebeancrop","coffeebeancrop",ItemID.coffee_seed);
-CropRegistry.fruitPush(BlockID.coffeebeancrop,ItemID.coffee_beans);
-Harvest.registerDroppingBlock(BlockID.coffeebeancrop);
-
-PlantModel.crop(BlockID.coffeebeancrop);
-
-TileEntity.registerPrototype(BlockID.coffeebeancrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.coffee_seed,BlockID.coffeebeancrop);
-
-
-
-
-// file: CROPS/peas.js
-
-CropRegistry.registerWithID("peascrop","peascrop","peascrop",ItemID.peas_seed);
-CropRegistry.fruitPush(BlockID.peascrop,ItemID.peas);
-Harvest.registerDroppingBlock(BlockID.peascrop);
-
-PlantModel.crop(BlockID.peascrop);
-
-TileEntity.registerPrototype(BlockID.peascrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.peas_seed,BlockID.peascrop);
-
-
-
-
-// file: CROPS/chilipepper.js
-
-CropRegistry.registerWithID("chilipeppercrop","chilipeppercrop","chilipeppercrop",ItemID.chili_pepper_seed);
-CropRegistry.fruitPush(BlockID.chilipeppercrop,ItemID.chili_pepper);
-Harvest.registerDroppingBlock(BlockID.chilipeppercrop);
-
-PlantModel.crop(BlockID.chilipeppercrop);
-
-TileEntity.registerPrototype(BlockID.chilipeppercrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.chili_pepper_seed,BlockID.chilipeppercrop);
-
-
-
-
-// file: CROPS/spiceleaf.js
-
-CropRegistry.registerWithID("spiceleafcrop","spiceleafcrop","spiceleafcrop",ItemID.spice_leaf_seed);
-CropRegistry.fruitPush(BlockID.spiceleafcrop,ItemID.spice_leaf_seed);
-Harvest.registerDroppingBlock(BlockID.spiceleafcrop);
-
-PlantModel.crop(BlockID.spiceleafcrop);
-
-TileEntity.registerPrototype(BlockID.spiceleafcrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.spice_leaf_seed,BlockID.spiceleafcrop);
-
-
-
-
-// file: CROPS/corn.js
-
-CropRegistry.registerWithID("corncrop","corncrop","corncrop",ItemID.corn_seed);
-CropRegistry.fruitPush(BlockID.corncrop,ItemID.corn);
-Harvest.registerDroppingBlock(BlockID.corncrop);
-
-PlantModel.crop(BlockID.corncrop);
-
-TileEntity.registerPrototype(BlockID.corncrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.corn_seed,BlockID.corncrop);
-
-
-
-
-// file: CROPS/peppercorn.js
-
-CropRegistry.registerWithID("peppercorncrop","peppercorncrop","peppercorncrop",ItemID.peppercorn_seed);
-CropRegistry.fruitPush(BlockID.peppercorncrop,ItemID.peppercorn);
-Harvest.registerDroppingBlock(BlockID.peppercorncrop);
-
-PlantModel.crop(BlockID.peppercorncrop);
-
-TileEntity.registerPrototype(BlockID.peppercorncrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.peppercorn_seed,BlockID.peppercorncrop);
-
-
-
-
-// file: CROPS/candleberry.js
-
-﻿CropRegistry.registerWithID("candleberrycrop","candleberrycrop","candleberrycrop",ItemID.candleberryseed);
-CropRegistry.fruitPush(BlockID.candleberrycrop,ItemID.candleberry);
-Harvest.registerDroppingBlock(BlockID.candleberrycrop);
-
-PlantModel.crop(BlockID.candleberrycrop);
-
-TileEntity.registerPrototype(BlockID.candleberrycrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.candleberryseed,BlockID.candleberrycrop);
-
-
-
-
-// file: CROPS/curryleaf.js
-
-CropRegistry.registerWithID("curryleaf","curryleaf","curryleafcrop",ItemID.curryleaf_seed);
-CropRegistry.fruitPush(BlockID.curryleaf,ItemID.curryleaf);
-Harvest.registerDroppingBlock(BlockID.curryleaf);
-
-PlantModel.crop(BlockID.curryleaf);
-
-TileEntity.registerPrototype(BlockID.curryleaf,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.curryleaf_seed,BlockID.curryleaf);
+IDRegistry.genItemID("CandleBerryDbug0");
+Item.createItem("CandleBerryDbug0", "candle 0", {name: "stick", data: 0});
+Item.registerUseFunction("CandleBerryDbug0",
+ function(coords, item, block){
+	World.setBlock(coords.x,coords.y,coords.z,BlockID.candleberrycrop,0);
+	World.addTileEntity(coords.x,coords.y+1,coords.z);
+	Debug.m("crop deployed(0) with item :"+item.id);
+ });
+ 
+IDRegistry.genItemID("CandleBerryDbug1");
+Item.createItem("CandleBerryDbug1", "candle 1", {name: "stick", data: 0});
+Item.registerUseFunction("CandleBerryDbug1",
+ function(coords, item, block){
+	World.setBlock(coords.x,coords.y1,coords.z,BlockID.candleberrycrop,1);
+	World.addTileEntity(coords.x,coords.y+1,coords.z);
+	Debug.m("crop deployed(1) with item :"+item.id);
+ });
+ 
+IDRegistry.genItemID("CandleBerryDbug2");
+Item.createItem("CandleBerryDbug2", "candle 2", {name: "stick", data: 0});
+Item.registerUseFunction("CandleBerryDbug2",
+ function(coords, item, block){
+	World.setBlock(coords.x,coords.y,coords.z,BlockID.candleberrycrop,2);
+	World.addTileEntity(coords.x,coords.y+1,coords.z);
+	Debug.m("crop deployed(2) with item :"+item.id);
+ });*/
 
 
 
@@ -1115,26 +928,6 @@ Recipes.addShapeless({id: ItemID.spring_salad, count: 1, data: 0}, [{id: ItemID.
 		}
 	}
 });
-
-if(ItemID.pomidor!=null){
-	Recipes.addShapeless({id: ItemID.spring_salad, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.lettuce, data: 0}, {id: ItemID.pomidor, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.cutting_board){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-};
-
-if(ItemID.ogurec!=null){
-	Recipes.addShapeless({id: ItemID.spring_salad, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.lettuce, data: 0}, {id: ItemID.ogurec, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.cutting_board){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-};
 
 IDRegistry.genItemID("cucumber_salad");
 Item.createFoodItem("cucumber_salad", "Cucumber salad", {name: "cucumber_salad", meta: 0}, {food: 11});
@@ -1756,13 +1549,13 @@ Recipes.addShapeless({id: ItemID.fresh_milk, count: 4, data: 0}, [{id: 325, data
 
 IDRegistry.genItemID("salt");
 Item.createItem("salt", "Salt", {name: "salt", meta: 0});
-Recipes.addShapeless({id: ItemID.salt, count: 1, data: 0}, [{id: ItemID.fresh_water, data: 0}, {id: ItemID.pot, data: 0}], function(api, field, result){ 
+/*Recipes.addShapeless({id: ItemID.salt, count: 1, data: 0}, [{id: ItemID.fresh_water, data: 0}, {id: ItemID.pot, data: 0}], function(api, field, result){ 
 	for (var i in field){ 
-		if (field[i].id != ItemID.pot){ 
+		if (field[i].id != pot){ 
 			api.decreaseFieldSlot(i); 
 		}
 	} 
-});
+});*/
 
 IDRegistry.genItemID("flour");
 Item.createItem("flour", "Flour", {name: "flour", meta: 0});
@@ -1857,244 +1650,12 @@ Recipes.addShapeless({id: ItemID.sausage, count: 1, data: 0}, [{id: ItemID.cutti
 	}
 });
 
-/*
-pot roast 
-spider eye soup 
-zombie jerky 
-vindaloo 
-sausage 
-
-meat pie 
-baked beans 
-maple sausage 
-hamburger 
-dim sum 
-cottage pie 
-cornish pasty 
-corned beef 
-beef wellington 
-beef jerky 
-shepards pie 
-lamb berley soup 
-honey lemon lamb 
-rabbit stew 
-spicy mustard pork 
-pork lo mein 
-pineapple ham 
-pea and ham soup 
-hot and sour soup 
-honey soy ribs 
-
-honey glazed ham 
-baked ham 
-bacon and eggs 
-teriyaki chicken 
-sweet and sour chicken 
-orange chicken 
-lemon chicken 
-kung pao chicken
-ginger chicken 
-general tso's chicken 
-garlic chicken 
-fired chicken 
-chicken sandwich 
-chicken pot pie 
-chicken noodle soup 
-chicken gumbo 
-chicken curry 
-chicken chow mein 
-chicken celery casserole 
-cashew chicken
-*/
-
-IDRegistry.genItemID("cashewChicken");
-Item.createFoodItem("cashewChicken", "Cashew chicken", {name: "cashewchicken", meta: 0}, {food: 6});
-Recipes.addShapeless({id: ItemID.cashewChicken, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: ItemID.peas, data: 0}, {id: ItemID.peppercorn, data: 0}, {id: ItemID.corn, data: 0},{id: 365, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("chickenCeleryCasserole");
-Item.createFoodItem("chickenCeleryCasserole", "Chicken celery casserole", {name: "chickencelerycasserole", meta: 0}, {food: 12});
-Recipes.addShapeless({id: ItemID.chickenCeleryCasserole, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: 391, data: 0}, {id: ItemID.garlic, data: 0}, {id: 39, data: 0},{id: 365, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("chickenChowmein");
-Item.createFoodItem("chickenChowmein", "Chicken chowmein", {name: "chickenchowmein", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.chickenChowmein, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 391, data: 0}, {id: ItemID.peas, data: 0}, {id: ItemID.onion, data: 0},{id: ItemID.garlic, data: 0},{id: ItemID.stock, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.skillet){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("chickenCurry");
-Item.createFoodItem("chickenCurry", "Chicken curry", {name: "chickencurry", meta: 0}, {food: 14});
-Recipes.addShapeless({id: ItemID.chickenCurry, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 392, data: 0}, {id: ItemID.plain_yogurt, data: 0}, {id: ItemID.spice_leaf, data: 0},{id: ItemID.chili_pepper, data: 0},{id: 365, data: 0},{id: ItemID.lettuce, data: 0},{id: ItemID.peas, data: 0},{id: ItemID.garlic, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("chickenGumbo");
-Item.createFoodItem("chickenGumbo", "Chicken gumbo", {name: "chickengumbo", meta: 0}, {food: 16});
-Recipes.addShapeless({id: ItemID.chickenGumbo, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 392, data: 0}, {id: 391, data: 0}, {id: ItemID.onion, data: 0},{id: ItemID.stock, data: 0},{id: 365, data: 0},{id: ItemID.spice_leaf, data: 0},{id: ItemID.bellpepper, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("chickenNoodleSoup");
-Item.createFoodItem("chickenNoodleSoup", "Chicken noodle soup", {name: "chickennoodlesoup", meta: 0}, {food: 9});
-Recipes.addShapeless({id: ItemID.chickenNoodleSoup, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 296, data: 0}, {id: 391, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-//
-IDRegistry.genItemID("chickenPotPie");
-Item.createFoodItem("chickenPotPie", "Chicken pot pie", {name: "chickenpotpie", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.chickenPotPie, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: 265, data: 0}, {id: 391, data: 0},{id: ItemID.dough, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("chickenSandwich");
-Item.createFoodItem("chickenSandwich", "Chicken sandwich", {name: "chickensandwich", meta: 0}, {food: 11});
-Recipes.addShapeless({id: ItemID.chickenSandwich, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 365, data: 0}, {id: 297, data: 0}, {id: ItemID.mayo, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.skillet){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("friredChicken");
-Item.createFoodItem("friredChicken", "Fried chicken", {name: "friedchicken", meta: 0}, {food: 11});
-Recipes.addShapeless({id: ItemID.friredChicken, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 365, data: 0}, {id: ItemID.butter, data: 0}, {id: ItemID.spice_leaf, data: 0}, {id: ItemID.black_pepper, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("garlicChicken");
-Item.createFoodItem("garlicChicken", "Garlic chicken", {name: "garlicchicken", meta: 0}, {food: 12});
-Recipes.addShapeless({id: ItemID.garlicChicken, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: ItemID.garlic, data: 0}, {id: ItemID.garlic, data: 0},{id: 365, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("generalTsoChicken");
-Item.createFoodItem("generalTsoChicken", "General tso chicken", {name: "generaltsochicken", meta: 0}, {food: 12});
-Recipes.addShapeless({id: ItemID.generalTsoChicken, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 365, data: 0}, {id: ItemID.lettuce, data: 0}, {id: 353, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.skillet){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("gingerChicken");
-Item.createFoodItem("gingerChicken", "Ginger chicken", {name: "gingerchicken", meta: 0}, {food: 12});
-Recipes.addShapeless({id: ItemID.gingerChicken, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: ItemID.garlic, data: 0}, {id: 365, data: 0}, {id: ItemID.onion, data: 0}, {id: 353, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("kungPaoCkicken");
-Item.createFoodItem("kungPaoCkicken", "Kung pao chicken", {name: "kungpaochicken", meta: 0}, {food: 12});
-Recipes.addShapeless({id: ItemID.kungPaoCkicken, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:365, data: 0}, {id: ItemID.grape, data: 0}, {id: ItemID.garlic, data: 0}, {id: ItemID.onion, data: 0},{id:353 ,data:0},{id:ItemID.butter ,data:0},{id:ItemID.peppercorn ,data:0},{id:ItemID.cucumber ,data:0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("lemonChicken");
-Item.createFoodItem("lemonChicken", "Lemon chicken", {name: "lemonchicken", meta: 0}, {food: 9});
-Recipes.addShapeless({id: ItemID.lemonChicken, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id:365, data: 0}, {id: ItemID.grape, data: 0},{id:ItemID.butter ,data:0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("orangeChicken");
-Item.createFoodItem("orangeChicken", "Orange chicken", {name: "orangechicken", meta: 0}, {food: 12});
-Recipes.addShapeless({id: ItemID.orangeChicken, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:365, data: 0}, {id: ItemID.grape, data: 0},{id:353 ,data:0},{id:ItemID.lettuce ,data:0},{id:ItemID.cabbage ,data:0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("sweetAndSourChicken");
-Item.createFoodItem("sweetAndSourChicken", "Sweet and sour chicken", {name: "sweetandsourchicken", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.sweetAndSourChicken, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:365, data: 0}, {id: ItemID.butter, data: 0},{id:ItemID.grape ,data:0},{id:ItemID.bellpepper ,data:0},{id:ItemID.onion ,data:0},{id:ItemID.tomato ,data:0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("teriyakiChicken");
-Item.createFoodItem("teriyakiChicken", "Teriyaki chicken", {name: "teriyakichicken", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.teriyakiChicken, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id:365, data: 0}, {id: ItemID.peas, data: 0},{id:ItemID.sausage ,data:0},{id:ItemID.candleberry ,data:0},{id:ItemID.onion ,data:0},{id:ItemID.garlic ,data:0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.skillet){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("baconAndEggs");
-Item.createFoodItem("baconAndEggs", "Bacon and eggs", {name: "baconandeggs", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.baconAndEggs, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id:319, data: 0}, {id: 344, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.skillet){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("bakedHam");
-Item.createFoodItem("bakedHam", "Baked ham", {name: "bakedham", meta: 0}, {food: 9});
-Recipes.addShapeless({id: ItemID.bakedHam, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id:319, data: 0}, {id: 260, data: 0}, {id: 353, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("honeyGlazedHam");
-Item.createFoodItem("honeyGlazedHam", "Honey glazed ham", {name: "honeyglazedham", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.honeyGlazedHam, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:319, data: 0}, {id: 353, data: 0}, {id: ItemID.black_pepper, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
 
 
 
+// file: ITEMS/ARMOR/wax.js
 
-// file: ITEMS/wax.js
-
-IDRegistry.genItemID("pressedWax");
+﻿IDRegistry.genItemID("pressedWax");
 Item.createItem("pressedWax", "Wax", {name: "wax", meta: 0}, {});
 Recipes.addShapeless({id: ItemID.pressedWax, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0}], function(api, field, result){ 
 	for (var i in field){
@@ -2103,10 +1664,6 @@ Recipes.addShapeless({id: ItemID.pressedWax, count: 1, data: 0}, [{id: ItemID.po
 		}
 	}
 });
-
-if(ItemID[ItemID.beeswax]){
-	Recipes.addShapeless({id: ItemID.pressedWax, count: 1, data: 0}, [{id: ItemID.beeswax, data: 0}]);
-};
 
 IDRegistry.genBlockID("pressedWaxBlock"); 
 Block.createBlock("pressedWaxBlock", [
@@ -2117,43 +1674,49 @@ Recipes.addShaped({id: BlockID.pressedWaxBlock, count: 1, data: 0}, ["bbb", "bbb
 
 
 
-// file: ITEMS/armor.js
+// file: ITEMS/ARMOR/leather.js
 
 IDRegistry.genItemID("hardedLeather");
 Item.createItem("hardedLeather", "Harded leather", {name: "hardenedleatherItem", meta: 0}, {stack: 64});
 Recipes.addShapeless({id: ItemID.hardedLeather, count: 1, data: 0}, [{id: 334, data: 0}, {id: ItemID.pressedWax, data: 0}]);
 
-IDRegistry.genItemID("hardedHelm");
-IDRegistry.genItemID("hardedChestplate");
-IDRegistry.genItemID("hardedLegging");
-IDRegistry.genItemID("hardedFoots");
 
-Item.createArmorItem("hardedHelm", "Harded Leather Helmet", {name: "hardenedleatherhelmItem"}, {type: "helmet", armor: 2, durability: 149, texture: "armor/hardenedleather_1.png"});
-Item.createArmorItem("hardedChestplate", "Harded Leather Chestplate", {name: "hardenedleatherchestItem"}, {type: "chestplate", armor: 6, durability: 216, texture: "armor/hardenedleather_1.png"});
-Item.createArmorItem("hardedLegging", "Harded Leather Leggings", {name: "hardenedleatherleggingsItem"}, {type: "leggings", armor: 5, durability: 203, texture: "armor/hardenedleather_2.png"});
-Item.createArmorItem("hardedFoots", "Harded Leather Boots", {name: "hardenedleatherbootsItem"}, {type: "boots", armor: 2, durability: 176, texture: "armor/hardenedleather_1.png"});
 
-Recipes.addShaped({id: ItemID.hardedHelm, count: 1, data: 0}, [
-	"xxx",
-	"x x"
-], ['x', ItemID.hardedLeather, 0]);
 
-Recipes.addShaped({id: ItemID.hardedChestplate, count: 1, data: 0}, [
-	"x x",
-	"xxx",
-	"xxx"
-], ['x', ItemID.hardedLeather, 0]);
+// file: ITEMS/ARMOR/helm.js
 
-Recipes.addShaped({id: ItemID.hardedLegging, count: 1, data: 0}, [
-	"xxx",
-	"x x",
-	"x x"
-], ['x', ItemID.hardedLeather, 0]);
+IDRegistry.genItemID("hardenedLeatherHelm");
+Item.createArmorItem("hardenedLeatherHelm", "Harded leather helm", {name: "hardenedleatherhelmItem"}, {type: "helmet", armor: 2, durability: 149, texture: "armor/hardenedleather_1.png"});
+Recipes.addShaped({id: ItemID.hardenedLeatherHelm, count: 1, data: 0}, ["aaa", " a a"], ["a", ItemID.hardedLeather, 0]);
 
-Recipes.addShaped({id: ItemID.hardedFoots, count: 1, data: 0}, [
-	"x x",
-	"x x"
-], ['x', ItemID.hardedLeather, 0]);
+
+
+
+// file: ITEMS/ARMOR/chest.js
+
+IDRegistry.genItemID("hardenedLeatherChest");
+Item.createArmorItem("hardenedLeatherChest", "Hardened leather chest", {name: "hardenedleatherchestItem"}, {type: "chestplate", armor: 6, durability: 216, texture: "armor/hardenedleather_1.png"});
+Callback.addCallback("PostLoaded",function(){
+Recipes.addShaped({id: ItemID.hardenedLeatherChest, count: 1, data: 0}, ["a a", " aaa"," aaa"], ["a", ItemID.hardedLeather, 0]);
+});
+
+
+
+
+// file: ITEMS/ARMOR/leggins.js
+
+IDRegistry.genItemID("hardenedLeatherLeggings");
+Item.createArmorItem("hardenedLeatherLeggings", "Harded leather leggins", {name: "hardenedleatherleggingsItem"}, {type: "leggings", armor: 5, durability: 203, texture: "hardenedleather_2"});
+Recipes.addShaped({id: ItemID.hardenedLeatherLeggings, count: 1, data: 0}, ["aaa", " a a"," a a"], ["a", ItemID.hardedLeather, 0]);
+
+
+
+
+// file: ITEMS/ARMOR/foots.js
+
+IDRegistry.genItemID("hardenedLeatherBoots");
+Item.createArmorItem("hardenedLeatherBoots", "Hardened leather boots", {name: "hardenedleatherbootsItem"}, {type: "boots", armor: 2, durability: 176, texture: "armor/hardenedleather_1.png"});
+Recipes.addShaped({id: ItemID.hardenedLeatherBoots, count: 1, data: 0}, ["   ", " a a"," a a"], ["a", ItemID.hardedLeather, 0]);
 
 
 
@@ -2165,116 +1728,84 @@ for(var i = 0;i<16;i++){
 	Item.createItem("candleItem"+i, "Candle", {name: "candle", meta: i},{});
 };
 Item.registerUseFunction("candleItem1", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,1);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem1, item.count - 1, 0)
-	}
+	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,1);
+	World.addTileEntity(coords.x, coords.y+1, coords.z);
+	Player.setCarriedItem(ItemID.candleItem1, item.count - 1, 0)
 });
 Item.registerUseFunction("candleItem2", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,2);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem2, item.count - 1, 0)
-	}
+	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,2);
+	World.addTileEntity(coords.x, coords.y+1, coords.z);
+	Player.setCarriedItem(ItemID.candleItem2, item.count - 1, 0)
 });
 Item.registerUseFunction("candleItem3", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,3);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem3, item.count - 1, 0)
-	}
+	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,3);
+	World.addTileEntity(coords.x, coords.y+1, coords.z);
+	Player.setCarriedItem(ItemID.candleItem3, item.count - 1, 0)
 });
 Item.registerUseFunction("candleItem4", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,4);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem4, item.count - 1, 0)
-	}
+	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,4);
+	World.addTileEntity(coords.x, coords.y+1, coords.z);
+	Player.setCarriedItem(ItemID.candleItem4, item.count - 1, 0)
 });
 Item.registerUseFunction("candleItem5", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,5);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem5, item.count - 1, 0)
-	}
+	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,5);
+	World.addTileEntity(coords.x, coords.y+1, coords.z);
+	Player.setCarriedItem(ItemID.candleItem5, item.count - 1, 0)
 });
 Item.registerUseFunction("candleItem6", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,6);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem6, item.count - 1, 0)
-	}
+	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,6);
+	World.addTileEntity(coords.x, coords.y+1, coords.z);
+	Player.setCarriedItem(ItemID.candleItem6, item.count - 1, 0)
 });
 Item.registerUseFunction("candleItem7", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,7);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem7, item.count - 1, 0)
-	}
+	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,7);
+	World.addTileEntity(coords.x, coords.y+1, coords.z);
+	Player.setCarriedItem(ItemID.candleItem7, item.count - 1, 0)
 });
 Item.registerUseFunction("candleItem8", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,8);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem8, item.count - 1, 0)
-	}
+	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,8);
+	World.addTileEntity(coords.x, coords.y+1, coords.z);
+	Player.setCarriedItem(ItemID.candleItem8, item.count - 1, 0)
 });
 Item.registerUseFunction("candleItem9", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,9);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem9, item.count - 1, 0)
-	}
+	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,9);
+	World.addTileEntity(coords.x, coords.y+1, coords.z);
+	Player.setCarriedItem(ItemID.candleItem9, item.count - 1, 0)
 });
 Item.registerUseFunction("candleItem10", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,10);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem10, item.count - 1, 0)
-	}
+	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,10);
+	World.addTileEntity(coords.x, coords.y+1, coords.z);
+	Player.setCarriedItem(ItemID.candleItem10, item.count - 1, 0)
 });
 Item.registerUseFunction("candleItem11", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,11);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem11, item.count - 1, 0)
-	}
+	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,11);
+	World.addTileEntity(coords.x, coords.y+1, coords.z);
+	Player.setCarriedItem(ItemID.candleItem11, item.count - 1, 0)
 });
 Item.registerUseFunction("candleItem12", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,12);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem12, item.count - 1, 0)
-	}
+	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,12);
+	World.addTileEntity(coords.x, coords.y+1, coords.z);
+	Player.setCarriedItem(ItemID.candleItem12, item.count - 1, 0)
 });
 Item.registerUseFunction("candleItem13", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,13);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem13, item.count - 1, 0)
-	}
+	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,13);
+	World.addTileEntity(coords.x, coords.y+1, coords.z);
+	Player.setCarriedItem(ItemID.candleItem13, item.count - 1, 0)
 });
 Item.registerUseFunction("candleItem14", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,14);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem14, item.count - 1, 0)
-	}
+	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,14);
+	World.addTileEntity(coords.x, coords.y+1, coords.z);
+	Player.setCarriedItem(ItemID.candleItem14, item.count - 1, 0)
 });
 Item.registerUseFunction("candleItem15", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,15);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem15, item.count - 1, 0)
-	}
+	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,15);
+	World.addTileEntity(coords.x, coords.y+1, coords.z);
+	Player.setCarriedItem(ItemID.candleItem15, item.count - 1, 0)
 });
 Item.registerUseFunction("candleItem0", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem0, item.count - 1, 0)
-	}
+	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,0);
+	World.addTileEntity(coords.x, coords.y+1, coords.z);
+	Player.setCarriedItem(ItemID.candleItem0, item.count - 1, 0)
 });
 
 Recipes.addShapeless({id: ItemID.candleItem0, count: 4, data: 0}, [{id: 287, data: 0},{id: ItemID.pressedWax, data: 0}]);
@@ -2330,19 +1861,18 @@ Block.createBlock("sink_2", [
 Block.createBlock("sink_3", [
 {name: "Sink 3", texture: [["sinkbottom", 3], ["sinktop", 3], ["sinkside", 3], ["sinkside", 3], ["sinkside", 3], ["sinkside", 3]], inCreative: true}
 ]);   
-Callback.addCallback("ItemUse", function(coords,item,block){
-	if((item.id==325&&item.data==0)){
-		switch(block.id){
-			case BlockID.sink_0:
-			case BlockID.sink_1:
-			case BlockID.sink_2:
-			case BlockID.sink_3:				
-				Player.setCarriedItem(item.id, item.count - 1, item.data);
-				Player.addItemToInventory(325, 1, 8);			
-					break;
-		}	
-	}
-});       
+ Callback.addCallback("ItemUse", function(coords,item,block){
+ var pl = Player.getCarriedItem();   if((pl.id==325)){
+ switch(block.id){
+ case BlockID.sink_0:
+ case BlockID.sink_1:
+ case BlockID.sink_2:
+ case BlockID.sink_3:
+    Player.setCarriedItem(item.id, item.count - 1, item.data);
+  Player.addItemToInventory(325, 1, 8);
+break;
+}}
+ } );       
 Callback.addCallback("PostLoaded", function(){
 	Recipes.addShaped({id: BlockID.sink_0, count: 1, data: 0}, [
 		"ara",
@@ -2509,16 +2039,6 @@ if(__config__.access("traps.animal.TileEntity")){
 
 
 
-// file: BLOCKS/fishTrap.js
-
-/*IDRegistry.genBlockID("fishTrap"); 
-Block.createBlock("fishTrap", [
-	{name: "Fish trap", texture: [["fishtrap", 0]], inCreative: true}
-]);*/
-
-
-
-
 // file: BLOCKS/CANDLES/block.js
 
 var candleVariations = [];
@@ -2587,14 +2107,27 @@ Block.registerDropFunction("candle", function(coords, blockID, blockData, level)
 
 
 
+// file: BLOCKS/CANDLES/TileEntity.js
+
+if(__config__.access("debug.TileEntity.other.candle")){
+	TileEntity.registerPrototype(BlockID.candle,{
+		tick:function(){
+			if(Math.random()<__config__.access("other.candleBurning")){
+				Particles.addParticle(this.x+0.5, this.y+0.5, this.z+0.5, 14, Random.Float(0.1,0.4), Random.Float(0.1,0.4), Random.Float(0.1,0.4)/*,0*/)
+			}
+		}
+	});
+};
+
+
+
+
 // file: GARDENS/BERRYGARDEN/block.js
 
 IDRegistry.genBlockID("berrygarden"); 
 Block.createBlock("berrygarden", [
 	{name: "Berry garden", texture: [["empty", 0],["empty", 0],["berrygardenBlock", 0]], inCreative: false}
 ],BLOCK_TYPE_PLANT);
-
-Harvest.registerDroppingBlock(BlockID.berrygarden);
 
 PlantModel.tree(BlockID.berrygarden,0);
 
@@ -2661,8 +2194,6 @@ IDRegistry.genBlockID("grassgarden");
 Block.createBlock("grassgarden", [
 	{name: "Grass garden", texture: [["empty", 0],["empty", 0],["grassgardenBlock", 0]], inCreative: false}
 ],BLOCK_TYPE_PLANT);
-
-Harvest.registerDroppingBlock(BlockID.grassgarden);
 
 PlantModel.tree(BlockID.grassgarden,0);
 
@@ -2739,8 +2270,6 @@ Block.createBlock("herbgarden", [
 	{name: "Herb garden", texture: [["empty", 0],["empty", 0],["herbgardenBlock", 0]], inCreative: false}
 ],BLOCK_TYPE_PLANT);
 
-Harvest.registerDroppingBlock(BlockID.herbgarden);
-
 PlantModel.tree(BlockID.herbgarden,0);
 
 CropRegistry.fruitPush(BlockID.herbgarden,ItemID.herbGardenITEM);
@@ -2794,8 +2323,6 @@ IDRegistry.genBlockID("candleberrygarden");
 Block.createBlock("candleberrygarden", [
 	{name: "Candleberry garden", texture: [["empty", 0],["empty", 0],["candleberrycrop", 2]], inCreative: false}
 ],BLOCK_TYPE_PLANT);
-
-Harvest.registerDroppingBlock(BlockID.candleberrygarden);
 
 PlantModel.tree(BlockID.candleberrygarden,0);
 
@@ -2900,7 +2427,6 @@ Callback.addCallback("PostLoaded", function(){
 // file: WORLD/grassdrop.js
 
  var seedsArray = [
- ItemID.curryleaf_seed,
  ItemID.candleberryseed,
  ItemID.strawberry_seed,
  ItemID.raspberry_seed,
@@ -2922,44 +2448,23 @@ Callback.addCallback("PostLoaded", function(){
  ItemID.corn_seed,
  ItemID.peppercorn_seed
  ];
-Callback.addCallback("DestroyBlock", function(coords, block, player){
-	var trueIDs = {
-		31:true,
-		175:true
-	};
-	var trueMetaS = {
-		1:true,
-		2:true,
-		10:true
-	};
-	if(trueIDs[block.id]&&trueMetaS[block.data]){
+ Callback.addCallback("DestroyBlock", function(coords, block, player){
+	if(((block.id==31)&&(block.data==1)||(block.id==175)&&(block.data==10)||(block.data==2))){
 		var nnn =__config__.access("other.grassDrop");
 		var nn = Random.Int(0,nnn);
-		//Debug.m(nn);
-		if(nn<seedsArray.length-1){  
+		if(nn<seedsArray.length){  
 			Harvest.dropPlant(seedsArray[nn],coords.x,coords.y,coords.z);
 		}
 	}
-});
-Callback.addCallback("ItemUse", function(coords, item, block){
- 
-	var trueTool = {
-		290:true,
-		291:true,
-		292:true,
-		293:true,
-		294:true
-	};
-	
-	if(block.id==2&&trueTool[item.id]){
-		var nnn =__config__.access("other.grassDrop");
-		var nn = Random.Int(0,nnn);
-		//Debug.m(nn);
-		if(nn<seedsArray.length-1){  
-			Harvest.dropPlant(seedsArray[nn],coords.x,coords.y+1,coords.z);
+ });
+ Callback.addCallback("ItemUse", function(coords, item, block){
+ if((block.id==2)&&((item.id==290)||(item.id==291)||(item.id==292)||(item.id==293)||(item.id==293)||(item.id==294))){
+	var nn = Random.Int(0,400);
+	if(nn<seedsArray.length){  
+			Harvest.dropPlant(seedsArray[nn],coords.x,coords.y,coords.z); 
 		}
 	}
-});
+ });
 
 
 
@@ -2991,8 +2496,7 @@ Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
 	if(Math.random() <nnumber){
 		var coords = GenerationUtils.randomCoords(chunkX, chunkZ, 64, 128);
 		coords = GenerationUtils.findSurface(coords.x, coords.y, coords.z);
-		for(var idd in BerryGardenBiomes ){
-			var id = BerryGardenBiomes[idd];
+		for(var id in BerryGardenBiomes ){
 			if((World.getBiome((chunkX + 0.5) * 16, (chunkZ + 0.5) * 16)==id)&&(World.getBlockID(coords.x, coords.y, coords.z) == 2)){
 				World.setBlock(coords.x, coords.y + 1, coords.z, BlockID.berrygarden, 0);
 				World.addTileEntity(coords.x, coords.y + 1, coords.z);
@@ -3012,8 +2516,7 @@ Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
 	if(Math.random() <nnumber){
 		var coords = GenerationUtils.randomCoords(chunkX, chunkZ, 64, 128);
 		coords = GenerationUtils.findSurface(coords.x, coords.y, coords.z);
-		for(var idd in HerbGardenBiomes ){
-			var id = HerbGardenBiomes[idd];
+		for(var id in HerbGardenBiomes ){
 			if((World.getBiome((chunkX + 0.5) * 16, (chunkZ + 0.5) * 16)==id)&&(World.getBlockID(coords.x, coords.y, coords.z) == 2)){
 				World.setBlock(coords.x, coords.y + 1, coords.z, BlockID.herbgarden , 0);
 				 	World.addTileEntity(coords.x, coords.y + 1, coords.z);
@@ -3033,8 +2536,7 @@ Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
 	if(Math.random() <nnumber){
 		var coords = GenerationUtils.randomCoords(chunkX, chunkZ, 64, 128);
 		coords = GenerationUtils.findSurface(coords.x, coords.y, coords.z);
-		for(var idd in GrassGardenBiomes ){
-			var id = GrassGardenBiomes[idd];			
+		for(var id in GrassGardenBiomes ){
 			if((World.getBiome((chunkX + 0.5) * 16, (chunkZ + 0.5) * 16)==id)&&(World.getBlockID(coords.x, coords.y, coords.z) == 2)){
 				World.setBlock(coords.x, coords.y + 1, coords.z, BlockID.grassgarden, 0);
 				 World.addTileEntity(coords.x, coords.y + 1, coords.z);				 	
@@ -3053,8 +2555,7 @@ Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
 	if(Math.random() <nnumber){
 		var coords = GenerationUtils.randomCoords(chunkX, chunkZ, 64, 128);
 		coords = GenerationUtils.findSurface(coords.x, coords.y, coords.z);
-		for(var idd in CandleberryGardenBiomes ){
-			var id = CandleberryGardenBiomes[idd];
+		for(var id in CandleberryGardenBiomes ){
 			if((World.getBiome((chunkX + 0.5) * 16, (chunkZ + 0.5) * 16)==id)&&(World.getBlockID(coords.x, coords.y, coords.z) == 2)){
 				World.setBlock(coords.x, coords.y + 1, coords.z, BlockID.candleberryGarden, 0);
 				World.addTileEntity(coords.x, coords.y + 1, coords.z);
@@ -3073,8 +2574,7 @@ Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
 	var coords = GenerationUtils.randomCoords(chunkX, chunkZ, 64, 128);
 	coords = GenerationUtils.findSurface(coords.x, coords.y, coords.z);
 	if(Math.random()< __config__.access("genNumbers.other.salt")){
-		 for(var idd in SaltBiomes ){
-			var id = SaltBiomes[idd];
+		 for(var id in SaltBiomes ){
 			if((World.getBiome((chunkX + 0.5) * 16, (chunkZ + 0.5) * 16)==id)){
 				World.setBlock(coords.x, coords.y + 1, coords.z, BlockID.salt, 0);
 				if (Math.random() < .5){ // top
@@ -3118,6 +2618,426 @@ Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
 		if((World.getBlockID(coords.x, coords.y, coords.z) == 2)){			
 			Harvest.addTree(0,BlockID.appleBlock,4,this.x,this.y,this.z);
 		}
+	}
+});
+
+
+
+
+// file: CROPS/strawberry.js
+
+CropRegistry.registerWithID("strawberrycrop","strawberrycrop","strawberrycrop",ItemID.strawberry_seed);
+CropRegistry.fruitPush(BlockID.strawberrycrop,ItemID.strawberry);
+
+PlantModel.crop(BlockID.strawberrycrop);
+
+TileEntity.registerPrototype(BlockID.strawberrycrop,cropPROTO);
+
+Item.registerUseFunctionForID(ItemID.strawberry_seed, function(coords, item, block){
+	if(block.id == 60){
+		World.setBlock(coords.x,coords.y+1,coords.z,BlockID.strawberrycrop,0);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.strawberry_seed, item.count - 1, 0);
+	}
+});
+
+
+
+
+// file: CROPS/raspberry.js
+
+CropRegistry.registerWithID("raspberrycrop","raspberrycrop","raspberry_crop",ItemID.raspberry_seed);
+CropRegistry.fruitPush(BlockID.raspberrycrop,ItemID.raspberry);
+
+PlantModel.crop(BlockID.raspberrycrop);
+
+TileEntity.registerPrototype(BlockID.raspberrycrop,cropPROTO);
+
+Item.registerUseFunctionForID(ItemID.raspberry_seed, function(coords, item, block){
+	if(block.id == 60){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.raspberrycrop ,0);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.raspberry_seed, item.count - 1, 0);
+	}
+});
+
+
+
+
+// file: CROPS/cranberry.js
+
+CropRegistry.registerWithID("cranberrycrop","cranberrycrop","cranberrycrop",ItemID.cranberry_seed);
+CropRegistry.fruitPush(BlockID.cranberrycrop,ItemID.cranberry);
+
+PlantModel.crop(BlockID.cranberrycrop);
+
+TileEntity.registerPrototype(BlockID.cranberrycrop,cropPROTO);
+
+Item.registerUseFunctionForID(ItemID.cranberry_seed, function(coords, item, block){
+	if(block.id == 60){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.cranberrycrop ,0);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.cranberry_seed, item.count - 1, 0);
+	}
+});
+
+
+
+
+// file: CROPS/blueberry.js
+
+CropRegistry.registerWithID("blueberrycrop","blueberrycrop","blueberrycrop",ItemID.blueberry_seed);
+CropRegistry.fruitPush(BlockID.blueberrycrop,ItemID.blueberry);
+
+PlantModel.crop(BlockID.blueberrycrop);
+
+TileEntity.registerPrototype(BlockID.blueberrycrop,cropPROTO);
+
+Item.registerUseFunctionForID(ItemID.blueberry_seed, function(coords, item, block){
+	if(block.id == 60){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.blueberrycrop ,0);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.blueberry_seed, item.count - 1, 0);
+	}
+});
+
+
+
+
+// file: CROPS/blackberry.js
+
+CropRegistry.registerWithID("blackberrycrop","blackberrycrop","blackberrycrop",ItemID.blackberry_seed);
+CropRegistry.fruitPush(BlockID.blackberrycrop,ItemID.blackberry);
+
+PlantModel.crop(BlockID.blackberrycrop);
+
+TileEntity.registerPrototype(BlockID.blackberrycrop,cropPROTO);
+
+Item.registerUseFunctionForID(ItemID.blackberry_seed, function(coords, item, block){
+	if(block.id == 60){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.blackberrycrop ,0);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.blackberry_seed, item.count - 1, 0);
+	}
+});
+
+
+
+
+// file: CROPS/grape.js
+
+CropRegistry.registerWithID("grapecrop","grapecrop","grapecrop",ItemID.grape_seed);
+CropRegistry.fruitPush(BlockID.grapecrop,ItemID.grape);
+
+PlantModel.crop(BlockID.grapecrop);
+
+TileEntity.registerPrototype(BlockID.grapecrop,cropPROTO);
+
+Item.registerUseFunctionForID(ItemID.grape_seed, function(coords, item, block){
+	if(block.id == 60){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.grapecrop ,0);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.grape_seed, item.count - 1, 0);
+	}
+});
+
+
+
+
+// file: CROPS/cucumber.js
+
+CropRegistry.registerWithID("cucumbercrop","cucumbercrop","cucumbercrop",ItemID.cucumber_seed);
+CropRegistry.fruitPush(BlockID.cucumbercrop,ItemID.cucumber);
+
+PlantModel.crop(BlockID.cucumbercrop);
+
+TileEntity.registerPrototype(BlockID.cucumbercrop,cropPROTO);
+
+Item.registerUseFunctionForID(ItemID.cucumber_seed, function(coords, item, block){
+	if(block.id == 60){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.cucumbercrop ,0);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.cucumber_seed, item.count - 1, 0);
+	}
+});
+
+
+
+
+// file: CROPS/onion.js
+
+CropRegistry.registerWithID("onioncrop","onioncrop","onioncrop",ItemID.onion_seed);
+CropRegistry.fruitPush(BlockID.onioncrop,ItemID.onion);
+
+PlantModel.crop(BlockID.onioncrop);
+
+TileEntity.registerPrototype(BlockID.onioncrop,cropPROTO);
+
+Item.registerUseFunctionForID(ItemID.onion_seed, function(coords, item, block){
+	if(block.id == 60){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.onioncrop ,0);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.onion_seed, item.count - 1, 0);
+	}
+});
+
+
+
+
+// file: CROPS/cabbage.js
+
+CropRegistry.registerWithID("cabbagecrop","cabbagecrop","cabbagecrop",ItemID.cabbage_seed);
+CropRegistry.fruitPush(BlockID.cabbagecrop,ItemID.cabbage);
+
+PlantModel.crop(BlockID.cabbagecrop);
+
+TileEntity.registerPrototype(BlockID.cabbagecrop,cropPROTO);
+
+Item.registerUseFunctionForID(ItemID.cabbage_seed, function(coords, item, block){
+	if(block.id == 60){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.cabbagecrop ,0);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.cabbage_seed, item.count - 1, 0);
+	}
+});
+
+
+
+
+// file: CROPS/tomato.js
+
+CropRegistry.registerWithID("tomatocrop","tomatocrop","tomatocrop",ItemID.tomato_seed);
+CropRegistry.fruitPush(BlockID.tomatocrop,ItemID.tomato);
+
+PlantModel.crop(BlockID.tomatocrop);
+
+TileEntity.registerPrototype(BlockID.tomatocrop,cropPROTO);
+
+Item.registerUseFunctionForID(ItemID.tomato_seed, function(coords, item, block){
+	if(block.id == 60){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.tomatocrop ,0);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.tomato_seed, item.count - 1, 0);
+	}
+});
+
+
+
+
+// file: CROPS/garlic.js
+
+CropRegistry.registerWithID("garliccrop","garliccrop","garliccrop",ItemID.garlic_seed);
+CropRegistry.fruitPush(BlockID.garliccrop,ItemID.garlic);
+
+PlantModel.crop(BlockID.garliccrop);
+
+TileEntity.registerPrototype(BlockID.garliccrop,cropPROTO);
+
+Item.registerUseFunctionForID(ItemID.garlic_seed, function(coords, item, block){
+	if(block.id == 60){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.garliccrop ,0);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.garlic_seed, item.count - 1, 0);
+	}
+});
+
+
+
+
+// file: CROPS/bellpepper.js
+
+CropRegistry.registerWithID("bellpeppercrop","bellpeppercrop","bellpeppercrop",ItemID.bellpepper_seed);
+CropRegistry.fruitPush(BlockID.bellpeppercrop,ItemID.bellpepper);
+
+PlantModel.crop(BlockID.bellpeppercrop);
+
+TileEntity.registerPrototype(BlockID.bellpeppercrop,cropPROTO);
+
+Item.registerUseFunctionForID(ItemID.bellpepper_seed, function(coords, item, block){
+	if(block.id == 60){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.bellpeppercrop ,0);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.bellpepper_seed, item.count - 1, 0);
+	}
+});
+
+
+
+
+// file: CROPS/lettuce.js
+
+CropRegistry.registerWithID("lettucecrop","lettucecrop","lettucecrop",ItemID.lettuce_seed);
+CropRegistry.fruitPush(BlockID.lettucecrop,ItemID.lettuce);
+
+PlantModel.crop(BlockID.lettucecrop);
+
+TileEntity.registerPrototype(BlockID.lettucecrop,cropPROTO);
+
+Item.registerUseFunctionForID(ItemID.lettuce_seed, function(coords, item, block){
+	if(block.id == 60){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.lettucecrop ,0);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.lettuce_seed, item.count - 1, 0);
+	}
+});
+
+
+
+
+// file: CROPS/coffeebean.js
+
+CropRegistry.registerWithID("coffeebeancrop","coffeebeancrop","coffeebeancrop",ItemID.coffee_seed);
+CropRegistry.fruitPush(BlockID.coffeebeancrop,ItemID.coffee_beans);
+
+PlantModel.crop(BlockID.coffeebeancrop);
+
+TileEntity.registerPrototype(BlockID.coffeebeancrop,cropPROTO);
+
+Item.registerUseFunctionForID(ItemID.coffee_seed, function(coords, item, block){
+	if(block.id == 60){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.coffeebeancrop ,0);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.coffee_seed, item.count - 1, 0);
+	}
+});
+
+
+
+
+// file: CROPS/peas.js
+
+CropRegistry.registerWithID("peascrop","peascrop","peascrop",ItemID.peas_seed);
+CropRegistry.fruitPush(BlockID.peascrop,ItemID.peas);
+
+PlantModel.crop(BlockID.peascrop);
+
+TileEntity.registerPrototype(BlockID.peascrop,cropPROTO);
+
+Item.registerUseFunctionForID(ItemID.peas_seed, function(coords, item, block){
+	if(block.id == 60){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.peascrop ,0);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.peas_seed, item.count - 1, 0);
+	}
+});
+
+
+
+
+// file: CROPS/chilipepper.js
+
+CropRegistry.registerWithID("chilipeppercrop","chilipeppercrop","chilipeppercrop",ItemID.chili_pepper_seed);
+CropRegistry.fruitPush(BlockID.chilipeppercrop,ItemID.chili_pepper);
+
+PlantModel.crop(BlockID.chilipeppercrop);
+
+TileEntity.registerPrototype(BlockID.chilipeppercrop,cropPROTO);
+
+Item.registerUseFunctionForID(ItemID.chili_pepper_seed, function(coords, item, block){
+	if(block.id == 60){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.chilipeppercrop ,0);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.chili_pepper_seed, item.count - 1, 0);
+	}
+});
+
+
+
+
+// file: CROPS/spiceleaf.js
+
+CropRegistry.registerWithID("spiceleafcrop","spiceleafcrop","spiceleafcrop",ItemID.spice_leaf_seed);
+CropRegistry.fruitPush(BlockID.spiceleafcrop,ItemID.spice_leaf_seed);
+
+PlantModel.crop(BlockID.spiceleafcrop);
+
+TileEntity.registerPrototype(BlockID.spiceleafcrop,cropPROTO);
+
+Item.registerUseFunctionForID( ItemID.spice_leaf_seed , function(coords, item, block){
+	if(block.id == 60){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.spiceleafcrop ,0);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem( ItemID.spice_leaf_seed , item.count - 1, 0);
+	}
+});
+
+
+
+
+// file: CROPS/corn.js
+
+CropRegistry.registerWithID("corncrop","corncrop","corncrop",ItemID.corn_seed);
+CropRegistry.fruitPush(BlockID.corncrop,ItemID.corn);
+
+PlantModel.crop(BlockID.corncrop);
+
+TileEntity.registerPrototype(BlockID.corncrop,cropPROTO);
+
+Item.registerUseFunctionForID( ItemID.corn_seed , function(coords, item, block){
+	if(block.id == 60){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.corncrop ,0);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem( ItemID.corn_seed , item.count - 1, 0);
+	}
+});
+
+
+
+
+// file: CROPS/peppercorn.js
+
+CropRegistry.registerWithID("peppercorncrop","peppercorncrop","peppercorncrop",ItemID.peppercorn_seed);
+CropRegistry.fruitPush(BlockID.peppercorncrop,ItemID.peppercorn);
+
+PlantModel.crop(BlockID.peppercorncrop);
+
+TileEntity.registerPrototype(BlockID.peppercorncrop,cropPROTO);
+
+Item.registerUseFunctionForID( ItemID.peppercorn_seed , function(coords, item, block){
+	if(block.id == 60){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.peppercorncrop ,0);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.peppercorn_seed, item.count - 1, 0);
+	}
+});
+
+
+
+
+// file: CROPS/candleberry.js
+
+﻿CropRegistry.registerWithID("candleberrycrop","candleberrycrop","candleberrycrop",ItemID.candleberryseed);
+CropRegistry.fruitPush(BlockID.candleberrycrop,ItemID.candleberry);
+
+PlantModel.crop(BlockID.candleberrycrop);
+
+TileEntity.registerPrototype(BlockID.candleberrycrop,cropPROTO);
+
+Item.registerUseFunctionForID(ItemID.candleberryseed, function(coords, item, block){
+	if(block.id == 60){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candleberrycrop ,0);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleberryseed, item.count - 1, 0);
+	}
+});
+
+
+
+
+// file: CROPS/curryleaf.js
+
+CropRegistry.registerWithID("curryleaf","curryleaf","curryleafcrop",ItemID.curryleaf_seed);
+CropRegistry.fruitPush(BlockID.curryleaf,ItemID.curryleaf);
+
+PlantModel.crop(BlockID.curryleaf);
+
+TileEntity.registerPrototype(BlockID.curryleaf,cropPROTO);
+
+Item.registerUseFunctionForID(ItemID.curryleaf_seed, function(coords, item, block){
+	if(block.id == 60){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.curryleaf ,0);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.curryleaf_seed, item.count - 1, 0);
 	}
 });
 
