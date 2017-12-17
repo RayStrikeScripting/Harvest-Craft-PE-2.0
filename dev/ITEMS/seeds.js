@@ -86,3 +86,6 @@ Recipes.addShapeless({id: ItemID.curryleaf_seed, count: 1, data: 0}, [{id: ItemI
 IDRegistry.genItemID("cotton_seed");
 Item.createItem("cotton_seed", "Cotton seed", {name: "cottonSeed", meta: 0});
 Recipes.addShapeless({id: ItemID.cotton_seed, count: 1, data: 0}, [{id: ItemID.cotton, data: 0}]);
+
+IDRegistry.genItemID("bean_seed");
+Item.createItem("bean_seed", "Bean Seed", {name: "beanseed", meta: 0});

@@ -43,3 +43,5 @@ Item.createFoodItem("curryleaf", "Curryleaf", {name: "curryleaf", meta: 0}, {foo
 IDRegistry.genItemID("cotton");
 Item.createItem("cotton", "Cotton", {name: "cotton", meta: 0}, {});
 Recipes.addShapeless({id: 287, count: 2, data: 0}, [{id: ItemID.cotton, data: 0},{id: ItemID.cotton, data: 0},{id: ItemID.cotton, data: 0}]);
+IDRegistry.genItemID("bean");
+Item.createFoodItem("bean", "Bean", {name: "bean", meta: 0}, {food: 1});
