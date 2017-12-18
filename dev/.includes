@@ -25,10 +25,15 @@ CROPS/peas.js
 CROPS/chilipepper.js
 CROPS/spiceleaf.js
 CROPS/corn.js
-CROPS/peppercorn.js
 CROPS/candleberry.js
 CROPS/curryleaf.js
 CROPS/cotton.js
+CROPS/rutabaga.js
+CROPS/bean.js
+CROPS/rice.js
+CROPS/mustardseeds.js
+CROPS/ginger.js
+CROPS/spinach.js
 
 ITEMS/tools.js
 ITEMS/baits.js
