@@ -7,11 +7,6 @@ Recipes.addShapeless({id: ItemID.black_pepper, count: 1, data: 0}, [{id: ItemID.
 		}
 	}
 });
-
-IDRegistry.genItemID("toast");
-Item.createFoodItem("toast", "Toast", {name: "toast", meta: 0}, {food: 7});
-Recipes.addFurnace(297, ItemID.toast, 0);
-
 IDRegistry.genItemID("cocoa_powder");
 Item.createItem("cocoa_powder", "Cocoa powder", {name: "cocoa_powder", meta: 0});
 Recipes.addShapeless({id: ItemID.cocoa_powder, count: 1, data: 0}, [{id: ItemID.mortar_bowl, data: 0}, {id: 351, data: 3}], function(api, field, result){
@@ -126,6 +121,13 @@ Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, da
 		}
 	}
 });
+Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.rutabaga, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
 Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.onion, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
@@ -148,6 +150,20 @@ Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, da
 	}
 });
 Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.peas, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.bean, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.rice, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
@@ -1022,3 +1038,207 @@ Recipes.addShapeless({id: ItemID.bakedbeans, count: 1, data: 0}, [{id: ItemID.be
 		}
 	}
 });
+IDRegistry.genItemID("maplesausage");
+Item.createFoodItem("maplesausage", "Maple Sausage", {name: "maplesausage", meta: 0}, {food: 1});
+Recipes.addShapeless({id: ItemID.maplesausage, count: 1, data: 0}, [{id: ItemID.spice_leaf, data: 0}, {id:363, data: 0}]});
+
+IDRegistry.genItemID("toast");
+Item.createFoodItem("toast", "Toast", {name: "toast", meta: 0}, {food: 4});
+Recipes.addShapeless({id: ItemID.toast, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id:297, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.bakeware){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("hamburger");
+Item.createFoodItem("hamburger", "Hamburger", {name: "hamburger", meta: 0}, {food: 8});
+Recipes.addShapeless({id: ItemID.hamburger, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id:363, data: 0}, {id: ItemID.toast, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.skillet){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("dimsum");
+Item.createFoodItem("dimsum", "Dim Sum", {name: "dimsum", meta: 0}, {food: 12});
+/*
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id:365, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id:363, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id:319, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id:411, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id:423, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id: ItemID.turkeyRaw, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id: ItemID.venisonRaw, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+*/
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id:365, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id:363, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id:319, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id:411, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id:423, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id: ItemID.turkeyRaw, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id: ItemID.venisonRaw, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id:365, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id:363, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id:319, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id:411, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id:423, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id: ItemID.turkeyRaw, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id: ItemID.venisonRaw, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("cottagepie");
+Item.createFoodItem("cottagepie", "Cottage Pie", {name: "cottagepie", meta: 0}, {food: 12});
+Recipes.addShapeless({id: ItemID.cottagepie, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id:363, data: 0}, {id:392, data: 0}, {id:391, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.peas, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.bakeware){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("cornishpasty");
+Item.createFoodItem("cornishpasty", "Cornish Pasty", {name: "cornishpasty", meta: 0}, {food: 12});
+Recipes.addShapeless({id: ItemID.cornishpasty, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id:363, data: 0}, {id:392, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.rutabaga, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.bakeware){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("cornedbeef");
+Item.createFoodItem("cornedbeef", "Corned Beef", {name: "cornedbeef", meta: 0}, {food: 10});
+Recipes.addShapeless({id: ItemID.cornishpasty, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id:363, data: 0}, {id: ItemID.salt, data: 0}, {id:353, data: 0}, {id: ItemID.mustardseeds, data: 0}, {id: ItemID.spice_leaf, data: 0}, {id: ItemID.ginger, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("beefwellington");
+Item.createFoodItem("beefwellington", "Beef Wellington", {name: "beefwellington", meta: 0}, {food: 18});
+Recipes.addShapeless({id: ItemID.beefwellington, count: 1, data: 0}, [{id:363, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.spinach, data: 0}, {id:40, data: 0}]});
+Recipes.addShapeless({id: ItemID.beefwellington, count: 1, data: 0}, [{id:363, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.spinach, data: 0}, {id:39, data: 0}]});
