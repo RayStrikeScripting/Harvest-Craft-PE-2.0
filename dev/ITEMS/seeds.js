@@ -89,3 +89,28 @@ Recipes.addShapeless({id: ItemID.cotton_seed, count: 1, data: 0}, [{id: ItemID.c
 
 IDRegistry.genItemID("bean_seed");
 Item.createItem("bean_seed", "Bean Seed", {name: "beanseed", meta: 0});
+Recipes.addShapeless({id: ItemID.bean_seed, count: 1, data: 0}, [{id: ItemID.bean, data: 0}]);
+
+IDRegistry.genItemID("rice_seed");
+Item.createItem("rice_seed", "Rice Seed", {name: "riceseed", meta: 0});
+Recipes.addShapeless({id: ItemID.rice_seed, count: 1, data: 0}, [{id: ItemID.rice, data: 0}]);
+
+IDRegistry.genItemID("waterchestnut_seed");
+Item.createItem("waterchestnut_seed", "Water Chestnut Seed", {name: "waterchestnutseed", meta: 0});
+Recipes.addShapeless({id: ItemID.waterchestnut_seed, count: 1, data: 0}, [{id: ItemID.waterchestnut, data: 0}]);
+
+IDRegistry.genItemID("rutabaga_seed");
+Item.createItem("rutabaga_seed", "Rutabaga Seed", {name: "rutabagaseed", meta: 0});
+Recipes.addShapeless({id: ItemID.rutabaga_seed, count: 1, data: 0}, [{id: ItemID.rutabaga, data: 0}]);
+
+IDRegistry.genItemID("mustard_seed");
+Item.createItem("mustard_seed", "Mustard Seed", {name: "mustardseed", meta: 0});
+Recipes.addShapeless({id: ItemID.mustard_seed, count: 1, data: 0}, [{id: ItemID.mustardseeds, data: 0}]);
+
+IDRegistry.genItemID("ginger_seed");
+Item.createItem("ginger_seed", "Ginger Seed", {name: "gingerseed", meta: 0});
+Recipes.addShapeless({id: ItemID.ginger_seed, count: 1, data: 0}, [{id: ItemID.ginger, data: 0}]);
+
+IDRegistry.genItemID("spinach_seed");
+Item.createItem("spinach_seed", "Spinach Seed", {name: "spinachseed", meta: 0});
+Recipes.addShapeless({id: ItemID.spinach_seed, count: 1, data: 0}, [{id: ItemID.spinach, data: 0}]);
