@@ -1040,7 +1040,7 @@ Recipes.addShapeless({id: ItemID.bakedbeans, count: 1, data: 0}, [{id: ItemID.be
 });
 IDRegistry.genItemID("maplesausage");
 Item.createFoodItem("maplesausage", "Maple Sausage", {name: "maplesausage", meta: 0}, {food: 1});
-Recipes.addShapeless({id: ItemID.maplesausage, count: 1, data: 0}, [{id: ItemID.spice_leaf, data: 0}, {id:363, data: 0}]});
+Recipes.addShapeless({id: ItemID.maplesausage, count: 1, data: 0}, [{id: ItemID.spice_leaf, data: 0}, {id:363, data: 0}]);
 
 IDRegistry.genItemID("toast");
 Item.createFoodItem("toast", "Toast", {name: "toast", meta: 0}, {food: 4});
@@ -1240,5 +1240,6 @@ Recipes.addShapeless({id: ItemID.cornishpasty, count: 1, data: 0}, [{id: ItemID.
 });
 IDRegistry.genItemID("beefwellington");
 Item.createFoodItem("beefwellington", "Beef Wellington", {name: "beefwellington", meta: 0}, {food: 18});
-Recipes.addShapeless({id: ItemID.beefwellington, count: 1, data: 0}, [{id:363, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.spinach, data: 0}, {id:40, data: 0}]});
-Recipes.addShapeless({id: ItemID.beefwellington, count: 1, data: 0}, [{id:363, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.spinach, data: 0}, {id:39, data: 0}]});
+Recipes.addShapeless({id: ItemID.beefwellington, count: 1, data: 0}, [{id:363, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.spinach, data: 0}, {id:40, data: 0}]);
+Recipes.addShapeless({id: ItemID.beefwellington, count: 1, data: 0}, [{id:363, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.spinach, data: 0}, {id:39, data: 0}]);
+//

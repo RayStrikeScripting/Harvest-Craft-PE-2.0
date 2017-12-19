@@ -2,7 +2,7 @@
 BUILD INFO:
   dir: dev
   target: main.js
-  files: 72
+  files: 80
 */
 
 
@@ -28,143 +28,56 @@ BUILD INFO:
 // file: OTHER/header.js
 
 Callback.addCallback("LevelLoaded", function(){
-	Game.message(ChatColor.GREEN + "HarvestCraft Pe v2.3 by Nikolay Savenko");
+	Game.message(ChatColor.GREEN + "HarvestCraft PE v2.3.2 by Nikolay Savenko");
 });	
 
 
 
 
-// file: API/HarvestAPI.js
+// file: API/importLib.js
 
-﻿importLib("PlantModel", "*");
-importLib("rnd_Lib", "*");
+importLib("PlantModel", "*");
 importLib("Harvest_Core", "*");
 
-var rrr = Random.Int(1,3);
+
+
+
+// file: API/Prototypes.js
+
+﻿var rrr = Random.Int(1,3);
 var rrd = Random.Int(1,2);
 
-var cropPROTO = {
-	defaultValues: {
-		age: 0,
-		fruit:280
-	},	 	
-	tick:function(){
-		if(World.getBlockID(this.x,this.y-1,this.z)!=60){
-			World.destroyBlock(this.x, this.y, this.z, false);
-		}	
-		var number = __config__.access("other.plantAge");
-		if(this.data.age<2){  
-			if(Math.random()<number){
-				this.data.age++;
-				World.setBlock(this.x,this.y,this.z,World.getBlockID(this.x,this.y,this.z),this.data.age);
-				Debug.m("age++ and now are "+this.data.age);
-			}
-		}	
-	},
-	created:function(){
-		this.data.fruit = CropRegistry.cropsDrop[World.getBlockID(this.x,this.y,this.z)];
-	},
-	click: function(id, count, data, coords){
-		if((id==351)&&(data==15)){
-			if(this.data.age==2){
-				this.data.age=0;
-				Harvest.dropFruit(this.data.fruit,this.x,this.y,this.z);	
-				World.setBlock(this.x,this.y,this.z,World.getBlockID(this.x,this.y,this.z),this.data.age);
-			}
-			else{
-				this.data.age++;
-				World.setBlock(this.x,this.y,this.z,World.getBlockID(this.x,this.y,this.z),this.data.age);
-			}
-		}
-		else{
-			if(this.data.age==2){
-				this.data.age=0;
-				Harvest.dropFruit(this.data.fruit,this.x,this.y,this.z);
-				World.setBlock(this.x,this.y,this.z,World.getBlockID(this.x,this.y,this.z),this.data.age);
-			}
-		}
-	} 	
-};
+var BLOCK_TYPE_CANDLE = Block.createSpecialType({
+	base: 50,
+	opaque: false,
+	lightopacity: 0,
+	lightlevel: 10 
+});
 
-var fruitPROTO = {
-	defaultValues: {
-		age: 0,
-		fruit:280
-	},	 	
-	tick:function(){
-		if(World.getBlockID(this.x,this.y+1,this.z)!=18){
-			World.destroyBlock(this.x, this.y, this.z, false);
-		}	
-		var number = __config__.access("other.treeAge");
-		if((Math.random()<number)&&(this.data.age<2)){   
-			this.data.age++;
-			World.setBlock(this.x,this.y,this.z,World.getBlockID(this.x,this.y,this.z),this.data.age);
-		}	
-	},
-	created:function(){
-		this.data.fruit = CropRegistry.cropsDrop[World.getBlockID(this.x,this.y,this.z)];
-	},
-	click: function(id, count, data, coords){
-		if((id==351)&&(data==15)){
-			if(this.data.age==2){
-				this.data.age=0;
-				Harvest.dropFruit(this.data.fruit,this.x,this.y,this.z);	
-				World.setBlock(this.x,this.y,this.z,World.getBlockID(this.x,this.y,this.z),this.data.age);
-			}
-			else{
-				this.data.age++;
-				World.setBlock(this.x,this.y,this.z,World.getBlockID(this.x,this.y,this.z),this.data.age);
-			}
-		}
-		else{
-			if(this.data.age==2){
-				this.data.age=0;
-				Harvest.dropFruit(this.data.fruit,this.x,this.y,this.z);
-				World.setBlock(this.x,this.y,this.z,World.getBlockID(this.x,this.y,this.z),this.data.age);
-			}
-		}
-	} 	
-};
-
-var gardenPROTO = {
-	defaultValues: {
-		drop:280
-	},
-	created:function(){
-		this.data.drop = CropRegistry.cropsDrop[World.getBlockID(this.x,this.y,this.z)];
-	},
-	click: function(id, count, data, coords){
-		World.destroyBlock(this.x, this.y, this.z, false);
-		Harvest.dropPlant(this.data.drop,this.x,this.y,this.z);
-	}
-};
-
-var saplingPROTO = {
-	tick: function(){
-				if (!TREE_SAPLING_GROUND_TILES[World.getBlockID(this.x, this.y - 1, this.z)]){
-					World.destroyBlock(this.x, this.y, this.z, true);
-				}
-				var nnumber = __config__.access("other.treeAge");
-				if (Math.random() < nnumber){
-					World.destroyBlock(this.x, this.y, this.z, false);
-					Harvest.addTree(0,BlockID.appleBlock,4,this.x,this.y-1,this.z);
-				}
-			},	
-			click: function(id, count, data){
-				if (id == 351 && data == 15){
-					if(Math.random()<0.6){
-						Harvest.addTree(0,BlockID.appleBlock,4,this.x,this.y-1,this.z);
+function addGeneration(block,biomes,count,chance){
+	Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
+		if(Math.random() <chance){
+			for(var ccount = 1;ccount<=count;ccount++){
+				var coords = GenerationUtils.randomCoords(chunkX, chunkZ, 64, 128);
+				coords = GenerationUtils.findSurface(coords.x, coords.y, coords.z);
+				if(biomes==null){
+					World.setBlock(coords.x, coords.y + 1, coords.z, block.id, block.data);
+					World.addTileEntity(coords.x, coords.y + 1, coords.z);	
+				}else{
+					for(var idd in biomes ){
+						var id = biomes[idd];
+						if((World.getBiome((chunkX + 0.5) * 16, (chunkZ + 0.5) * 16)==id)&&(World.getBlockID(coords.x, coords.y, coords.z) == 2)){
+							World.setBlock(coords.x, coords.y + 1, coords.z, block.id, block.data);
+							World.addTileEntity(coords.x, coords.y + 1, coords.z);	
+						}
 					}
-					Player.setCarriedItem(id, count - 1, data);
-				}
+				}			
 			}
-};
+		}
+	});
+}
 
-var TREE_SAPLING_GROUND_TILES = {
-	2: true,
-	3: true,
-	60: true
-};
+//addGeneration({id:0,data:0},[1,2,4,5,6,5],3,0.1);
 
 
 
@@ -299,14 +212,15 @@ Translation.addTranslation("Sink 2", {ru:"Глиняный кувшин",zh:"水
 Translation.addTranslation("Sink 3", {ru:"Кирпичный колодец",zh:"水槽3"});
 Translation.addTranslation("Fish trap", {ru:"Ловушка для рыбы",zh:"鱼陷阱"});
 Translation.addTranslation("Animal trap", {ru:"Ловушка для зверей",zh:"动物陷阱"});
-Translation.addTranslation("Harded leather helm", {ru:"Шлем из прочной кожи",zh:"坚硬皮革头盔"});
-Translation.addTranslation("Hardened leather chest", {ru:"Кираса из прочной кожи",zh:"坚硬皮革胸甲"});
-Translation.addTranslation("Harded leather leggins", {ru:"Поножи из прочной кожи",zh:"坚硬皮革护腿"});
-Translation.addTranslation("Hardened leather boots", {ru:"Ботинки из прочной кожи",zh:"坚硬皮革鞋子"});
+Translation.addTranslation("Harded Leather Helmet", {ru:"Шлем из прочной кожи",zh:"坚硬皮革头盔"});
+Translation.addTranslation("Harded Leather Chestplate", {ru:"Кираса из прочной кожи",zh:"坚硬皮革胸甲"});
+Translation.addTranslation("Harded Leather Leggings", {ru:"Поножи из прочной кожи",zh:"坚硬皮革护腿"});
+Translation.addTranslation("Harded Leather Boots", {ru:"Ботинки из прочной кожи",zh:"坚硬皮革鞋子"});
 Translation.addTranslation("Grain bait", {ru: "Семечковая приманка"});
 Translation.addTranslation("Fruit bait", {ru: "Фруктовая приманка"});
 Translation.addTranslation("Veggie bait", {ru: "Овощная приманка"});
 Translation.addTranslation("Curryleaf", {ru: "Японское карри"});
+Translation.addTranslation("Curry Powder", {ru: "Порошок карри"});
 Translation.addTranslation("Curryleaf seed", {ru: "Семя японского карри"});
 Translation.addTranslation("Raw venison", {ru: "Сырая оленина"});
 Translation.addTranslation("Cooked venison", {ru: "Приготовленная оленина"});
@@ -323,71 +237,517 @@ Translation.addTranslation("Candle", {ru: "Свеча"});
 Translation.addTranslation("Candleberry garden", {ru: "Куст свечной ягоды"});
 Translation.addTranslation("Apple", {ru: "Яблоко"});
 Translation.addTranslation("Pressed wax", {ru: "Прессованный воск"});
+Translation.addTranslation("Candle berry", {ru: "Свечная ягода"});
+Translation.addTranslation("Cashew chicken", {ru: "Курица кешью"});
+Translation.addTranslation("Chicken celery casserole", {ru: "Куриная запеканка с сельдереем"});
+Translation.addTranslation("Chicken chowmein", {ru: "Китайское рагу из курицы"});
+Translation.addTranslation("Cheese", {ru: "Сыр"});
+Translation.addTranslation("Chicken curry", {ru: "Куриное карри"});
+Translation.addTranslation("Chicken gumbo", {ru: "Куриное гамбо"});
+Translation.addTranslation("Chicken noodle soup", {ru: "Куриный суп с лапшой"});
+Translation.addTranslation("Chicken pot pie", {ru: "Куриный пирог в горшочке"});
+Translation.addTranslation("Chicken sandwich", {ru: "Куриный сэндвич"});
+Translation.addTranslation("Fried chicken", {ru: "Курица фри"});
+Translation.addTranslation("Garlic chicken", {ru: "Курица с чесноком"});
+Translation.addTranslation("General tso chicken", {ru: "Курица генерала ЦО"});
+Translation.addTranslation("Ginger chicken", {ru: "Имбирная курица"});
+Translation.addTranslation("Kung pao chicken", {ru: "Курица Кунг Пао"});
+Translation.addTranslation("Lemon chicken", {ru: "Курица с лемоном"});
+Translation.addTranslation("Orange chicken", {ru: "Курица с апельсином"});
+Translation.addTranslation("Sweet and sour chicken", {ru: "Кисло-сладкая курица"});
+Translation.addTranslation("Teriyaki chicken", {ru: "Курица Терияки"});
+Translation.addTranslation("Bacon and eggs", {ru: "Яйца с беконом"});
+Translation.addTranslation("Baked ham", {ru: "Буженина"});
+Translation.addTranslation("Honey glazed ham", {ru: "Медовая ветчина"});
+Translation.addTranslation("Honey soy ribs", {ru: "Соевые ребра с медом"});
+Translation.addTranslation("Hot and sour soup", {ru: "Горячий кислый суп"});
+Translation.addTranslation("Pea and ham soup", {ru: "Ветчина с персиком"});
+Translation.addTranslation("Pineapple ham", {ru: "Ветчина с ананасом"});
+Translation.addTranslation("Pork lo mein", {ru: "Свинина с лапшой"});
+Translation.addTranslation("Spicy mustarg pork", {ru: "Свинина в острой горчице"});
+Translation.addTranslation("Honey lemon lamb", {ru: "Медовая баранина с медом"});
+Translation.addTranslation("Lamb barley soup", {ru: "Суп из баранины с ячменем"});
+Translation.addTranslation("Shepards pie", {ru: "Пирог Шепарда"});
+Translation.addTranslation("Beefjerky", {ru: "Вяленое мясо"});
+Translation.addTranslation("Cotton", {ru: "Хлопок"});
+Translation.addTranslation("Cotton seed", {ru: "Семя хлопка"});
+Translation.addTranslation("Cotton garden", {ru: "Хлопковый куст"});
+Translation.addTranslation("Strawberry juice", {ru: "Клубничный сок"});
+Translation.addTranslation("Cornish Pasty", {ru: "Корниш-пасты"});
+Translation.addTranslation("Maple Sausage", {ru: "Кленовая колбаса"});
+Translation.addTranslation("Hamburger", {ru: "Гамбургер"});
+Translation.addTranslation("Cottage Pie", {ru: "Коттеджный пирог"});
+Translation.addTranslation("Meat Pie", {ru: "Пирог с мясом"});
+Translation.addTranslation("Corned Beef", {ru: "Солонина"});
+Translation.addTranslation("Beef Wellington", {ru: "Биф Веллингтон"});
+Translation.addTranslation("Bean", {ru: "Бобы"});
+Translation.addTranslation("Rice", {ru: "Рис"});
+Translation.addTranslation("Water Chestnut", {ru: "Каштан"});
+Translation.addTranslation("Rutabaga", {ru: "Редис"});
+Translation.addTranslation("Mustard Seeds", {ru: "Горчичные семена"});
+Translation.addTranslation("Ginger", {ru: "Имбирь"});
+Translation.addTranslation("Spinach", {ru: "Шпинат"});
+Translation.addTranslation("Bean Seed", {ru: "Семя бобов"});
+Translation.addTranslation("Rice Seed", {ru: "Семя риса"});
+Translation.addTranslation("Water Chestnut Seed", {ru: "Семя каштана"});
+Translation.addTranslation("Rutabaga Seed", {ru: "Семя редиса"});
+Translation.addTranslation("Mustard Seed", {ru: "Горчичное семя"});
+Translation.addTranslation("Ginger Seed", {ru: "Семя имбиря"});
+Translation.addTranslation("Spinach Seed", {ru: "Семя шпината"});
+Translation.addTranslation("Meat Pie", {ru: "Мясной пирог"});
+Translation.addTranslation("Baked Beans", {ru: "Печеные бобы"});
+Translation.addTranslation("Dim Sum", {ru: "Дим-Сам"});
 
 
 
 
 // file: DEBUG/debugItems.js
 
-﻿/*
-IDRegistry.genItemID("Atree");
+﻿/*IDRegistry.genItemID("Atree");
 Item.createItem("Atree", "Spawn Tree", {name: "stick", data: 0});
-Item.registerUseFunction("Atree",
- function(coords, item, block){
- Debug.m("Item");	
- Harvest.addTree(0,BlockID.appleBlock,8,coords.x,coords.y,coords.z);
- });
+Item.registerUseFunction("Atree",function(coords, item, block){
+	Debug.m("Item");	
+	Harvest.addTree(0,BlockID.appleBlock,8,coords.x,coords.y,coords.z);
+});
+
 IDRegistry.genItemID("AGE");
 Item.createItem("AGE", "AGE", {name: "stick", data: 0});
-Item.registerUseFunction("AGE",
- function(coords, item, block){
-	if(CropRegistry.cropsIDs[World.getBlockID(coords.x,coords.y,coords.z)]){
-		Debug.m("Это растение");
-	}
+Item.registerUseFunction("AGE",function(coords, item, block){
 	var te = World.getTileEntity(coords.x,coords.y,coords.z);
-	Game.message(te.data.age);
+	Game.message(te.isCrop);
  });
- IDRegistry.genItemID("PROGRESS");
-Item.createItem("PROGRESS", "PROGRESS", {name: "stick", data: 0});
-Item.registerUseFunction("PROGRESS",
- function(coords, item, block){
-	var te = World.getTileEntity(coords.x,coords.y,coords.z);
-	Game.message("progress is:"+te.data.progress+";");
- });
+ 
 IDRegistry.genItemID("data");
 Item.createItem("data", "data", {name: "stick", data: 0});
-Item.registerUseFunction("data",
- function(coords, item, block){
- Debug.m("ID:"+World.getBlockID(coords.x,coords.y,coords.z));
- Debug.m("DATA:"+World.getBlockData(coords.x,coords.y,coords.z)); 	
- });
- 
-IDRegistry.genItemID("CandleBerryDbug0");
-Item.createItem("CandleBerryDbug0", "candle 0", {name: "stick", data: 0});
-Item.registerUseFunction("CandleBerryDbug0",
- function(coords, item, block){
-	World.setBlock(coords.x,coords.y,coords.z,BlockID.candleberrycrop,0);
-	World.addTileEntity(coords.x,coords.y+1,coords.z);
-	Debug.m("crop deployed(0) with item :"+item.id);
- });
- 
-IDRegistry.genItemID("CandleBerryDbug1");
-Item.createItem("CandleBerryDbug1", "candle 1", {name: "stick", data: 0});
-Item.registerUseFunction("CandleBerryDbug1",
- function(coords, item, block){
-	World.setBlock(coords.x,coords.y1,coords.z,BlockID.candleberrycrop,1);
-	World.addTileEntity(coords.x,coords.y+1,coords.z);
-	Debug.m("crop deployed(1) with item :"+item.id);
- });
- 
-IDRegistry.genItemID("CandleBerryDbug2");
-Item.createItem("CandleBerryDbug2", "candle 2", {name: "stick", data: 0});
-Item.registerUseFunction("CandleBerryDbug2",
- function(coords, item, block){
-	World.setBlock(coords.x,coords.y,coords.z,BlockID.candleberrycrop,2);
-	World.addTileEntity(coords.x,coords.y+1,coords.z);
-	Debug.m("crop deployed(2) with item :"+item.id);
- });*/
+Item.registerUseFunction("data",function(coords, item, block){
+	Debug.m("ID:"+World.getBlockID(coords.x,coords.y,coords.z));
+	Debug.m("DATA:"+World.getBlockData(coords.x,coords.y,coords.z)); 	
+});
+IDRegistry.genItemID("biome");
+Item.createItem("biome", "Get biome", {name: "stick", data: 0});
+Item.registerUseFunction("biome",function(coords, item, block){
+	Debug.m("Biome id: "+World.getBiome(coords.x, coords.z) );
+});*/
+
+
+
+
+// file: CROPS/strawberry.js
+
+CropRegistry.registerWithID("strawberrycrop","strawberrycrop","strawberrycrop",ItemID.strawberry_seed);
+CropRegistry.fruitPush(BlockID.strawberrycrop,ItemID.strawberry);
+Harvest.registerDroppingBlock(BlockID.strawberrycrop);
+
+PlantModel.crop(BlockID.strawberrycrop);
+
+TileEntity.registerPrototype(BlockID.strawberrycrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.strawberry_seed,BlockID.strawberrycrop);
+
+
+
+
+// file: CROPS/raspberry.js
+
+CropRegistry.registerWithID("raspberrycrop","raspberrycrop","raspberry_crop",ItemID.raspberry_seed);
+CropRegistry.fruitPush(BlockID.raspberrycrop,ItemID.raspberry);
+Harvest.registerDroppingBlock(BlockID.raspberrycrop);
+
+PlantModel.crop(BlockID.raspberrycrop);
+
+TileEntity.registerPrototype(BlockID.raspberrycrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.raspberry_seed,BlockID.raspberrycrop);
+
+
+
+
+// file: CROPS/cranberry.js
+
+CropRegistry.registerWithID("cranberrycrop","cranberrycrop","cranberrycrop",ItemID.cranberry_seed);
+CropRegistry.fruitPush(BlockID.cranberrycrop,ItemID.cranberry);
+Harvest.registerDroppingBlock(BlockID.cranberrycrop);
+
+PlantModel.crop(BlockID.cranberrycrop);
+
+TileEntity.registerPrototype(BlockID.cranberrycrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.cranberry_seed,BlockID.cranberrycrop);
+
+
+
+
+// file: CROPS/blueberry.js
+
+CropRegistry.registerWithID("blueberrycrop","blueberrycrop","blueberrycrop",ItemID.blueberry_seed);
+CropRegistry.fruitPush(BlockID.blueberrycrop,ItemID.blueberry);
+Harvest.registerDroppingBlock(BlockID.blueberrycrop);
+
+PlantModel.crop(BlockID.blueberrycrop);
+
+TileEntity.registerPrototype(BlockID.blueberrycrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.blueberry_seed,BlockID.blueberrycrop);
+
+
+
+
+// file: CROPS/blackberry.js
+
+CropRegistry.registerWithID("blackberrycrop","blackberrycrop","blackberrycrop",ItemID.blackberry_seed);
+CropRegistry.fruitPush(BlockID.blackberrycrop,ItemID.blackberry);
+Harvest.registerDroppingBlock(BlockID.blackberrycrop);
+
+PlantModel.crop(BlockID.blackberrycrop);
+
+TileEntity.registerPrototype(BlockID.blackberrycrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.blackberry_seed,BlockID.blackberrycrop);
+
+
+
+
+// file: CROPS/grape.js
+
+CropRegistry.registerWithID("grapecrop","grapecrop","grapecrop",ItemID.grape_seed);
+CropRegistry.fruitPush(BlockID.grapecrop,ItemID.grape);
+Harvest.registerDroppingBlock(BlockID.grapecrop);
+
+PlantModel.crop(BlockID.grapecrop);
+
+TileEntity.registerPrototype(BlockID.grapecrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.grape_seed,BlockID.grapecrop);
+
+
+
+
+// file: CROPS/cucumber.js
+
+CropRegistry.registerWithID("cucumbercrop","cucumbercrop","cucumbercrop",ItemID.cucumber_seed);
+CropRegistry.fruitPush(BlockID.cucumbercrop,ItemID.cucumber);
+Harvest.registerDroppingBlock(BlockID.cucumbercrop);
+
+PlantModel.crop(BlockID.cucumbercrop);
+
+TileEntity.registerPrototype(BlockID.cucumbercrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.cucumber_seed,BlockID.cucumbercrop);
+
+
+
+
+// file: CROPS/onion.js
+
+CropRegistry.registerWithID("onioncrop","onioncrop","onioncrop",ItemID.onion_seed);
+CropRegistry.fruitPush(BlockID.onioncrop,ItemID.onion);
+Harvest.registerDroppingBlock(BlockID.onioncrop);
+
+PlantModel.crop(BlockID.onioncrop);
+
+TileEntity.registerPrototype(BlockID.onioncrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.onion_seed,BlockID.onioncrop);
+
+
+
+
+// file: CROPS/cabbage.js
+
+CropRegistry.registerWithID("cabbagecrop","cabbagecrop","cabbagecrop",ItemID.cabbage_seed);
+CropRegistry.fruitPush(BlockID.cabbagecrop,ItemID.cabbage);
+Harvest.registerDroppingBlock(BlockID.cabbagecrop);
+
+PlantModel.crop(BlockID.cabbagecrop);
+
+TileEntity.registerPrototype(BlockID.cabbagecrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.cabbage_seed,BlockID.cabbagecrop);
+
+
+
+
+// file: CROPS/tomato.js
+
+CropRegistry.registerWithID("tomatocrop","tomatocrop","tomatocrop",ItemID.tomato_seed);
+CropRegistry.fruitPush(BlockID.tomatocrop,ItemID.tomato);
+Harvest.registerDroppingBlock(BlockID.tomatocrop);
+
+PlantModel.crop(BlockID.tomatocrop);
+
+TileEntity.registerPrototype(BlockID.tomatocrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.tomato_seed,BlockID.tomatocrop);
+
+
+
+
+// file: CROPS/garlic.js
+
+CropRegistry.registerWithID("garliccrop","garliccrop","garliccrop",ItemID.garlic_seed);
+CropRegistry.fruitPush(BlockID.garliccrop,ItemID.garlic);
+Harvest.registerDroppingBlock(BlockID.garliccrop);
+
+PlantModel.crop(BlockID.garliccrop);
+
+TileEntity.registerPrototype(BlockID.garliccrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.garlic_seed,BlockID.garliccrop);
+
+
+
+
+// file: CROPS/bellpepper.js
+
+CropRegistry.registerWithID("bellpeppercrop","bellpeppercrop","bellpeppercrop",ItemID.bellpepper_seed);
+CropRegistry.fruitPush(BlockID.bellpeppercrop,ItemID.bellpepper);
+Harvest.registerDroppingBlock(BlockID.bellpeppercrop);
+
+PlantModel.crop(BlockID.bellpeppercrop);
+
+TileEntity.registerPrototype(BlockID.bellpeppercrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.bellpepper_seed,BlockID.bellpeppercrop);
+
+
+
+
+// file: CROPS/lettuce.js
+
+CropRegistry.registerWithID("lettucecrop","lettucecrop","lettucecrop",ItemID.lettuce_seed);
+CropRegistry.fruitPush(BlockID.lettucecrop,ItemID.lettuce);
+Harvest.registerDroppingBlock(BlockID.lettucecrop);
+
+PlantModel.crop(BlockID.lettucecrop);
+
+TileEntity.registerPrototype(BlockID.lettucecrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.lettuce_seed,BlockID.lettuce);
+
+
+
+
+// file: CROPS/coffeebean.js
+
+CropRegistry.registerWithID("coffeebeancrop","coffeebeancrop","coffeebeancrop",ItemID.coffee_seed);
+CropRegistry.fruitPush(BlockID.coffeebeancrop,ItemID.coffee_beans);
+Harvest.registerDroppingBlock(BlockID.coffeebeancrop);
+
+PlantModel.crop(BlockID.coffeebeancrop);
+
+TileEntity.registerPrototype(BlockID.coffeebeancrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.coffee_seed,BlockID.coffeebeancrop);
+
+
+
+
+// file: CROPS/peas.js
+
+CropRegistry.registerWithID("peascrop","peascrop","peascrop",ItemID.peas_seed);
+CropRegistry.fruitPush(BlockID.peascrop,ItemID.peas);
+Harvest.registerDroppingBlock(BlockID.peascrop);
+
+PlantModel.crop(BlockID.peascrop);
+
+TileEntity.registerPrototype(BlockID.peascrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.peas_seed,BlockID.peascrop);
+
+
+
+
+// file: CROPS/chilipepper.js
+
+CropRegistry.registerWithID("chilipeppercrop","chilipeppercrop","chilipeppercrop",ItemID.chili_pepper_seed);
+CropRegistry.fruitPush(BlockID.chilipeppercrop,ItemID.chili_pepper);
+Harvest.registerDroppingBlock(BlockID.chilipeppercrop);
+
+PlantModel.crop(BlockID.chilipeppercrop);
+
+TileEntity.registerPrototype(BlockID.chilipeppercrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.chili_pepper_seed,BlockID.chilipeppercrop);
+
+
+
+
+// file: CROPS/spiceleaf.js
+
+CropRegistry.registerWithID("spiceleafcrop","spiceleafcrop","spiceleafcrop",ItemID.spice_leaf_seed);
+CropRegistry.fruitPush(BlockID.spiceleafcrop,ItemID.spice_leaf_seed);
+Harvest.registerDroppingBlock(BlockID.spiceleafcrop);
+
+PlantModel.crop(BlockID.spiceleafcrop);
+
+TileEntity.registerPrototype(BlockID.spiceleafcrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.spice_leaf_seed,BlockID.spiceleafcrop);
+
+
+
+
+// file: CROPS/corn.js
+
+CropRegistry.registerWithID("corncrop","corncrop","corncrop",ItemID.corn_seed);
+CropRegistry.fruitPush(BlockID.corncrop,ItemID.corn);
+Harvest.registerDroppingBlock(BlockID.corncrop);
+
+PlantModel.crop(BlockID.corncrop);
+
+TileEntity.registerPrototype(BlockID.corncrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.corn_seed,BlockID.corncrop);
+
+
+
+
+// file: CROPS/candleberry.js
+
+﻿CropRegistry.registerWithID("candleberrycrop","candleberrycrop","candleberrycrop",ItemID.candleberryseed);
+CropRegistry.fruitPush(BlockID.candleberrycrop,ItemID.candleberry);
+Harvest.registerDroppingBlock(BlockID.candleberrycrop);
+
+PlantModel.crop(BlockID.candleberrycrop);
+
+TileEntity.registerPrototype(BlockID.candleberrycrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.candleberryseed,BlockID.candleberrycrop);
+
+
+
+
+// file: CROPS/curryleaf.js
+
+CropRegistry.registerWithID("curryleaf","curryleaf","curryleafcrop",ItemID.curryleaf_seed);
+CropRegistry.fruitPush(BlockID.curryleaf,ItemID.curryleaf);
+Harvest.registerDroppingBlock(BlockID.curryleaf);
+
+PlantModel.crop(BlockID.curryleaf);
+
+TileEntity.registerPrototype(BlockID.curryleaf,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.curryleaf_seed,BlockID.curryleaf);
+
+
+
+
+// file: CROPS/cotton.js
+
+CropRegistry.registerWithID("cottoncrop","cottoncrop","cottoncrop",ItemID.cotton_seed);
+CropRegistry.fruitPush(BlockID.cottoncrop,ItemID.cotton);
+Harvest.registerDroppingBlock(BlockID.cottoncrop);
+
+PlantModel.crop(BlockID.cottoncrop);
+
+TileEntity.registerPrototype(BlockID.cottoncrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.cotton_seed,BlockID.cottoncrop);
+
+
+
+
+// file: CROPS/rutabaga.js
+
+CropRegistry.registerWithID("rutabagacrop","rutabagacrop","rutabagacrop",ItemID.rutabaga_seed);
+CropRegistry.fruitPush(BlockID.rutabagacrop,ItemID.rutabaga);
+Harvest.registerDroppingBlock(BlockID.rutabagacrop);
+
+PlantModel.crop(BlockID.rutabagacrop);
+
+TileEntity.registerPrototype(BlockID.rutabagacrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.rutabaga_seed,BlockID.rutabagacrop);
+
+
+
+
+// file: CROPS/bean.js
+
+CropRegistry.registerWithID("beancrop","beancrop","beancrop",ItemID.bean_seed);
+CropRegistry.fruitPush(BlockID.beancrop,ItemID.bean);
+Harvest.registerDroppingBlock(BlockID.beancrop);
+
+PlantModel.crop(BlockID.beancrop);
+
+TileEntity.registerPrototype(BlockID.beancrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.bean_seed,BlockID.beancrop);
+
+
+
+
+// file: CROPS/waterchestnut.js
+
+CropRegistry.registerWithID("waterchestnutcrop","waterchestnutcrop","waterchestnutcrop",ItemID.waterchestnut_seed);
+CropRegistry.fruitPush(BlockID.waterchestnutcrop,ItemID.waterchestnut);
+Harvest.registerDroppingBlock(BlockID.waterchestnutcrop);
+
+PlantModel.crop(BlockID.waterchestnutcrop);
+
+TileEntity.registerPrototype(BlockID.waterchestnutcrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.waterchestnut_seed,BlockID.waterchestnutcrop);
+
+
+
+
+// file: CROPS/rice.js
+
+CropRegistry.registerWithID("ricecrop","ricecrop","ricecrop",ItemID.rice_seed);
+CropRegistry.fruitPush(BlockID.ricecrop,ItemID.rice);
+Harvest.registerDroppingBlock(BlockID.ricecrop);
+
+PlantModel.crop(BlockID.ricecrop);
+
+TileEntity.registerPrototype(BlockID.ricecrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.rice_seed,BlockID.ricecrop);
+
+
+
+
+// file: CROPS/mustardseeds.js
+
+CropRegistry.registerWithID("mustardseedscrop","mustardseedscrop","mustardseedscrop",ItemID.mustard_seed);
+CropRegistry.fruitPush(BlockID.mustardseedscrop,ItemID.mustardseeds);
+Harvest.registerDroppingBlock(BlockID.mustardseedscrop);
+
+PlantModel.crop(BlockID.mustardseedscrop);
+
+TileEntity.registerPrototype(BlockID.mustardseedscrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.mustard_seed,BlockID.mustardseedscrop);
+
+
+
+
+// file: CROPS/ginger.js
+
+CropRegistry.registerWithID("gingercrop","gingercrop","gingercrop",ItemID.ginger_seed);
+CropRegistry.fruitPush(BlockID.gingercrop,ItemID.ginger);
+Harvest.registerDroppingBlock(BlockID.gingercrop);
+
+PlantModel.crop(BlockID.gingercrop);
+
+TileEntity.registerPrototype(BlockID.gingercrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.ginger_seed,BlockID.gingercrop);
+
+
+
+
+// file: CROPS/spinach.js
+
+CropRegistry.registerWithID("spinachcrop","spinachcrop","spinachcrop",ItemID.spinach_seed);
+CropRegistry.fruitPush(BlockID.spinachcrop,ItemID.spinach);
+Harvest.registerDroppingBlock(BlockID.spinachcrop);
+
+PlantModel.crop(BlockID.spinachcrop);
+
+TileEntity.registerPrototype(BlockID.spinachcrop,cropPROTO);
+
+CropRegistry.registerSeed(ItemID.spinach_seed,BlockID.spinachcrop);
 
 
 
@@ -510,6 +870,23 @@ IDRegistry.genItemID("peppercorn");
 Item.createFoodItem("peppercorn", "Peppercorn", {name: "pepper_corn", meta: 0}, {food: 1});
 IDRegistry.genItemID("curryleaf");
 Item.createFoodItem("curryleaf", "Curryleaf", {name: "curryleaf", meta: 0}, {food: 1});
+IDRegistry.genItemID("cotton");
+Item.createItem("cotton", "Cotton", {name: "cotton", meta: 0}, {});
+Recipes.addShapeless({id: 287, count: 2, data: 0}, [{id: ItemID.cotton, data: 0},{id: ItemID.cotton, data: 0},{id: ItemID.cotton, data: 0}]);
+IDRegistry.genItemID("bean");
+Item.createFoodItem("bean", "Bean", {name: "bean", meta: 0}, {food: 1});
+IDRegistry.genItemID("rice");
+Item.createFoodItem("rice", "Rice", {name: "rice", meta: 0}, {food: 1});
+IDRegistry.genItemID("waterchestnut");
+Item.createFoodItem("waterchestnut", "Water Chestnut", {name: "waterchestnut", meta: 0}, {food: 1});
+IDRegistry.genItemID("rutabaga");
+Item.createFoodItem("rutabaga", "Rutabaga", {name: "rutabaga", meta: 0}, {food: 1});
+IDRegistry.genItemID("mustardseeds");
+Item.createFoodItem("mustardseeds", "Mustard Seeds", {name: "mustardseeds", meta: 0}, {food: 1});
+IDRegistry.genItemID("ginger");
+Item.createFoodItem("ginger", "Ginger", {name: "ginger", meta: 0}, {food: 1});
+IDRegistry.genItemID("spinach");
+Item.createFoodItem("spinach", "Spinach", {name: "spinach", meta: 0}, {food: 1});
 
 
 
@@ -600,6 +977,38 @@ Recipes.addShapeless({id: ItemID.peppercorn_seed, count: 1, data: 0}, [{id: Item
 IDRegistry.genItemID("curryleaf_seed");
 Item.createItem("curryleaf_seed", "Curryleaf seed", {name: "curryleafseed", meta: 0});
 Recipes.addShapeless({id: ItemID.curryleaf_seed, count: 1, data: 0}, [{id: ItemID.curryleaf, data: 0}]);
+
+IDRegistry.genItemID("cotton_seed");
+Item.createItem("cotton_seed", "Cotton seed", {name: "cottonSeed", meta: 0});
+Recipes.addShapeless({id: ItemID.cotton_seed, count: 1, data: 0}, [{id: ItemID.cotton, data: 0}]);
+
+IDRegistry.genItemID("bean_seed");
+Item.createItem("bean_seed", "Bean Seed", {name: "beanseed", meta: 0});
+Recipes.addShapeless({id: ItemID.bean_seed, count: 1, data: 0}, [{id: ItemID.bean, data: 0}]);
+
+IDRegistry.genItemID("rice_seed");
+Item.createItem("rice_seed", "Rice Seed", {name: "riceseed", meta: 0});
+Recipes.addShapeless({id: ItemID.rice_seed, count: 1, data: 0}, [{id: ItemID.rice, data: 0}]);
+
+IDRegistry.genItemID("waterchestnut_seed");
+Item.createItem("waterchestnut_seed", "Water Chestnut Seed", {name: "waterchestnutseed", meta: 0});
+Recipes.addShapeless({id: ItemID.waterchestnut_seed, count: 1, data: 0}, [{id: ItemID.waterchestnut, data: 0}]);
+
+IDRegistry.genItemID("rutabaga_seed");
+Item.createItem("rutabaga_seed", "Rutabaga Seed", {name: "rutabagaseed", meta: 0});
+Recipes.addShapeless({id: ItemID.rutabaga_seed, count: 1, data: 0}, [{id: ItemID.rutabaga, data: 0}]);
+
+IDRegistry.genItemID("mustard_seed");
+Item.createItem("mustard_seed", "Mustard Seed", {name: "mustardseed", meta: 0});
+Recipes.addShapeless({id: ItemID.mustard_seed, count: 1, data: 0}, [{id: ItemID.mustardseeds, data: 0}]);
+
+IDRegistry.genItemID("ginger_seed");
+Item.createItem("ginger_seed", "Ginger Seed", {name: "gingerseed", meta: 0});
+Recipes.addShapeless({id: ItemID.ginger_seed, count: 1, data: 0}, [{id: ItemID.ginger, data: 0}]);
+
+IDRegistry.genItemID("spinach_seed");
+Item.createItem("spinach_seed", "Spinach Seed", {name: "spinachseed", meta: 0});
+Recipes.addShapeless({id: ItemID.spinach_seed, count: 1, data: 0}, [{id: ItemID.spinach, data: 0}]);
 
 
 
@@ -703,7 +1112,7 @@ Recipes.addShapeless({id: ItemID.apple_juice, count: 1, data: 0}, [{id: ItemID.j
 
 IDRegistry.genItemID("strawberry_smoothie");
 Item.createFoodItem("strawberry_smoothie", "Strawberry smoothie", {name: "strawberry_smoothie", meta: 0}, {food: 6});
-Recipes.addShapeless({id: ItemID.strawberry_smoothie, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: ItemID.strawberry, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.strawberry_smoothie, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: ItemID.strawberry, data: 0},{id: 332, data: 0}], function(api, field, result){ 
 	for (var i in field){
 		if (field[i].id != ItemID.juicer){
 			api.decreaseFieldSlot(i);
@@ -713,7 +1122,7 @@ Recipes.addShapeless({id: ItemID.strawberry_smoothie, count: 1, data: 0}, [{id: 
 
 IDRegistry.genItemID("raspberry_smoothie");
 Item.createFoodItem("raspberry_smoothie", "Raspberry smoothie", {name: "raspberry_smoothie", meta: 0}, {food: 6});
-Recipes.addShapeless({id: ItemID.raspberry_smoothie, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: ItemID.raspberry, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.raspberry_smoothie, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: ItemID.raspberry, data: 0},{id: 332, data: 0}], function(api, field, result){ 
 	for (var i in field){
 		if (field[i].id != ItemID.juicer){
 			api.decreaseFieldSlot(i);
@@ -723,7 +1132,7 @@ Recipes.addShapeless({id: ItemID.raspberry_smoothie, count: 1, data: 0}, [{id: I
 
 IDRegistry.genItemID("blackberry_smoothie");
 Item.createFoodItem("blackberry_smoothie", "Blackberry smoothie", {name: "blackberry_smoothie", meta: 0}, {food: 6});
-Recipes.addShapeless({id: ItemID.blackberry_smoothie, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: ItemID.blackberry, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.blackberry_smoothie, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: ItemID.blackberry, data: 0},{id: 332, data: 0}], function(api, field, result){ 
 	for (var i in field){
 		if (field[i].id != ItemID.juicer){
 			api.decreaseFieldSlot(i);
@@ -733,7 +1142,7 @@ Recipes.addShapeless({id: ItemID.blackberry_smoothie, count: 1, data: 0}, [{id: 
 
 IDRegistry.genItemID("blueberry_smoothie");
 Item.createFoodItem("blueberry_smoothie", "Blueberry smoothie", {name: "blueberry_smoothie", meta: 0}, {food: 6});
-Recipes.addShapeless({id: ItemID.blueberry_smoothie, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: ItemID.blueberry, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.blueberry_smoothie, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: ItemID.blueberry, data: 0},{id: 332, data: 0}], function(api, field, result){ 
 	for (var i in field){
 		if (field[i].id != ItemID.juicer){
 			api.decreaseFieldSlot(i);
@@ -743,7 +1152,7 @@ Recipes.addShapeless({id: ItemID.blueberry_smoothie, count: 1, data: 0}, [{id: I
 
 IDRegistry.genItemID("melon_smoothie");
 Item.createFoodItem("melon_smoothie", "Melon smoothie", {name: "melon_smoothie", meta: 0}, {food: 5});
-Recipes.addShapeless({id: ItemID.melon_smoothie, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: 360, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.melon_smoothie, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: 360, data: 0},{id: 332, data: 0}], function(api, field, result){ 
 	for (var i in field){
 		if (field[i].id != ItemID.juicer){
 			api.decreaseFieldSlot(i);
@@ -929,6 +1338,26 @@ Recipes.addShapeless({id: ItemID.spring_salad, count: 1, data: 0}, [{id: ItemID.
 	}
 });
 
+if(ItemID.pomidor!=null){
+	Recipes.addShapeless({id: ItemID.spring_salad, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.lettuce, data: 0}, {id: ItemID.pomidor, data: 0}], function(api, field, result){ 
+	for (var i in field){
+		if (field[i].id != ItemID.cutting_board){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+};
+
+if(ItemID.ogurec!=null){
+	Recipes.addShapeless({id: ItemID.spring_salad, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.lettuce, data: 0}, {id: ItemID.ogurec, data: 0}], function(api, field, result){ 
+	for (var i in field){
+		if (field[i].id != ItemID.cutting_board){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+};
+
 IDRegistry.genItemID("cucumber_salad");
 Item.createFoodItem("cucumber_salad", "Cucumber salad", {name: "cucumber_salad", meta: 0}, {food: 11});
 Recipes.addShapeless({id: ItemID.cucumber_salad, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.spring_salad, data: 0}, {id: ItemID.cucumber, data: 0}], function(api, field, result){ 
@@ -975,21 +1404,16 @@ Recipes.addFurnace(ItemID.turkeyRaw, ItemID.turkeyCooked, 0);
 
 IDRegistry.genItemID("black_pepper");
 Item.createItem("black_pepper", "Black pepper", {name: "black_pepper", meta: 0});
-Recipes.addShapeless({id: ItemID.black_pepper, count: 1, data: 0}, [{id: ItemID.mortar_bowl, data: 0}, {id: ItemID.peppercorn, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.black_pepper, count: 1, data: 0}, [{id: ItemID.mortar_bowl, data: 0}, {id: ItemID.peppercorn, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.mortar_bowl){
 			api.decreaseFieldSlot(i);
 		}
 	}
 });
-
-IDRegistry.genItemID("toast");
-Item.createFoodItem("toast", "Toast", {name: "toast", meta: 0}, {food: 7});
-Recipes.addFurnace(297, ItemID.toast, 0);
-
 IDRegistry.genItemID("cocoa_powder");
 Item.createItem("cocoa_powder", "Cocoa powder", {name: "cocoa_powder", meta: 0});
-Recipes.addShapeless({id: ItemID.cocoa_powder, count: 1, data: 0}, [{id: ItemID.mortar_bowl, data: 0}, {id: 351, data: 3}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.cocoa_powder, count: 1, data: 0}, [{id: ItemID.mortar_bowl, data: 0}, {id: 351, data: 3}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.mortar_bowl){
 			api.decreaseFieldSlot(i);
@@ -1007,7 +1431,7 @@ Recipes.addShapeless({id: ItemID.espresso, count: 1, data: 0}, [{id: ItemID.coff
 
 IDRegistry.genItemID("hot_chocolate");
 Item.createFoodItem("hot_chocolate", "Hot chocolate", {name: "hot_chocolate", meta: 0}, {food: 2});
-Recipes.addShapeless({id: ItemID.hot_chocolate, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: ItemID.fresh_milk, data: 0}, {id: ItemID.cocoa_powder, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.hot_chocolate, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: ItemID.fresh_milk, data: 0}, {id: ItemID.cocoa_powder, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.juicer){
 			api.decreaseFieldSlot(i);
@@ -1017,7 +1441,7 @@ Recipes.addShapeless({id: ItemID.hot_chocolate, count: 1, data: 0}, [{id: ItemID
 
 IDRegistry.genItemID("vinegar");
 Item.createItem("vinegar", "Vinegar", {name: "vinegar", meta: 0});
-Recipes.addShapeless({id: ItemID.vinegar, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.grape_juice, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.vinegar, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.grape_juice, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
@@ -1027,7 +1451,7 @@ Recipes.addShapeless({id: ItemID.vinegar, count: 1, data: 0}, [{id: ItemID.pot, 
 
 IDRegistry.genItemID("cheese");
 Item.createFoodItem("cheese", "Cheese", {name: "cheese", meta: 0}, {food: 2});
-Recipes.addShapeless({id: ItemID.cheese, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.fresh_milk, data: 0}, {id: ItemID.salt, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.cheese, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.fresh_milk, data: 0}, {id: ItemID.salt, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
@@ -1038,105 +1462,126 @@ Recipes.addShapeless({id: ItemID.cheese, count: 1, data: 0}, [{id: ItemID.pot, d
 //BlockID.ogurec
 IDRegistry.genItemID("stock");
 Item.createFoodItem("stock", "Stock", {name: "stock", meta: 0}, {food: 3});
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 352, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 352, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
 		}
 	}
 });
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 363, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 363, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
 		}
 	}
 });
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 319, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 319, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
 		}
 	}
 });
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 423, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 423, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
 		}
 	}
 });
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 411, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 411, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
 		}
 	}
 });
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 365, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 365, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
 		}
 	}
 });
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.corn, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.corn, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
 		}
 	}
 });
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.tomato, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.tomato, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
 		}
 	}
 });
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.cucumber, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.cucumber, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
 		}
 	}
 });
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.onion, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.rutabaga, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
 		}
 	}
 });
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.cabbage, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.onion, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
 		}
 	}
 });
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.bellpepper, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.cabbage, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
 		}
 	}
 });
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.peas, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.bellpepper, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
 		}
 	}
 });
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 86, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.peas, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
 		}
 	}
 });
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 392, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.bean, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.rice, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 86, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 392, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
@@ -1146,7 +1591,7 @@ Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, da
 
 IDRegistry.genItemID("pot_roast");
 Item.createFoodItem("pot_roast", "Pot roast", {name: "pot_roast", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.pot_roast, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 363, data: 0}, {id: 393, data: 0}, {id: 391, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.pot_roast, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 363, data: 0}, {id: 393, data: 0}, {id: 391, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
@@ -1156,14 +1601,14 @@ Recipes.addShapeless({id: ItemID.pot_roast, count: 1, data: 0}, [{id: ItemID.pot
 
 IDRegistry.genItemID("vegetable_soup");
 Item.createFoodItem("vegetable_soup", "Vegetable soup", {name: "vegetable_soup", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.vegetable_soup, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 40, data: 0}, {id: 393, data: 0}, {id: 391, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.vegetable_soup, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 40, data: 0}, {id: 393, data: 0}, {id: 391, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
 		}
 	}
 });
-Recipes.addShapeless({id: ItemID.vegetable_soup, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 39, data: 0}, {id: 393, data: 0}, {id: 391, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.vegetable_soup, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 39, data: 0}, {id: 393, data: 0}, {id: 391, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
@@ -1173,7 +1618,7 @@ Recipes.addShapeless({id: ItemID.vegetable_soup, count: 1, data: 0}, [{id: ItemI
 
 IDRegistry.genItemID("heavy_cream");
 Item.createItem("heavy_cream", "Heavy cream", {name: "heavy_cream", meta: 0});
-Recipes.addShapeless({id: ItemID.heavy_cream, count: 1, data: 0}, [{id: ItemID.mixing_bowl, data: 0}, {id: 352, data: 1}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.heavy_cream, count: 1, data: 0}, [{id: ItemID.mixing_bowl, data: 0}, {id: 352, data: 1}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.mixing_bowl && field[i].id != 352){
 			api.decreaseFieldSlot(i);
@@ -1183,7 +1628,7 @@ Recipes.addShapeless({id: ItemID.heavy_cream, count: 1, data: 0}, [{id: ItemID.m
 		}
 	}
 });
-Recipes.addShapeless({id: ItemID.heavy_cream, count: 1, data: 0}, [{id: ItemID.mixing_bowl, data: 0}, {id: ItemID.fresh_milk, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.heavy_cream, count: 1, data: 0}, [{id: ItemID.mixing_bowl, data: 0}, {id: ItemID.fresh_milk, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.mixing_bowl){
 			api.decreaseFieldSlot(i);
@@ -1193,7 +1638,7 @@ Recipes.addShapeless({id: ItemID.heavy_cream, count: 1, data: 0}, [{id: ItemID.m
 
 IDRegistry.genItemID("pumpkin_soup");
 Item.createFoodItem("pumpkin_soup", "Pumpkin soup", {name: "pumpkin_soup", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.pumpkin_soup, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 86, data: 0}, {id: ItemID.heavy_cream, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.pumpkin_soup, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 86, data: 0}, {id: ItemID.heavy_cream, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
@@ -1203,7 +1648,7 @@ Recipes.addShapeless({id: ItemID.pumpkin_soup, count: 1, data: 0}, [{id: ItemID.
 
 IDRegistry.genItemID("cornflakes");
 Item.createFoodItem("cornflakes", "Cornflakes", {name: "cornflakes", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.cornflakes, count: 1, data: 0}, [{id: ItemID.mixing_bowl, data: 0}, {id: ItemID.fresh_milk, data: 0}, {id: ItemID.corn, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.cornflakes, count: 1, data: 0}, [{id: ItemID.mixing_bowl, data: 0}, {id: ItemID.fresh_milk, data: 0}, {id: ItemID.corn, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.mixing_bowl){
 			api.decreaseFieldSlot(i);
@@ -1213,7 +1658,7 @@ Recipes.addShapeless({id: ItemID.cornflakes, count: 1, data: 0}, [{id: ItemID.mi
 
 IDRegistry.genItemID("fried_egg");
 Item.createFoodItem("fried_egg", "Fried egg", {name: "fried_egg", meta: 0}, {food: 4});
-Recipes.addShapeless({id: ItemID.fried_egg, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 344, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.fried_egg, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 344, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.skillet){
 			api.decreaseFieldSlot(i);
@@ -1223,7 +1668,7 @@ Recipes.addShapeless({id: ItemID.fried_egg, count: 1, data: 0}, [{id: ItemID.ski
 
 IDRegistry.genItemID("boiled_egg");
 Item.createFoodItem("boiled_egg", "Boiled egg", {name: "boiled_egg", meta: 0}, {food: 2});
-Recipes.addShapeless({id: ItemID.boiled_egg, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 344, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.boiled_egg, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 344, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
@@ -1233,14 +1678,14 @@ Recipes.addShapeless({id: ItemID.boiled_egg, count: 1, data: 0}, [{id: ItemID.po
 
 IDRegistry.genItemID("pancakes");
 Item.createFoodItem("pancakes", "Pancakes", {name: "pancakes", meta: 0}, {food: 6});
-Recipes.addShapeless({id: ItemID.pancakes, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.fresh_milk, data: 0}, {id: 344, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.pancakes, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.fresh_milk, data: 0}, {id: 344, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.skillet){
 			api.decreaseFieldSlot(i);
 		}
 	}
 });
-Recipes.addShapeless({id: ItemID.pancakes, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: ItemID.flour, data: 0}, {id: 325, data: 1}, {id: 344, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.pancakes, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: ItemID.flour, data: 0}, {id: 325, data: 1}, {id: 344, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.skillet){
 			api.decreaseFieldSlot(i);
@@ -1253,14 +1698,14 @@ Recipes.addShapeless({id: ItemID.pancakes, count: 1, data: 0}, [{id: ItemID.skil
 
 IDRegistry.genItemID("dough");
 Item.createItem("dough", "Dough", {name: "dough", meta: 0});
-Recipes.addShapeless({id: ItemID.dough, count: 1, data: 0}, [{id: ItemID.mixing_bowl, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.fresh_water, data: 0}, {id: ItemID.salt, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.dough, count: 1, data: 0}, [{id: ItemID.mixing_bowl, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.fresh_water, data: 0}, {id: ItemID.salt, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.mixing_bowl){
 			api.decreaseFieldSlot(i);
 		}
 	}
 });
-Recipes.addShapeless({id: ItemID.dough, count: 1, data: 0}, [{id: ItemID.mixing_bowl, data: 0}, {id: ItemID.flour, data: 0}, {id: 325, data: 8}, {id: ItemID.salt, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.dough, count: 1, data: 0}, [{id: ItemID.mixing_bowl, data: 0}, {id: ItemID.flour, data: 0}, {id: 325, data: 8}, {id: ItemID.salt, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.mixing_bowl){
 			api.decreaseFieldSlot(i);
@@ -1273,7 +1718,7 @@ Recipes.addShapeless({id: ItemID.dough, count: 1, data: 0}, [{id: ItemID.mixing_
 
 IDRegistry.genItemID("cranberry_bar");
 Item.createFoodItem("cranberry_bar", "Cranberry bar", {name: "cranberry_bar", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.cranberry_bar, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.cranberry, data: 0}, {id: 353, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.cranberry_bar, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.cranberry, data: 0}, {id: 353, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.bakeware){
 			api.decreaseFieldSlot(i);
@@ -1283,7 +1728,7 @@ Recipes.addShapeless({id: ItemID.cranberry_bar, count: 1, data: 0}, [{id: ItemID
 
 IDRegistry.genItemID("pizza");
 Item.createFoodItem("pizza", "Pizza", {name: "pizza", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.pizza, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.tomato, data: 0}, {id: 319, data: 0}, {id: ItemID.cheese, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.pizza, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.tomato, data: 0}, {id: 319, data: 0}, {id: ItemID.cheese, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.bakeware){
 			api.decreaseFieldSlot(i);
@@ -1293,7 +1738,7 @@ Recipes.addShapeless({id: ItemID.pizza, count: 1, data: 0}, [{id: ItemID.bakewar
 
 IDRegistry.genItemID("fries");
 Item.createFoodItem("fries", "Fries", {name: "fries", meta: 0}, {food: 4});
-Recipes.addShapeless({id: ItemID.fries, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: 394, data: 0}, {id: ItemID.salt, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.fries, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: 394, data: 0}, {id: ItemID.salt, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.bakeware){
 			api.decreaseFieldSlot(i);
@@ -1303,7 +1748,7 @@ Recipes.addShapeless({id: ItemID.fries, count: 1, data: 0}, [{id: ItemID.bakewar
 
 IDRegistry.genItemID("breaded_porkchop");
 Item.createFoodItem("breaded_porkchop", "Breaded porkchop", {name: "breaded_porkchop", meta: 0}, {food: 5});
-Recipes.addShapeless({id: ItemID.breaded_porkchop, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 319, data: 0}, {id: ItemID.flour, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.breaded_porkchop, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 319, data: 0}, {id: ItemID.flour, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.skillet){
 			api.decreaseFieldSlot(i);
@@ -1313,7 +1758,7 @@ Recipes.addShapeless({id: ItemID.breaded_porkchop, count: 1, data: 0}, [{id: Ite
 
 IDRegistry.genItemID("butter");
 Item.createItem("butter", "Butter", {name: "butter", meta: 0});
-Recipes.addShapeless({id: ItemID.butter, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: ItemID.heavy_cream, data: 0}, {id: ItemID.salt, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.butter, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: ItemID.heavy_cream, data: 0}, {id: ItemID.salt, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.saucepan){
 			api.decreaseFieldSlot(i);
@@ -1323,7 +1768,7 @@ Recipes.addShapeless({id: ItemID.butter, count: 1, data: 0}, [{id: ItemID.saucep
 
 IDRegistry.genItemID("hot_wings");
 Item.createFoodItem("hot_wings", "Hot wings", {name: "hot_wings", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.hot_wings, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 366, data: 0}, {id: ItemID.chili_pepper, data: 0}, {id: ItemID.butter, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.hot_wings, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 366, data: 0}, {id: ItemID.chili_pepper, data: 0}, {id: ItemID.butter, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.skillet){
 			api.decreaseFieldSlot(i);
@@ -1333,7 +1778,7 @@ Recipes.addShapeless({id: ItemID.hot_wings, count: 1, data: 0}, [{id: ItemID.ski
 
 IDRegistry.genItemID("mayo");
 Item.createFoodItem("mayo", "Mayo", {name: "mayo", meta: 0});
-Recipes.addShapeless({id: ItemID.mayo, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: 344, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.mayo, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: 344, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.juicer){
 			api.decreaseFieldSlot(i);
@@ -1343,14 +1788,14 @@ Recipes.addShapeless({id: ItemID.mayo, count: 1, data: 0}, [{id: ItemID.juicer, 
 
 IDRegistry.genItemID("fish_dinner");
 Item.createFoodItem("fish_dinner", "Fish dinner", {name: "fish_dinner", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.fish_dinner, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 349, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.mayo, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.fish_dinner, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 349, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.mayo, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.skillet){
 			api.decreaseFieldSlot(i);
 		}
 	}
 });
-Recipes.addShapeless({id: ItemID.fish_dinner, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 460, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.mayo, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.fish_dinner, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 460, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.mayo, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.skillet){
 			api.decreaseFieldSlot(i);
@@ -1360,7 +1805,7 @@ Recipes.addShapeless({id: ItemID.fish_dinner, count: 1, data: 0}, [{id: ItemID.s
 
 IDRegistry.genItemID("potato_cakes");
 Item.createFoodItem("potato_cakes", "Potato cakes", {name: "potato_cakes", meta: 0}, {food: 7});
-Recipes.addShapeless({id: ItemID.potato_cakes, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 392, data: 0}, {id: ItemID.butter, data: 0}, {id: ItemID.onion, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.potato_cakes, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 392, data: 0}, {id: ItemID.butter, data: 0}, {id: ItemID.onion, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.skillet){
 			api.decreaseFieldSlot(i);
@@ -1374,7 +1819,7 @@ Recipes.addShapeless({id: ItemID.hearty_breakfast, count: 1, data: 0}, [{id: Ite
 
 IDRegistry.genItemID("steak_and_chips");
 Item.createFoodItem("steak_and_chips", "Steak and chips", {name: "steak_and_chips", meta: 0}, {food: 12});
-Recipes.addShapeless({id: ItemID.steak_and_chips, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 363, data: 0}, {id: ItemID.fries, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.steak_and_chips, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 363, data: 0}, {id: ItemID.fries, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.skillet){
 			api.decreaseFieldSlot(i);
@@ -1384,7 +1829,7 @@ Recipes.addShapeless({id: ItemID.steak_and_chips, count: 1, data: 0}, [{id: Item
 
 IDRegistry.genItemID("roast_chicken");
 Item.createFoodItem("roast_chicken", "Roast chicken", {name: "roast_chicken", meta: 0}, {food: 9});
-Recipes.addShapeless({id: ItemID.roast_chicken, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: 366, data: 0}, {id: ItemID.salt, data: 0}, {id: ItemID.black_pepper, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.roast_chicken, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: 366, data: 0}, {id: ItemID.salt, data: 0}, {id: ItemID.black_pepper, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.bakeware){
 			api.decreaseFieldSlot(i);
@@ -1394,7 +1839,7 @@ Recipes.addShapeless({id: ItemID.roast_chicken, count: 1, data: 0}, [{id: ItemID
 
 IDRegistry.genItemID("roast_potatoes");
 Item.createFoodItem("roast_potatoes", "Roast potatoes", {name: "roast_potatoes", meta: 0}, {food: 6});
-Recipes.addShapeless({id: ItemID.roast_potatoes, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: 392, data: 0}, {id: ItemID.salt, data: 0}, {id: ItemID.black_pepper, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.roast_potatoes, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: 392, data: 0}, {id: ItemID.salt, data: 0}, {id: ItemID.black_pepper, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.bakeware){
 			api.decreaseFieldSlot(i);
@@ -1404,7 +1849,7 @@ Recipes.addShapeless({id: ItemID.roast_potatoes, count: 1, data: 0}, [{id: ItemI
 
 IDRegistry.genItemID("sunday_roast");
 Item.createFoodItem("sunday_roast", "Sunday roast", {name: "sunday_roast", meta: 0}, {food: 14});
-Recipes.addShapeless({id: ItemID.sunday_roast, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: ItemID.roast_chicken, data: 0}, {id: ItemID.roast_potatoes, data: 0}, {id: ItemID.lettuce, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.sunday_roast, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: ItemID.roast_chicken, data: 0}, {id: ItemID.roast_potatoes, data: 0}, {id: ItemID.lettuce, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.bakeware){
 			api.decreaseFieldSlot(i);
@@ -1414,7 +1859,7 @@ Recipes.addShapeless({id: ItemID.sunday_roast, count: 1, data: 0}, [{id: ItemID.
 
 IDRegistry.genItemID("lamb_with_mint_sauce");
 Item.createFoodItem("lamb_with_mint_sauce", "Lamb with mint sauce", {name: "lamb_with_mint_sauce", meta: 0}, {food: 11});
-Recipes.addShapeless({id: ItemID.lamb_with_mint_sauce, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: 423, data: 0}, {id: ItemID.spice_leaf, data: 0}, {id: ItemID.vinegar, data: 0}, {id: 353, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.lamb_with_mint_sauce, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: 423, data: 0}, {id: ItemID.spice_leaf, data: 0}, {id: ItemID.vinegar, data: 0}, {id: 353, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.bakeware){
 			api.decreaseFieldSlot(i);
@@ -1425,35 +1870,35 @@ Recipes.addShapeless({id: ItemID.lamb_with_mint_sauce, count: 1, data: 0}, [{id:
 
 IDRegistry.genItemID("meaty_stew");
 Item.createFoodItem("meaty_stew", "Meaty stew", {name: "meaty_stew", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.meaty_stew, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 363, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.meaty_stew, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 363, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
 		}
 	}
 });
-Recipes.addShapeless({id: ItemID.meaty_stew, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 319, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.meaty_stew, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 319, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
 		}
 	}
 });
-Recipes.addShapeless({id: ItemID.meaty_stew, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 423, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.meaty_stew, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 423, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
 		}
 	}
 });
-Recipes.addShapeless({id: ItemID.meaty_stew, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 363, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.meaty_stew, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 363, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
 		}
 	}
 });
-Recipes.addShapeless({id: ItemID.meaty_stew, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 411, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.meaty_stew, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 411, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.pot){
 			api.decreaseFieldSlot(i);
@@ -1463,14 +1908,14 @@ Recipes.addShapeless({id: ItemID.meaty_stew, count: 1, data: 0}, [{id: ItemID.po
 
 IDRegistry.genItemID("chocolate_bar");
 Item.createFoodItem("chocolate_bar", "Chocolate bar", {name: "chocolate_bar", meta: 0}, {food: 5});
-Recipes.addShapeless({id: ItemID.chocolate_bar, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: ItemID.cocoa_powder, data: 0}, {id: ItemID.butter, data: 0}, {id: ItemID.fresh_milk, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.chocolate_bar, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: ItemID.cocoa_powder, data: 0}, {id: ItemID.butter, data: 0}, {id: ItemID.fresh_milk, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.saucepan){
 			api.decreaseFieldSlot(i);
 		}
 	}
 });
-Recipes.addShapeless({id: ItemID.chocolate_bar, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: ItemID.cocoa_powder, data: 0}, {id: ItemID.butter, data: 0}, {id: 325, data: 1}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.chocolate_bar, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: ItemID.cocoa_powder, data: 0}, {id: ItemID.butter, data: 0}, {id: 325, data: 1}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.saucepan){
 			api.decreaseFieldSlot(i);
@@ -1483,7 +1928,7 @@ Recipes.addShapeless({id: ItemID.chocolate_bar, count: 1, data: 0}, [{id: ItemID
 
 IDRegistry.genItemID("chaos_cookie");
 Item.createFoodItem("chaos_cookie", "Chaos cookie", {name: "chaos_cookie", meta: 0}, {food: 4});
-Recipes.addShapeless({id: ItemID.chaos_cookie, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: ItemID.chocolate_bar, data: 0}, {id: ItemID.flour, data: 0}, {id: 352, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.chaos_cookie, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: ItemID.chocolate_bar, data: 0}, {id: ItemID.flour, data: 0}, {id: 352, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.bakeware){
 			api.decreaseFieldSlot(i);
@@ -1493,7 +1938,7 @@ Recipes.addShapeless({id: ItemID.chaos_cookie, count: 1, data: 0}, [{id: ItemID.
 
 IDRegistry.genItemID("blueberry_pie");
 Item.createFoodItem("blueberry_pie", "Blueberry pie", {name: "blueberry_pie", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.blueberry_pie, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: ItemID.blueberry, data: 0}, {id: ItemID.dough, data: 0}, {id: 353, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.blueberry_pie, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: ItemID.blueberry, data: 0}, {id: ItemID.dough, data: 0}, {id: 353, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.bakeware){
 			api.decreaseFieldSlot(i);
@@ -1503,14 +1948,14 @@ Recipes.addShapeless({id: ItemID.blueberry_pie, count: 1, data: 0}, [{id: ItemID
 
 IDRegistry.genItemID("waffles");
 Item.createFoodItem("waffles", "Waffles", {name: "waffles", meta: 0}, {food: 9});
-Recipes.addShapeless({id: ItemID.blueberry_pie, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: ItemID.flour, data: 0}, {id: 344, data: 0}, {id: ItemID.butter, data: 0}, {id: ItemID.fresh_milk, data: 0}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.blueberry_pie, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: ItemID.flour, data: 0}, {id: 344, data: 0}, {id: ItemID.butter, data: 0}, {id: ItemID.fresh_milk, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.skillet){
 			api.decreaseFieldSlot(i);
 		}
 	}
 });
-Recipes.addShapeless({id: ItemID.blueberry_pie, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: ItemID.flour, data: 0}, {id: 344, data: 0}, {id: ItemID.butter, data: 0}, {id: 325, data: 1}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.blueberry_pie, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: ItemID.flour, data: 0}, {id: 344, data: 0}, {id: ItemID.butter, data: 0}, {id: 325, data: 1}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.skillet){
 			api.decreaseFieldSlot(i);
@@ -1521,22 +1966,22 @@ Recipes.addShapeless({id: ItemID.blueberry_pie, count: 1, data: 0}, [{id: ItemID
 	}
 });
 
-IDRegistry.genItemID("fresh_water"); 
-Item.createItem("fresh_water", "Fresh water", {name: "fresh_water", meta: 0}); 
-Recipes.addShapeless({id: ItemID.fresh_water, count: 1, data: 0}, [{id: 325, data: 8}], function(api, field, result){ 
-	for (var i in field){ 
-		if (field[i].id != 325){ 
-			api.decreaseFieldSlot(i); 
-		} 
+IDRegistry.genItemID("fresh_water");
+Item.createItem("fresh_water", "Fresh water", {name: "fresh_water", meta: 0});
+Recipes.addShapeless({id: ItemID.fresh_water, count: 1, data: 0}, [{id: 325, data: 8}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != 325){
+			api.decreaseFieldSlot(i);
+		}
 		else{
 			field[i].data = 0
 		}
-	} 
+	}
 });
 
 IDRegistry.genItemID("fresh_milk");
 Item.createItem("fresh_milk", "Fresh milk", {name: "fresh_milk", meta: 0});
-Recipes.addShapeless({id: ItemID.fresh_milk, count: 4, data: 0}, [{id: 325, data: 1}], function(api, field, result){ 
+Recipes.addShapeless({id: ItemID.fresh_milk, count: 4, data: 0}, [{id: 325, data: 1}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != 325){
 			api.decreaseFieldSlot(i);
@@ -1549,31 +1994,30 @@ Recipes.addShapeless({id: ItemID.fresh_milk, count: 4, data: 0}, [{id: 325, data
 
 IDRegistry.genItemID("salt");
 Item.createItem("salt", "Salt", {name: "salt", meta: 0});
-/*Recipes.addShapeless({id: ItemID.salt, count: 1, data: 0}, [{id: ItemID.fresh_water, data: 0}, {id: ItemID.pot, data: 0}], function(api, field, result){ 
-	for (var i in field){ 
-		if (field[i].id != pot){ 
-			api.decreaseFieldSlot(i); 
+Recipes.addShapeless({id: ItemID.salt, count: 1, data: 0}, [{id: ItemID.fresh_water, data: 0}, {id: ItemID.pot, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
 		}
-	} 
-});*/
+	}
+});
 
 IDRegistry.genItemID("flour");
 Item.createItem("flour", "Flour", {name: "flour", meta: 0});
-Recipes.addShapeless({id: ItemID.flour, count: 1, data: 0}, [{id: ItemID.mortar_bowl, data: 0}, {id: 394, data: 0}], function(api, field, result){ 
-	for (var i in field){ 
-		if (field[i].id != mortar_bowl){ 
-			api.decreaseFieldSlot(i); 
+Recipes.addShapeless({id: ItemID.flour, count: 1, data: 0}, [{id: ItemID.mortar_bowl, data: 0}, {id: 394, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != mortar_bowl){
+			api.decreaseFieldSlot(i);
 		}
-	} 
+	}
 });
-Recipes.addShapeless({id: ItemID.flour, count: 1, data: 0}, [{id: ItemID.mortar_bowl, data: 0}, {id: 296, data: 0}], function(api, field, result){ 
-	for (var i in field){ 
-		if (field[i].id != mortar_bowl){ 
-			api.decreaseFieldSlot(i); 
+Recipes.addShapeless({id: ItemID.flour, count: 1, data: 0}, [{id: ItemID.mortar_bowl, data: 0}, {id: 296, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != mortar_bowl){
+			api.decreaseFieldSlot(i);
 		}
-	} 
+	}
 });
-
 IDRegistry.genItemID("spidereyesoup");
 Item.createFoodItem("spidereyesoup", "Spider Eye Soup", {name: "spidereyesoup", meta: 0}, {food: 8});
 Recipes.addShapeless({id: ItemID.spidereyesoup, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 375, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
@@ -1583,7 +2027,6 @@ Recipes.addShapeless({id: ItemID.spidereyesoup, count: 1, data: 0}, [{id: ItemID
 		}
 	}
 });
-
 IDRegistry.genItemID("zombiejerky");
 Item.createFoodItem("zombiejerky", "Zombie Jerky", {name: "zombiejerky", meta: 0}, {food: 4});
 Recipes.addShapeless({id: ItemID.zombiejerky, count: 1, data: 0}, [{id: ItemID.salt, data: 0}, {id: ItemID.salt, data: 0}, {id: 367, data: 0}]);
@@ -1597,7 +2040,6 @@ Recipes.addShapeless({id: ItemID.currypowder, count: 1, data: 0}, [{id: ItemID.m
 		}
 	}
 });
-
 IDRegistry.genItemID("vindaloo");
 Item.createFoodItem("vindaloo", "Vindaloo", {name: "vindaloo", meta: 0}, {food: 10});
 Recipes.addShapeless({id: ItemID.vindaloo, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: 363, data: 0}, {id: ItemID.currypowder, data: 0}, {id: ItemID.butter, data: 0}, {id: 351, data: 0}, {id: ItemID.onion, data: 0}], function(api, field, result){
@@ -1607,7 +2049,6 @@ Recipes.addShapeless({id: ItemID.vindaloo, count: 1, data: 0}, [{id: ItemID.sauc
 		}
 	}
 });
-
 Recipes.addShapeless({id: ItemID.vindaloo, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: 365, data: 0}, {id: ItemID.currypowder, data: 0}, {id: ItemID.butter, data: 0}, {id: 351, data: 0}, {id: ItemID.onion, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.saucepan){
@@ -1615,7 +2056,6 @@ Recipes.addShapeless({id: ItemID.vindaloo, count: 1, data: 0}, [{id: ItemID.sauc
 		}
 	}
 });
-
 Recipes.addShapeless({id: ItemID.vindaloo, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: 319, data: 0}, {id: ItemID.currypowder, data: 0}, {id: ItemID.butter, data: 0}, {id: 351, data: 0}, {id: ItemID.onion, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.saucepan){
@@ -1623,7 +2063,6 @@ Recipes.addShapeless({id: ItemID.vindaloo, count: 1, data: 0}, [{id: ItemID.sauc
 		}
 	}
 });
-
 Recipes.addShapeless({id: ItemID.vindaloo, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: 411, data: 0}, {id: ItemID.currypowder, data: 0}, {id: ItemID.butter, data: 0}, {id: 351, data: 0}, {id: ItemID.onion, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.saucepan){
@@ -1631,7 +2070,6 @@ Recipes.addShapeless({id: ItemID.vindaloo, count: 1, data: 0}, [{id: ItemID.sauc
 		}
 	}
 });
-
 Recipes.addShapeless({id: ItemID.vindaloo, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: 423, data: 0}, {id: ItemID.currypowder, data: 0}, {id: ItemID.butter, data: 0}, {id: 351, data: 0}, {id: ItemID.onion, data: 0}], function(api, field, result){
 	for (var i in field){
 		if (field[i].id != ItemID.saucepan){
@@ -1639,7 +2077,6 @@ Recipes.addShapeless({id: ItemID.vindaloo, count: 1, data: 0}, [{id: ItemID.sauc
 		}
 	}
 });
-
 IDRegistry.genItemID("sausage");
 Item.createFoodItem("sausage", "Sausage", {name: "sausage", meta: 0}, {food: 6});
 Recipes.addShapeless({id: ItemID.sausage, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.salt, data: 0}, {id: ItemID.currypowder, data: 0}, {id: 363, data: 0}], function(api, field, result){
@@ -1650,12 +2087,573 @@ Recipes.addShapeless({id: ItemID.sausage, count: 1, data: 0}, [{id: ItemID.cutti
 	}
 });
 
+IDRegistry.genItemID("cashewChicken");
+Item.createFoodItem("cashewChicken", "Cashew chicken", {name: "cashewchicken", meta: 0}, {food: 6});
+Recipes.addShapeless({id: ItemID.cashewChicken, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: ItemID.peas, data: 0}, {id: ItemID.peppercorn, data: 0}, {id: ItemID.corn, data: 0},{id: 365, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.saucepan){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("chickenCeleryCasserole");
+Item.createFoodItem("chickenCeleryCasserole", "Chicken celery casserole", {name: "chickencelerycasserole", meta: 0}, {food: 12});
+Recipes.addShapeless({id: ItemID.chickenCeleryCasserole, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: 391, data: 0}, {id: ItemID.garlic, data: 0}, {id: 39, data: 0},{id: 365, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.bakeware){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("chickenChowmein");
+Item.createFoodItem("chickenChowmein", "Chicken chowmein", {name: "chickenchowmein", meta: 0}, {food: 10});
+Recipes.addShapeless({id: ItemID.chickenChowmein, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 391, data: 0}, {id: ItemID.peas, data: 0}, {id: ItemID.onion, data: 0},{id: ItemID.garlic, data: 0},{id: ItemID.stock, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.skillet){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("chickenCurry");
+Item.createFoodItem("chickenCurry", "Chicken curry", {name: "chickencurry", meta: 0}, {food: 14});
+Recipes.addShapeless({id: ItemID.chickenCurry, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 392, data: 0}, {id: ItemID.plain_yogurt, data: 0}, {id: ItemID.spice_leaf, data: 0},{id: ItemID.chili_pepper, data: 0},{id: 365, data: 0},{id: ItemID.lettuce, data: 0},{id: ItemID.peas, data: 0},{id: ItemID.garlic, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("chickenGumbo");
+Item.createFoodItem("chickenGumbo", "Chicken gumbo", {name: "chickengumbo", meta: 0}, {food: 16});
+Recipes.addShapeless({id: ItemID.chickenGumbo, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 392, data: 0}, {id: 391, data: 0}, {id: ItemID.onion, data: 0},{id: ItemID.stock, data: 0},{id: 365, data: 0},{id: ItemID.spice_leaf, data: 0},{id: ItemID.bellpepper, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("chickenNoodleSoup");
+Item.createFoodItem("chickenNoodleSoup", "Chicken noodle soup", {name: "chickennoodlesoup", meta: 0}, {food: 9});
+Recipes.addShapeless({id: ItemID.chickenNoodleSoup, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 296, data: 0}, {id: 391, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+
+IDRegistry.genItemID("chickenPotPie");
+Item.createFoodItem("chickenPotPie", "Chicken pot pie", {name: "chickenpotpie", meta: 0}, {food: 10});
+Recipes.addShapeless({id: ItemID.chickenPotPie, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: 265, data: 0}, {id: 391, data: 0},{id: ItemID.dough, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.bakeware){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("chickenSandwich");
+Item.createFoodItem("chickenSandwich", "Chicken sandwich", {name: "chickensandwich", meta: 0}, {food: 11});
+Recipes.addShapeless({id: ItemID.chickenSandwich, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 365, data: 0}, {id: 297, data: 0}, {id: ItemID.mayo, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.skillet){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("friredChicken");
+Item.createFoodItem("friredChicken", "Fried chicken", {name: "friedchicken", meta: 0}, {food: 11});
+Recipes.addShapeless({id: ItemID.friredChicken, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 365, data: 0}, {id: ItemID.butter, data: 0}, {id: ItemID.spice_leaf, data: 0}, {id: ItemID.black_pepper, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("garlicChicken");
+Item.createFoodItem("garlicChicken", "Garlic chicken", {name: "garlicchicken", meta: 0}, {food: 12});
+Recipes.addShapeless({id: ItemID.garlicChicken, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: ItemID.garlic, data: 0}, {id: ItemID.garlic, data: 0},{id: 365, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.bakeware){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("generalTsoChicken");
+Item.createFoodItem("generalTsoChicken", "General tso chicken", {name: "generaltsochicken", meta: 0}, {food: 12});
+Recipes.addShapeless({id: ItemID.generalTsoChicken, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 365, data: 0}, {id: ItemID.lettuce, data: 0}, {id: 353, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.skillet){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("gingerChicken");
+Item.createFoodItem("gingerChicken", "Ginger chicken", {name: "gingerchicken", meta: 0}, {food: 12});
+Recipes.addShapeless({id: ItemID.gingerChicken, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: ItemID.garlic, data: 0}, {id: 365, data: 0}, {id: ItemID.onion, data: 0}, {id: 353, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.saucepan){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("kungPaoCkicken");
+Item.createFoodItem("kungPaoCkicken", "Kung pao chicken", {name: "kungpaochicken", meta: 0}, {food: 12});
+Recipes.addShapeless({id: ItemID.kungPaoCkicken, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:365, data: 0}, {id: ItemID.grape, data: 0}, {id: ItemID.garlic, data: 0}, {id: ItemID.onion, data: 0},{id:353 ,data:0},{id:ItemID.butter ,data:0},{id:ItemID.peppercorn ,data:0},{id:ItemID.cucumber ,data:0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.saucepan){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("lemonChicken");
+Item.createFoodItem("lemonChicken", "Lemon chicken", {name: "lemonchicken", meta: 0}, {food: 9});
+Recipes.addShapeless({id: ItemID.lemonChicken, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id:365, data: 0}, {id: ItemID.grape, data: 0},{id:ItemID.butter ,data:0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.bakeware){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("orangeChicken");
+Item.createFoodItem("orangeChicken", "Orange chicken", {name: "orangechicken", meta: 0}, {food: 12});
+Recipes.addShapeless({id: ItemID.orangeChicken, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:365, data: 0}, {id: ItemID.grape, data: 0},{id:353 ,data:0},{id:ItemID.lettuce ,data:0},{id:ItemID.cabbage ,data:0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.saucepan){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("sweetAndSourChicken");
+Item.createFoodItem("sweetAndSourChicken", "Sweet and sour chicken", {name: "sweetandsourchicken", meta: 0}, {food: 10});
+Recipes.addShapeless({id: ItemID.sweetAndSourChicken, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:365, data: 0}, {id: ItemID.butter, data: 0},{id:ItemID.grape ,data:0},{id:ItemID.bellpepper ,data:0},{id:ItemID.onion ,data:0},{id:ItemID.tomato ,data:0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.saucepan){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("teriyakiChicken");
+Item.createFoodItem("teriyakiChicken", "Teriyaki chicken", {name: "teriyakichicken", meta: 0}, {food: 10});
+Recipes.addShapeless({id: ItemID.teriyakiChicken, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id:365, data: 0}, {id: ItemID.peas, data: 0},{id:ItemID.sausage ,data:0},{id:ItemID.candleberry ,data:0},{id:ItemID.onion ,data:0},{id:ItemID.garlic ,data:0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.skillet){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("baconAndEggs");
+Item.createFoodItem("baconAndEggs", "Bacon and eggs", {name: "baconandeggs", meta: 0}, {food: 10});
+Recipes.addShapeless({id: ItemID.baconAndEggs, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id:319, data: 0}, {id: 344, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.skillet){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("bakedHam");
+Item.createFoodItem("bakedHam", "Baked ham", {name: "bakedham", meta: 0}, {food: 9});
+Recipes.addShapeless({id: ItemID.bakedHam, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id:319, data: 0}, {id: 260, data: 0}, {id: 353, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.bakeware){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("honeyGlazedHam");
+Item.createFoodItem("honeyGlazedHam", "Honey glazed ham", {name: "honeyglazedham", meta: 0}, {food: 10});
+Recipes.addShapeless({id: ItemID.honeyGlazedHam, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:319, data: 0}, {id: 353, data: 0}, {id: ItemID.black_pepper, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.saucepan){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+/*
+pot roast
+spider eye soup
+zombie jerky
+vindaloo
+sausage
+
+meat pie
+baked beans
+maple sausage
+hamburger
+dim sum
+cottage pie
+cornish pasty
+corned beef
+beef wellington
+
+beef jerky
+shepards pie
+lamb berley soup
+honey lemon lamb
+rabbit stew
+spicy mustard pork
+pork lo mein
+pineapple ham
+pea and ham soup
+hot and sour soup
+honey soy ribs
+
+honey glazed ham
+baked ham
+bacon and eggs
+teriyaki chicken
+sweet and sour chicken
+orange chicken
+lemon chicken
+kung pao chicken
+ginger chicken
+general tso's chicken
+garlic chicken
+fired chicken
+chicken sandwich
+chicken pot pie
+chicken noodle soup
+chicken gumbo
+chicken curry
+chicken chow mein
+chicken celery casserole
+cashew chicken
+*/
+IDRegistry.genItemID("honeySoyRibs");
+Item.createFoodItem("honeySoyRibs", "Honey soy ribs", {name: "honeysoyribs", meta: 0}, {food: 14});
+Recipes.addShapeless({id: ItemID.honeySoyRibs, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id:319, data: 0}, {id: 353, data: 0}, {id: ItemID.sausage, data: 0},{id: ItemID.garlic, data: 0},{id: ItemID.vinegar, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.bakeware){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("hotAndSourSoup");
+Item.createFoodItem("hotAndSourSoup", "Hot and sour soup", {name: "hotandsoursoup", meta: 0}, {food: 12});
+Recipes.addShapeless({id: ItemID.hotAndSourSoup, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:319, data: 0}, {id: 39, data: 0}, {id: ItemID.cucumber, data: 0},{id: 344, data: 0},{id: ItemID.vinegar, data: 0},{id: ItemID.black_pepper, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.saucepan){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("peaAndHamSoup");
+Item.createFoodItem("peaAndHamSoup", "Pea and ham soup", {name: "peaandhamsoup", meta: 0}, {food: 8});
+Recipes.addShapeless({id: ItemID.peaAndHamSoup, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id:319, data: 0}, {id: ItemID.peas, data: 0}, {id: ItemID.strawberry, data: 0},{id: ItemID.onion, data: 0},{id: 391, data: 0},{id: ItemID.raspberry, data: 0},{id: ItemID.black_pepper, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("pineappleHam");
+Item.createFoodItem("pineappleHam", "Pineapple ham", {name: "pineappleham", meta: 0}, {food: 10});
+Recipes.addShapeless({id: ItemID.pineappleHam, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id:319, data: 0}, {id: 353, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.bakeware){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("porkLoMein");
+Item.createFoodItem("porkLoMein", "Pork lo mein", {name: "porklomein", meta: 0}, {food: 14});
+Recipes.addShapeless({id: ItemID.porkLoMein, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id:319, data: 0}, {id: 296, data: 0}, {id: ItemID.onion, data: 0}, {id: 291, data: 0},{id: ItemID.cabbage, data: 0},{id: ItemID.garlic, data: 0},{id: ItemID.sausage, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("spicyMustardPork");
+Item.createFoodItem("spicyMustardPork", "Spicy mustarg pork", {name: "spicymustardpork", meta: 0}, {food: 10});
+Recipes.addShapeless({id: ItemID.spicyMustardPork, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:319, data: 0}, {id: ItemID.garlic, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.saucepan){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.spicyMustardPork, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:319, data: 0}, {id: ItemID.salt, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.saucepan){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.spicyMustardPork, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:319, data: 0}, {id: ItemID.black_pepper, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.saucepan){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.spicyMustardPork, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:319, data: 0}, {id: ItemID.black_pepper, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.saucepan){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("honeyLemonLamb");
+Item.createFoodItem("honeyLemonLamb", "Honey lemon lamb", {name: "honeylemonlamb", meta: 0}, {food: 8});
+Recipes.addShapeless({id: ItemID.honeyLemonLamb, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id:291, data: 0}, {id: 292, data: 0}, {id: 411, data: 0}, {id: 39, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("lambBarleySoup");
+Item.createFoodItem("lambBarleySoup", "Lamb barley soup", {name: "lambbarleysoup", meta: 0}, {food: 10});
+Recipes.addShapeless({id: ItemID.lambBarleySoup, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id:291, data: 0}, {id: ItemID.stock, data: 0}, {id: 411, data: 0}, {id: ItemID.onion, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("shepardsPie");
+Item.createFoodItem("shepardsPie", "Shepards pie", {name: "shepardspie", meta: 0}, {food: 12});
+Recipes.addShapeless({id: ItemID.shepardsPie, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id:292, data: 0}, {id: ItemID.dough, data: 0}, {id: 291, data: 0}, {id: ItemID.peas, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.bakeware){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("beefjerky");
+Item.createFoodItem("beefjerky", "Beefjerky", {name: "beefjerky", meta: 0}, {food: 5});
+Recipes.addShapeless({id: ItemID.beefjerky, count: 1, data: 0}, [{id:363, data: 0}, {id: ItemID.salt, data: 0}]);
+
+IDRegistry.genItemID("meatPie");
+Item.createFoodItem("meatPie", "Meat pie", {name: "meatpie", meta: 0}, {food: 14});
+Recipes.addShapeless({id: ItemID.meatPie, count: 1, data: 0}, [{id: ItemID.dough, data: 0}, {id:363, data: 0}, {id: ItemID.bakeware, data: 0}, {id: ItemID.onion, data: 0}, {id: ItemID.garlic, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.bakeware){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("bakedbeans");
+Item.createFoodItem("bakedbeans", "Baked Beans", {name: "bakedbeans", meta: 0}, {food: 10});
+Recipes.addShapeless({id: ItemID.bakedbeans, count: 1, data: 0}, [{id: ItemID.bean, data: 0}, {id: ItemID.pot, data: 0}, {id:320, data: 0}, {id:353, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("maplesausage");
+Item.createFoodItem("maplesausage", "Maple Sausage", {name: "maplesausage", meta: 0}, {food: 1});
+Recipes.addShapeless({id: ItemID.maplesausage, count: 1, data: 0}, [{id: ItemID.spice_leaf, data: 0}, {id:363, data: 0}]);
+
+IDRegistry.genItemID("toast");
+Item.createFoodItem("toast", "Toast", {name: "toast", meta: 0}, {food: 4});
+Recipes.addShapeless({id: ItemID.toast, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id:297, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.bakeware){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("hamburger");
+Item.createFoodItem("hamburger", "Hamburger", {name: "hamburger", meta: 0}, {food: 8});
+Recipes.addShapeless({id: ItemID.hamburger, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id:363, data: 0}, {id: ItemID.toast, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.skillet){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("dimsum");
+Item.createFoodItem("dimsum", "Dim Sum", {name: "dimsum", meta: 0}, {food: 12});
+/*
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id:365, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id:363, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id:319, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id:411, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id:423, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id: ItemID.turkeyRaw, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id: ItemID.venisonRaw, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+*/
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id:365, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id:363, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id:319, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id:411, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id:423, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id: ItemID.turkeyRaw, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id: ItemID.venisonRaw, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id:365, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id:363, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id:319, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id:411, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id:423, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id: ItemID.turkeyRaw, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id: ItemID.venisonRaw, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("cottagepie");
+Item.createFoodItem("cottagepie", "Cottage Pie", {name: "cottagepie", meta: 0}, {food: 12});
+Recipes.addShapeless({id: ItemID.cottagepie, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id:363, data: 0}, {id:392, data: 0}, {id:391, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.peas, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.bakeware){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("cornishpasty");
+Item.createFoodItem("cornishpasty", "Cornish Pasty", {name: "cornishpasty", meta: 0}, {food: 12});
+Recipes.addShapeless({id: ItemID.cornishpasty, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id:363, data: 0}, {id:392, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.rutabaga, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.bakeware){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("cornedbeef");
+Item.createFoodItem("cornedbeef", "Corned Beef", {name: "cornedbeef", meta: 0}, {food: 10});
+Recipes.addShapeless({id: ItemID.cornishpasty, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id:363, data: 0}, {id: ItemID.salt, data: 0}, {id:353, data: 0}, {id: ItemID.mustardseeds, data: 0}, {id: ItemID.spice_leaf, data: 0}, {id: ItemID.ginger, data: 0}], function(api, field, result){
+	for (var i in field){
+		if (field[i].id != ItemID.pot){
+			api.decreaseFieldSlot(i);
+		}
+	}
+});
+IDRegistry.genItemID("beefwellington");
+Item.createFoodItem("beefwellington", "Beef Wellington", {name: "beefwellington", meta: 0}, {food: 18});
+Recipes.addShapeless({id: ItemID.beefwellington, count: 1, data: 0}, [{id:363, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.spinach, data: 0}, {id:40, data: 0}]);
+Recipes.addShapeless({id: ItemID.beefwellington, count: 1, data: 0}, [{id:363, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.spinach, data: 0}, {id:39, data: 0}]);
+//
 
 
 
-// file: ITEMS/ARMOR/wax.js
 
-﻿IDRegistry.genItemID("pressedWax");
+// file: ITEMS/wax.js
+
+IDRegistry.genItemID("pressedWax");
 Item.createItem("pressedWax", "Wax", {name: "wax", meta: 0}, {});
 Recipes.addShapeless({id: ItemID.pressedWax, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0}], function(api, field, result){ 
 	for (var i in field){
@@ -1664,6 +2662,10 @@ Recipes.addShapeless({id: ItemID.pressedWax, count: 1, data: 0}, [{id: ItemID.po
 		}
 	}
 });
+
+if(ItemID[ItemID.beeswax]){
+	Recipes.addShapeless({id: ItemID.pressedWax, count: 1, data: 0}, [{id: ItemID.beeswax, data: 0}]);
+};
 
 IDRegistry.genBlockID("pressedWaxBlock"); 
 Block.createBlock("pressedWaxBlock", [
@@ -1674,49 +2676,43 @@ Recipes.addShaped({id: BlockID.pressedWaxBlock, count: 1, data: 0}, ["bbb", "bbb
 
 
 
-// file: ITEMS/ARMOR/leather.js
+// file: ITEMS/armor.js
 
 IDRegistry.genItemID("hardedLeather");
 Item.createItem("hardedLeather", "Harded leather", {name: "hardenedleatherItem", meta: 0}, {stack: 64});
 Recipes.addShapeless({id: ItemID.hardedLeather, count: 1, data: 0}, [{id: 334, data: 0}, {id: ItemID.pressedWax, data: 0}]);
 
+IDRegistry.genItemID("hardedHelm");
+IDRegistry.genItemID("hardedChestplate");
+IDRegistry.genItemID("hardedLegging");
+IDRegistry.genItemID("hardedFoots");
 
+Item.createArmorItem("hardedHelm", "Harded Leather Helmet", {name: "hardenedleatherhelmItem"}, {type: "helmet", armor: 2, durability: 149, texture: "armor/hardenedleather_1.png"});
+Item.createArmorItem("hardedChestplate", "Harded Leather Chestplate", {name: "hardenedleatherchestItem"}, {type: "chestplate", armor: 6, durability: 216, texture: "armor/hardenedleather_1.png"});
+Item.createArmorItem("hardedLegging", "Harded Leather Leggings", {name: "hardenedleatherleggingsItem"}, {type: "leggings", armor: 5, durability: 203, texture: "armor/hardenedleather_2.png"});
+Item.createArmorItem("hardedFoots", "Harded Leather Boots", {name: "hardenedleatherbootsItem"}, {type: "boots", armor: 2, durability: 176, texture: "armor/hardenedleather_1.png"});
 
+Recipes.addShaped({id: ItemID.hardedHelm, count: 1, data: 0}, [
+	"xxx",
+	"x x"
+], ['x', ItemID.hardedLeather, 0]);
 
-// file: ITEMS/ARMOR/helm.js
+Recipes.addShaped({id: ItemID.hardedChestplate, count: 1, data: 0}, [
+	"x x",
+	"xxx",
+	"xxx"
+], ['x', ItemID.hardedLeather, 0]);
 
-IDRegistry.genItemID("hardenedLeatherHelm");
-Item.createArmorItem("hardenedLeatherHelm", "Harded leather helm", {name: "hardenedleatherhelmItem"}, {type: "helmet", armor: 2, durability: 149, texture: "armor/hardenedleather_1.png"});
-Recipes.addShaped({id: ItemID.hardenedLeatherHelm, count: 1, data: 0}, ["aaa", " a a"], ["a", ItemID.hardedLeather, 0]);
+Recipes.addShaped({id: ItemID.hardedLegging, count: 1, data: 0}, [
+	"xxx",
+	"x x",
+	"x x"
+], ['x', ItemID.hardedLeather, 0]);
 
-
-
-
-// file: ITEMS/ARMOR/chest.js
-
-IDRegistry.genItemID("hardenedLeatherChest");
-Item.createArmorItem("hardenedLeatherChest", "Hardened leather chest", {name: "hardenedleatherchestItem"}, {type: "chestplate", armor: 6, durability: 216, texture: "armor/hardenedleather_1.png"});
-Callback.addCallback("PostLoaded",function(){
-Recipes.addShaped({id: ItemID.hardenedLeatherChest, count: 1, data: 0}, ["a a", " aaa"," aaa"], ["a", ItemID.hardedLeather, 0]);
-});
-
-
-
-
-// file: ITEMS/ARMOR/leggins.js
-
-IDRegistry.genItemID("hardenedLeatherLeggings");
-Item.createArmorItem("hardenedLeatherLeggings", "Harded leather leggins", {name: "hardenedleatherleggingsItem"}, {type: "leggings", armor: 5, durability: 203, texture: "hardenedleather_2"});
-Recipes.addShaped({id: ItemID.hardenedLeatherLeggings, count: 1, data: 0}, ["aaa", " a a"," a a"], ["a", ItemID.hardedLeather, 0]);
-
-
-
-
-// file: ITEMS/ARMOR/foots.js
-
-IDRegistry.genItemID("hardenedLeatherBoots");
-Item.createArmorItem("hardenedLeatherBoots", "Hardened leather boots", {name: "hardenedleatherbootsItem"}, {type: "boots", armor: 2, durability: 176, texture: "armor/hardenedleather_1.png"});
-Recipes.addShaped({id: ItemID.hardenedLeatherBoots, count: 1, data: 0}, ["   ", " a a"," a a"], ["a", ItemID.hardedLeather, 0]);
+Recipes.addShaped({id: ItemID.hardedFoots, count: 1, data: 0}, [
+	"x x",
+	"x x"
+], ['x', ItemID.hardedLeather, 0]);
 
 
 
@@ -1728,84 +2724,116 @@ for(var i = 0;i<16;i++){
 	Item.createItem("candleItem"+i, "Candle", {name: "candle", meta: i},{});
 };
 Item.registerUseFunction("candleItem1", function(coords, item, block){
-	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,1);
-	World.addTileEntity(coords.x, coords.y+1, coords.z);
-	Player.setCarriedItem(ItemID.candleItem1, item.count - 1, 0)
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,1);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem1, item.count - 1, 0)
+	}
 });
 Item.registerUseFunction("candleItem2", function(coords, item, block){
-	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,2);
-	World.addTileEntity(coords.x, coords.y+1, coords.z);
-	Player.setCarriedItem(ItemID.candleItem2, item.count - 1, 0)
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,2);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem2, item.count - 1, 0)
+	}
 });
 Item.registerUseFunction("candleItem3", function(coords, item, block){
-	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,3);
-	World.addTileEntity(coords.x, coords.y+1, coords.z);
-	Player.setCarriedItem(ItemID.candleItem3, item.count - 1, 0)
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,3);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem3, item.count - 1, 0)
+	}
 });
 Item.registerUseFunction("candleItem4", function(coords, item, block){
-	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,4);
-	World.addTileEntity(coords.x, coords.y+1, coords.z);
-	Player.setCarriedItem(ItemID.candleItem4, item.count - 1, 0)
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,4);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem4, item.count - 1, 0)
+	}
 });
 Item.registerUseFunction("candleItem5", function(coords, item, block){
-	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,5);
-	World.addTileEntity(coords.x, coords.y+1, coords.z);
-	Player.setCarriedItem(ItemID.candleItem5, item.count - 1, 0)
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,5);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem5, item.count - 1, 0)
+	}
 });
 Item.registerUseFunction("candleItem6", function(coords, item, block){
-	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,6);
-	World.addTileEntity(coords.x, coords.y+1, coords.z);
-	Player.setCarriedItem(ItemID.candleItem6, item.count - 1, 0)
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,6);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem6, item.count - 1, 0)
+	}
 });
 Item.registerUseFunction("candleItem7", function(coords, item, block){
-	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,7);
-	World.addTileEntity(coords.x, coords.y+1, coords.z);
-	Player.setCarriedItem(ItemID.candleItem7, item.count - 1, 0)
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,7);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem7, item.count - 1, 0)
+	}
 });
 Item.registerUseFunction("candleItem8", function(coords, item, block){
-	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,8);
-	World.addTileEntity(coords.x, coords.y+1, coords.z);
-	Player.setCarriedItem(ItemID.candleItem8, item.count - 1, 0)
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,8);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem8, item.count - 1, 0)
+	}
 });
 Item.registerUseFunction("candleItem9", function(coords, item, block){
-	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,9);
-	World.addTileEntity(coords.x, coords.y+1, coords.z);
-	Player.setCarriedItem(ItemID.candleItem9, item.count - 1, 0)
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,9);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem9, item.count - 1, 0)
+	}
 });
 Item.registerUseFunction("candleItem10", function(coords, item, block){
-	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,10);
-	World.addTileEntity(coords.x, coords.y+1, coords.z);
-	Player.setCarriedItem(ItemID.candleItem10, item.count - 1, 0)
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,10);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem10, item.count - 1, 0)
+	}
 });
 Item.registerUseFunction("candleItem11", function(coords, item, block){
-	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,11);
-	World.addTileEntity(coords.x, coords.y+1, coords.z);
-	Player.setCarriedItem(ItemID.candleItem11, item.count - 1, 0)
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,11);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem11, item.count - 1, 0)
+	}
 });
 Item.registerUseFunction("candleItem12", function(coords, item, block){
-	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,12);
-	World.addTileEntity(coords.x, coords.y+1, coords.z);
-	Player.setCarriedItem(ItemID.candleItem12, item.count - 1, 0)
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,12);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem12, item.count - 1, 0)
+	}
 });
 Item.registerUseFunction("candleItem13", function(coords, item, block){
-	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,13);
-	World.addTileEntity(coords.x, coords.y+1, coords.z);
-	Player.setCarriedItem(ItemID.candleItem13, item.count - 1, 0)
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,13);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem13, item.count - 1, 0)
+	}
 });
 Item.registerUseFunction("candleItem14", function(coords, item, block){
-	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,14);
-	World.addTileEntity(coords.x, coords.y+1, coords.z);
-	Player.setCarriedItem(ItemID.candleItem14, item.count - 1, 0)
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,14);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem14, item.count - 1, 0)
+	}
 });
 Item.registerUseFunction("candleItem15", function(coords, item, block){
-	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,15);
-	World.addTileEntity(coords.x, coords.y+1, coords.z);
-	Player.setCarriedItem(ItemID.candleItem15, item.count - 1, 0)
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,15);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem15, item.count - 1, 0)
+	}
 });
 Item.registerUseFunction("candleItem0", function(coords, item, block){
-	World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,0);
-	World.addTileEntity(coords.x, coords.y+1, coords.z);
-	Player.setCarriedItem(ItemID.candleItem0, item.count - 1, 0)
+	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,0);
+		World.addTileEntity(coords.x, coords.y+1, coords.z);
+		Player.setCarriedItem(ItemID.candleItem0, item.count - 1, 0)
+	}
 });
 
 Recipes.addShapeless({id: ItemID.candleItem0, count: 4, data: 0}, [{id: 287, data: 0},{id: ItemID.pressedWax, data: 0}]);
@@ -1861,35 +2889,49 @@ Block.createBlock("sink_2", [
 Block.createBlock("sink_3", [
 {name: "Sink 3", texture: [["sinkbottom", 3], ["sinktop", 3], ["sinkside", 3], ["sinkside", 3], ["sinkside", 3], ["sinkside", 3]], inCreative: true}
 ]);   
- Callback.addCallback("ItemUse", function(coords,item,block){
- var pl = Player.getCarriedItem();   if((pl.id==325)){
- switch(block.id){
- case BlockID.sink_0:
- case BlockID.sink_1:
- case BlockID.sink_2:
- case BlockID.sink_3:
-    Player.setCarriedItem(item.id, item.count - 1, item.data);
-  Player.addItemToInventory(325, 1, 8);
-break;
-}}
- } );       
+Callback.addCallback("ItemUse", function(coords,item,block){
+	if((item.id==325&&item.data==0)){
+		switch(block.id){
+			case BlockID.sink_0:
+			case BlockID.sink_1:
+			case BlockID.sink_2:
+			case BlockID.sink_3:				
+				Player.setCarriedItem(item.id, item.count - 1, item.data);
+				//Player.addItemToInventory(325, 1, 8);
+				World.drop(coords.x,coords.y,coords.z,325,1,8);
+					break;
+		}	
+	}
+	if(item.id==374){
+		switch(block.id){
+			case BlockID.sink_0:
+			case BlockID.sink_1:
+			case BlockID.sink_2:
+			case BlockID.sink_3:				
+				Player.setCarriedItem(item.id, item.count - 1, item.data);
+				//Player.addItemToInventory(325, 1, 8);
+				World.drop(coords.x,coords.y,coords.z,373,1,0);
+					break;
+		}	
+	}
+});       
 Callback.addCallback("PostLoaded", function(){
 	Recipes.addShaped({id: BlockID.sink_0, count: 1, data: 0}, [
 		"ara",
 		"ara",
 		"ara"
 	], ["a", 265, 0, 'r', 17, -1]);
-	 Recipes.addShaped({id: BlockID.sink_1, count: 1, data: 1}, [
+	 Recipes.addShaped({id: BlockID.sink_1, count: 1, data: 0}, [
 		"ara",
 		"ara",
 		"ara"
 	], ["a", 265, 0, 'r', 1, -1]);
-	 Recipes.addShaped({id: BlockID.sink_2, count: 1, data: 2}, [
+	 Recipes.addShaped({id: BlockID.sink_2, count: 1, data: 0}, [
 		"ara",
 		"ara",
 		"ara"
 	], ["a", 265, 0, 'r', 82, 0]);
-	 Recipes.addShaped({id: BlockID.sink_3, count: 1, data: 3}, [
+	 Recipes.addShaped({id: BlockID.sink_3, count: 1, data: 0}, [
 		"ara",
 		"ara",
 		"ara"
@@ -2039,6 +3081,16 @@ if(__config__.access("traps.animal.TileEntity")){
 
 
 
+// file: BLOCKS/fishTrap.js
+
+/*IDRegistry.genBlockID("fishTrap"); 
+Block.createBlock("fishTrap", [
+	{name: "Fish trap", texture: [["fishtrap", 0]], inCreative: true}
+]);*/
+
+
+
+
 // file: BLOCKS/CANDLES/block.js
 
 var candleVariations = [];
@@ -2107,27 +3159,14 @@ Block.registerDropFunction("candle", function(coords, blockID, blockData, level)
 
 
 
-// file: BLOCKS/CANDLES/TileEntity.js
-
-if(__config__.access("debug.TileEntity.other.candle")){
-	TileEntity.registerPrototype(BlockID.candle,{
-		tick:function(){
-			if(Math.random()<__config__.access("other.candleBurning")){
-				Particles.addParticle(this.x+0.5, this.y+0.5, this.z+0.5, 14, Random.Float(0.1,0.4), Random.Float(0.1,0.4), Random.Float(0.1,0.4)/*,0*/)
-			}
-		}
-	});
-};
-
-
-
-
 // file: GARDENS/BERRYGARDEN/block.js
 
 IDRegistry.genBlockID("berrygarden"); 
 Block.createBlock("berrygarden", [
 	{name: "Berry garden", texture: [["empty", 0],["empty", 0],["berrygardenBlock", 0]], inCreative: false}
 ],BLOCK_TYPE_PLANT);
+
+Harvest.registerDroppingBlock(BlockID.berrygarden);
 
 PlantModel.tree(BlockID.berrygarden,0);
 
@@ -2194,6 +3233,8 @@ IDRegistry.genBlockID("grassgarden");
 Block.createBlock("grassgarden", [
 	{name: "Grass garden", texture: [["empty", 0],["empty", 0],["grassgardenBlock", 0]], inCreative: false}
 ],BLOCK_TYPE_PLANT);
+
+Harvest.registerDroppingBlock(BlockID.grassgarden);
 
 PlantModel.tree(BlockID.grassgarden,0);
 
@@ -2270,6 +3311,8 @@ Block.createBlock("herbgarden", [
 	{name: "Herb garden", texture: [["empty", 0],["empty", 0],["herbgardenBlock", 0]], inCreative: false}
 ],BLOCK_TYPE_PLANT);
 
+Harvest.registerDroppingBlock(BlockID.herbgarden);
+
 PlantModel.tree(BlockID.herbgarden,0);
 
 CropRegistry.fruitPush(BlockID.herbgarden,ItemID.herbGardenITEM);
@@ -2324,6 +3367,8 @@ Block.createBlock("candleberrygarden", [
 	{name: "Candleberry garden", texture: [["empty", 0],["empty", 0],["candleberrycrop", 2]], inCreative: false}
 ],BLOCK_TYPE_PLANT);
 
+Harvest.registerDroppingBlock(BlockID.candleberrygarden);
+
 PlantModel.tree(BlockID.candleberrygarden,0);
 
 CropRegistry.fruitPush(BlockID.candleberrygarden,ItemID.candleberrygardenITEM);
@@ -2358,6 +3403,54 @@ Item.registerUseFunction("candleberrygardenITEM", function(coords, item, tile){
 
 if(__config__.access("debug.TileEntity.garden.candleberry")){
 	TileEntity.registerPrototype(BlockID.candleberrygarden,gardenPROTO);
+};
+
+
+
+
+// file: GARDENS/COTTONGARDEN/block.js
+
+IDRegistry.genBlockID("cottongarden"); 
+Block.createBlock("cottongarden", [
+	{name: "Cotton garden", texture: [["empty", 0],["empty", 0],["cottoncrop", 2]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+
+Harvest.registerDroppingBlock(BlockID.cottongarden);
+
+PlantModel.tree(BlockID.cottongarden,0);
+
+CropRegistry.fruitPush(BlockID.cottongarden,ItemID.cottongardenITEM);
+
+Block.registerDropFunction("cottongarden", function(coords, blockID, blockData, level){
+	var drop = [];
+	drop.push([ItemID.cotton,rrr, 0]);
+	return drop;
+});
+
+
+
+
+// file: GARDENS/COTTONGARDEN/item.js
+
+IDRegistry.genItemID("cottongardenITEM");
+Item.createItem("cottongardenITEM", "Cotton garden", {name: "cottonGarden", meta: 0} ,{isTech: false} );
+Item.registerUseFunction("cottongardenITEM", function(coords, item, tile){
+	var place = coords.relative;
+	var tile1 = World.getBlock(place.x, place.y, place.z);
+	var tile2 = World.getBlock(place.x, place.y - 1, place.z);	
+	if (GenerationUtils.isTransparentBlock(tile1.id) && TREE_SAPLING_GROUND_TILES[tile2.id]){
+		World.setBlock(place.x, place.y, place.z, BlockID.cottongarden);
+		Player.setCarriedItem(item.id, item.count - 1, item.data);
+	}
+});
+
+
+
+
+// file: GARDENS/COTTONGARDEN/TileEntity.js
+
+if(__config__.access("debug.TileEntity.garden.cotton")){
+	TileEntity.registerPrototype(BlockID.cottongarden,gardenPROTO);
 };
 
 
@@ -2427,44 +3520,67 @@ Callback.addCallback("PostLoaded", function(){
 // file: WORLD/grassdrop.js
 
  var seedsArray = [
- ItemID.candleberryseed,
- ItemID.strawberry_seed,
- ItemID.raspberry_seed,
- ItemID.cranberry_seed,
- ItemID.blueberry_seed,
- ItemID.blackberry_seed,
- ItemID.grape_seed,
- ItemID.cucumber_seed,
- ItemID.onion_seed,
- ItemID.cabbage_seed,
- ItemID.tomato_seed,
- ItemID.bellpepper_seed,
- ItemID.garlic_seed,
- ItemID.lettuce_seed,
- ItemID.coffee_seed,
- ItemID.peas_seed,
- ItemID.chili_pepper_seed,
- ItemID.spice_leaf_seed,
- ItemID.corn_seed,
- ItemID.peppercorn_seed
+	 ItemID.curryleaf_seed,
+	 ItemID.candleberryseed,
+	 ItemID.strawberry_seed,
+	 ItemID.raspberry_seed,
+	 ItemID.cranberry_seed,
+	 ItemID.blueberry_seed,
+	 ItemID.blackberry_seed,
+	 ItemID.grape_seed,
+	 ItemID.cucumber_seed,
+	 ItemID.onion_seed,
+	 ItemID.cabbage_seed,
+	 ItemID.tomato_seed,
+	 ItemID.bellpepper_seed,
+	 ItemID.garlic_seed,
+	 ItemID.lettuce_seed,
+	 ItemID.coffee_seed,
+	 ItemID.peas_seed,
+	 ItemID.chili_pepper_seed,
+	 ItemID.spice_leaf_seed,
+	 ItemID.corn_seed,
+	 ItemID.peppercorn_seed,
+	 ItemID.cotton_seed
  ];
- Callback.addCallback("DestroyBlock", function(coords, block, player){
-	if(((block.id==31)&&(block.data==1)||(block.id==175)&&(block.data==10)||(block.data==2))){
+Callback.addCallback("DestroyBlock", function(coords, block, player){
+	var trueIDs = {
+		31:true,
+		175:true
+	};
+	var trueMetaS = {
+		1:true,
+		2:true,
+		10:true
+	};
+	if(trueIDs[block.id]&&trueMetaS[block.data]){
 		var nnn =__config__.access("other.grassDrop");
 		var nn = Random.Int(0,nnn);
+		//Debug.m(nn);
 		if(nn<seedsArray.length){  
 			Harvest.dropPlant(seedsArray[nn],coords.x,coords.y,coords.z);
 		}
 	}
- });
- Callback.addCallback("ItemUse", function(coords, item, block){
- if((block.id==2)&&((item.id==290)||(item.id==291)||(item.id==292)||(item.id==293)||(item.id==293)||(item.id==294))){
-	var nn = Random.Int(0,400);
-	if(nn<seedsArray.length){  
-			Harvest.dropPlant(seedsArray[nn],coords.x,coords.y,coords.z); 
+});
+Callback.addCallback("ItemUse", function(coords, item, block){
+ 
+	var trueTool = {
+		290:true,
+		291:true,
+		292:true,
+		293:true,
+		294:true
+	};
+	
+	if(block.id==2&&trueTool[item.id]){
+		var nnn =__config__.access("other.grassDrop");
+		var nn = Random.Int(0,nnn);
+		//Debug.m(nn);
+		if(nn<seedsArray.length){  
+			Harvest.dropPlant(seedsArray[nn],coords.x,coords.y+1,coords.z);
 		}
 	}
- });
+});
 
 
 
@@ -2472,98 +3588,83 @@ Callback.addCallback("PostLoaded", function(){
 // file: WORLD/GENERATION/GARDENS/biomes.js
 
 var SaltBiomes = [0,24,10];
+	//var SaltBiomes = __config__.access("generation.biomes.gardens.SaltBiomes");
 var BerryGardenBiomes = [1,4, 18, 27, 28,13];
+	//var BerryGardenBiomes = __config__.access("generation.biomes.gardens.BerryGardenBiomes");
 var CandleberryGardenBiomes = [1,4, 18, 27, 28,13];
+	//var CandleberryGardenBiomes = __config__.access("generation.biomes.gardens.CandleberryGardenBiomes");
 var DesertGardenBiomes =[2,35,37];
+	//var DesertGardenBiomes = __config__.access("generation.biomes.gardens.DesertGardenBiomes");
 var GourdGardenBiomes = [1,4, 18, 27, 28,13];
+	//var GourdGardenBiomes = __config__.access("generation.biomes.gardens.GourdGardenBiomes");
 var GrassGardenBiomes = [1,4, 18, 27, 28];
+	//var GrassGardenBiomes = __config__.access("generation.biomes.gardens.GrassGardenBiomes");
 var GroundGardenBiomes =[4,4, 18, 27, 28,13];
+	//var GroundGardenBiomes = __config__.access("generation.biomes.gardens.GroundGardenBiomes");
 var HerbGardenBiomes =  [4, 18, 27, 28];
+	//var HerbGardenBiomes = __config__.access("generation.biomes.gardens.HerbGardenBiomes");
 var LeafyGardenBiomes = [4, 18, 27, 28,13];
+	//var LeafyGardenBiomes = __config__.access("generation.biomes.gardens.LeafyGardenBiomes");
 var MushroomGardenBiomes = [4, 18, 27, 28];
+	//var MushroomGardenBiomes = __config__.access("generation.biomes.gardens.MushroomGardenBiomes");
 var StalkGardenBiomes = [4, 18, 27, 28];
+	//var StalkGardenBiomes = __config__.access("generation.biomes.gardens.StalkGardenBiomes");
 var TextileGardenBiomes = [4, 18, 27, 28];
+	//var TextileGardenBiomes = __config__.access("generation.biomes.gardens.TextileGardenBiomes");
 var TropicalGardenBiomes = [21, 22, 23, 149, 151,6, 134,35,36];
+	//var TropicalGardenBiomes = __config__.access("generation.biomes.gardens.TropicalGardenBiomes");
 var WaterGardenBiomes = [24,0];
+	//var WaterGardenBiomes = __config__.access("generation.biomes.gardens.WaterGardenBiomes");
 
 
 
 
 // file: WORLD/GENERATION/GARDENS/berryGarden.js
 
-Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
-	var nnumber = __config__.access("genNumbers.gardens.berry");
-	if(Math.random() <nnumber){
-		var coords = GenerationUtils.randomCoords(chunkX, chunkZ, 64, 128);
-		coords = GenerationUtils.findSurface(coords.x, coords.y, coords.z);
-		for(var id in BerryGardenBiomes ){
-			if((World.getBiome((chunkX + 0.5) * 16, (chunkZ + 0.5) * 16)==id)&&(World.getBlockID(coords.x, coords.y, coords.z) == 2)){
-				World.setBlock(coords.x, coords.y + 1, coords.z, BlockID.berrygarden, 0);
-				World.addTileEntity(coords.x, coords.y + 1, coords.z);
-						
-			}
-		}
-	}
-});
+addGeneration({id:BlockID.berrygarden,data:0},BerryGardenBiomes,
+	Random.Int(__config__.access("generation.group.gardens.berry.min"),
+	__config__.access("generation.group.gardens.berry.max")),
+__config__.access("generation.numbers.gardens.berry"));
 
 
 
 
 // file: WORLD/GENERATION/GARDENS/herbGarden.js
 
-Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
-	var nnumber = __config__.access("genNumbers.gardens.herb");
-	if(Math.random() <nnumber){
-		var coords = GenerationUtils.randomCoords(chunkX, chunkZ, 64, 128);
-		coords = GenerationUtils.findSurface(coords.x, coords.y, coords.z);
-		for(var id in HerbGardenBiomes ){
-			if((World.getBiome((chunkX + 0.5) * 16, (chunkZ + 0.5) * 16)==id)&&(World.getBlockID(coords.x, coords.y, coords.z) == 2)){
-				World.setBlock(coords.x, coords.y + 1, coords.z, BlockID.herbgarden , 0);
-				 	World.addTileEntity(coords.x, coords.y + 1, coords.z);
-				 	
-			}
-		}
-	}
-});
+addGeneration({id:BlockID.herbgarden,data:0},HerbGardenBiomes,
+	Random.Int(__config__.access("generation.group.gardens.herb.min"),
+	__config__.access("generation.group.gardens.herb.max")),
+__config__.access("generation.numbers.gardens.herb"));
 
 
 
 
 // file: WORLD/GENERATION/GARDENS/grassGarden.js
 
-Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
-	var nnumber = __config__.access("genNumbers.gardens.grass");
-	if(Math.random() <nnumber){
-		var coords = GenerationUtils.randomCoords(chunkX, chunkZ, 64, 128);
-		coords = GenerationUtils.findSurface(coords.x, coords.y, coords.z);
-		for(var id in GrassGardenBiomes ){
-			if((World.getBiome((chunkX + 0.5) * 16, (chunkZ + 0.5) * 16)==id)&&(World.getBlockID(coords.x, coords.y, coords.z) == 2)){
-				World.setBlock(coords.x, coords.y + 1, coords.z, BlockID.grassgarden, 0);
-				 World.addTileEntity(coords.x, coords.y + 1, coords.z);				 	
-			}
-		}
-	}
-});
+addGeneration({id:BlockID.grassgarden,data:0},GrassGardenBiomes,
+	Random.Int(__config__.access("generation.group.gardens.grass.min"),
+	__config__.access("generation.group.gardens.grass.max")),
+__config__.access("generation.numbers.gardens.grass"));
 
 
 
 
 // file: WORLD/GENERATION/GARDENS/candleberry.js
 
-Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
-	var nnumber = __config__.access("genNumbers.gardens.candleberry");
-	if(Math.random() <nnumber){
-		var coords = GenerationUtils.randomCoords(chunkX, chunkZ, 64, 128);
-		coords = GenerationUtils.findSurface(coords.x, coords.y, coords.z);
-		for(var id in CandleberryGardenBiomes ){
-			if((World.getBiome((chunkX + 0.5) * 16, (chunkZ + 0.5) * 16)==id)&&(World.getBlockID(coords.x, coords.y, coords.z) == 2)){
-				World.setBlock(coords.x, coords.y + 1, coords.z, BlockID.candleberryGarden, 0);
-				World.addTileEntity(coords.x, coords.y + 1, coords.z);
-						
-			}
-		}
-	}
-});
+addGeneration({id:BlockID.candleberryGarden,data:0},CandleberryGardenBiomes,
+	Random.Int(__config__.access("generation.group.gardens.candleberry.min"),
+	__config__.access("generation.group.gardens.candleberry.max")),
+__config__.access("generation.numbers.gardens.candleberry"));
+
+
+
+
+// file: WORLD/GENERATION/GARDENS/cottonGarden.js
+
+addGeneration({id:BlockID.cottongarden,data:0},TextileGardenBiomes,
+	Random.Int(__config__.access("generation.group.gardens.cotton.min"),
+	__config__.access("generation.group.gardens.cotton.max")),
+__config__.access("generation.numbers.gardens.cotton"));
 
 
 
@@ -2573,8 +3674,9 @@ Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
 Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
 	var coords = GenerationUtils.randomCoords(chunkX, chunkZ, 64, 128);
 	coords = GenerationUtils.findSurface(coords.x, coords.y, coords.z);
-	if(Math.random()< __config__.access("genNumbers.other.salt")){
-		 for(var id in SaltBiomes ){
+	if(Math.random()< __config__.access("generation.numbers.other.salt")){
+		 for(var idd in SaltBiomes ){
+			var id = SaltBiomes[idd];
 			if((World.getBiome((chunkX + 0.5) * 16, (chunkZ + 0.5) * 16)==id)){
 				World.setBlock(coords.x, coords.y + 1, coords.z, BlockID.salt, 0);
 				if (Math.random() < .5){ // top
@@ -2598,7 +3700,7 @@ Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
 });
 Callback.addCallback("GenerateChunkUnderground", function(chunkX, chunkZ){
 	var coords = GenerationUtils.randomCoords(chunkX, chunkZ, 64, 128);
-	if(Math.random()< __config__.access("genNumbers.other.salt") ){
+	if(Math.random()< __config__.access("generation.numbers.other.salt") ){
 		if(World.getBlockID(coords.x,coords.y,coords.z)!=0){
 			World.setBlock(coords.x, coords.y , coords.z, BlockID.salt, 0);
 		}
@@ -2610,7 +3712,7 @@ Callback.addCallback("GenerateChunkUnderground", function(chunkX, chunkZ){
 
 // file: WORLD/GENERATION/TREES/AppleTree.js
 
-Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
+/*Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
 	var nnumber = __config__.access("genNumbers.trees.apple");
 	if(Math.random()<nnumber){
 		var coords = GenerationUtils.randomCoords(chunkX, chunkZ, 64, 128);
@@ -2619,427 +3721,7 @@ Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
 			Harvest.addTree(0,BlockID.appleBlock,4,this.x,this.y,this.z);
 		}
 	}
-});
-
-
-
-
-// file: CROPS/strawberry.js
-
-CropRegistry.registerWithID("strawberrycrop","strawberrycrop","strawberrycrop",ItemID.strawberry_seed);
-CropRegistry.fruitPush(BlockID.strawberrycrop,ItemID.strawberry);
-
-PlantModel.crop(BlockID.strawberrycrop);
-
-TileEntity.registerPrototype(BlockID.strawberrycrop,cropPROTO);
-
-Item.registerUseFunctionForID(ItemID.strawberry_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z,BlockID.strawberrycrop,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.strawberry_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/raspberry.js
-
-CropRegistry.registerWithID("raspberrycrop","raspberrycrop","raspberry_crop",ItemID.raspberry_seed);
-CropRegistry.fruitPush(BlockID.raspberrycrop,ItemID.raspberry);
-
-PlantModel.crop(BlockID.raspberrycrop);
-
-TileEntity.registerPrototype(BlockID.raspberrycrop,cropPROTO);
-
-Item.registerUseFunctionForID(ItemID.raspberry_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.raspberrycrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.raspberry_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/cranberry.js
-
-CropRegistry.registerWithID("cranberrycrop","cranberrycrop","cranberrycrop",ItemID.cranberry_seed);
-CropRegistry.fruitPush(BlockID.cranberrycrop,ItemID.cranberry);
-
-PlantModel.crop(BlockID.cranberrycrop);
-
-TileEntity.registerPrototype(BlockID.cranberrycrop,cropPROTO);
-
-Item.registerUseFunctionForID(ItemID.cranberry_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.cranberrycrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.cranberry_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/blueberry.js
-
-CropRegistry.registerWithID("blueberrycrop","blueberrycrop","blueberrycrop",ItemID.blueberry_seed);
-CropRegistry.fruitPush(BlockID.blueberrycrop,ItemID.blueberry);
-
-PlantModel.crop(BlockID.blueberrycrop);
-
-TileEntity.registerPrototype(BlockID.blueberrycrop,cropPROTO);
-
-Item.registerUseFunctionForID(ItemID.blueberry_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.blueberrycrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.blueberry_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/blackberry.js
-
-CropRegistry.registerWithID("blackberrycrop","blackberrycrop","blackberrycrop",ItemID.blackberry_seed);
-CropRegistry.fruitPush(BlockID.blackberrycrop,ItemID.blackberry);
-
-PlantModel.crop(BlockID.blackberrycrop);
-
-TileEntity.registerPrototype(BlockID.blackberrycrop,cropPROTO);
-
-Item.registerUseFunctionForID(ItemID.blackberry_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.blackberrycrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.blackberry_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/grape.js
-
-CropRegistry.registerWithID("grapecrop","grapecrop","grapecrop",ItemID.grape_seed);
-CropRegistry.fruitPush(BlockID.grapecrop,ItemID.grape);
-
-PlantModel.crop(BlockID.grapecrop);
-
-TileEntity.registerPrototype(BlockID.grapecrop,cropPROTO);
-
-Item.registerUseFunctionForID(ItemID.grape_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.grapecrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.grape_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/cucumber.js
-
-CropRegistry.registerWithID("cucumbercrop","cucumbercrop","cucumbercrop",ItemID.cucumber_seed);
-CropRegistry.fruitPush(BlockID.cucumbercrop,ItemID.cucumber);
-
-PlantModel.crop(BlockID.cucumbercrop);
-
-TileEntity.registerPrototype(BlockID.cucumbercrop,cropPROTO);
-
-Item.registerUseFunctionForID(ItemID.cucumber_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.cucumbercrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.cucumber_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/onion.js
-
-CropRegistry.registerWithID("onioncrop","onioncrop","onioncrop",ItemID.onion_seed);
-CropRegistry.fruitPush(BlockID.onioncrop,ItemID.onion);
-
-PlantModel.crop(BlockID.onioncrop);
-
-TileEntity.registerPrototype(BlockID.onioncrop,cropPROTO);
-
-Item.registerUseFunctionForID(ItemID.onion_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.onioncrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.onion_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/cabbage.js
-
-CropRegistry.registerWithID("cabbagecrop","cabbagecrop","cabbagecrop",ItemID.cabbage_seed);
-CropRegistry.fruitPush(BlockID.cabbagecrop,ItemID.cabbage);
-
-PlantModel.crop(BlockID.cabbagecrop);
-
-TileEntity.registerPrototype(BlockID.cabbagecrop,cropPROTO);
-
-Item.registerUseFunctionForID(ItemID.cabbage_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.cabbagecrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.cabbage_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/tomato.js
-
-CropRegistry.registerWithID("tomatocrop","tomatocrop","tomatocrop",ItemID.tomato_seed);
-CropRegistry.fruitPush(BlockID.tomatocrop,ItemID.tomato);
-
-PlantModel.crop(BlockID.tomatocrop);
-
-TileEntity.registerPrototype(BlockID.tomatocrop,cropPROTO);
-
-Item.registerUseFunctionForID(ItemID.tomato_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.tomatocrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.tomato_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/garlic.js
-
-CropRegistry.registerWithID("garliccrop","garliccrop","garliccrop",ItemID.garlic_seed);
-CropRegistry.fruitPush(BlockID.garliccrop,ItemID.garlic);
-
-PlantModel.crop(BlockID.garliccrop);
-
-TileEntity.registerPrototype(BlockID.garliccrop,cropPROTO);
-
-Item.registerUseFunctionForID(ItemID.garlic_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.garliccrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.garlic_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/bellpepper.js
-
-CropRegistry.registerWithID("bellpeppercrop","bellpeppercrop","bellpeppercrop",ItemID.bellpepper_seed);
-CropRegistry.fruitPush(BlockID.bellpeppercrop,ItemID.bellpepper);
-
-PlantModel.crop(BlockID.bellpeppercrop);
-
-TileEntity.registerPrototype(BlockID.bellpeppercrop,cropPROTO);
-
-Item.registerUseFunctionForID(ItemID.bellpepper_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.bellpeppercrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.bellpepper_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/lettuce.js
-
-CropRegistry.registerWithID("lettucecrop","lettucecrop","lettucecrop",ItemID.lettuce_seed);
-CropRegistry.fruitPush(BlockID.lettucecrop,ItemID.lettuce);
-
-PlantModel.crop(BlockID.lettucecrop);
-
-TileEntity.registerPrototype(BlockID.lettucecrop,cropPROTO);
-
-Item.registerUseFunctionForID(ItemID.lettuce_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.lettucecrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.lettuce_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/coffeebean.js
-
-CropRegistry.registerWithID("coffeebeancrop","coffeebeancrop","coffeebeancrop",ItemID.coffee_seed);
-CropRegistry.fruitPush(BlockID.coffeebeancrop,ItemID.coffee_beans);
-
-PlantModel.crop(BlockID.coffeebeancrop);
-
-TileEntity.registerPrototype(BlockID.coffeebeancrop,cropPROTO);
-
-Item.registerUseFunctionForID(ItemID.coffee_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.coffeebeancrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.coffee_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/peas.js
-
-CropRegistry.registerWithID("peascrop","peascrop","peascrop",ItemID.peas_seed);
-CropRegistry.fruitPush(BlockID.peascrop,ItemID.peas);
-
-PlantModel.crop(BlockID.peascrop);
-
-TileEntity.registerPrototype(BlockID.peascrop,cropPROTO);
-
-Item.registerUseFunctionForID(ItemID.peas_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.peascrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.peas_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/chilipepper.js
-
-CropRegistry.registerWithID("chilipeppercrop","chilipeppercrop","chilipeppercrop",ItemID.chili_pepper_seed);
-CropRegistry.fruitPush(BlockID.chilipeppercrop,ItemID.chili_pepper);
-
-PlantModel.crop(BlockID.chilipeppercrop);
-
-TileEntity.registerPrototype(BlockID.chilipeppercrop,cropPROTO);
-
-Item.registerUseFunctionForID(ItemID.chili_pepper_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.chilipeppercrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.chili_pepper_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/spiceleaf.js
-
-CropRegistry.registerWithID("spiceleafcrop","spiceleafcrop","spiceleafcrop",ItemID.spice_leaf_seed);
-CropRegistry.fruitPush(BlockID.spiceleafcrop,ItemID.spice_leaf_seed);
-
-PlantModel.crop(BlockID.spiceleafcrop);
-
-TileEntity.registerPrototype(BlockID.spiceleafcrop,cropPROTO);
-
-Item.registerUseFunctionForID( ItemID.spice_leaf_seed , function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.spiceleafcrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem( ItemID.spice_leaf_seed , item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/corn.js
-
-CropRegistry.registerWithID("corncrop","corncrop","corncrop",ItemID.corn_seed);
-CropRegistry.fruitPush(BlockID.corncrop,ItemID.corn);
-
-PlantModel.crop(BlockID.corncrop);
-
-TileEntity.registerPrototype(BlockID.corncrop,cropPROTO);
-
-Item.registerUseFunctionForID( ItemID.corn_seed , function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.corncrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem( ItemID.corn_seed , item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/peppercorn.js
-
-CropRegistry.registerWithID("peppercorncrop","peppercorncrop","peppercorncrop",ItemID.peppercorn_seed);
-CropRegistry.fruitPush(BlockID.peppercorncrop,ItemID.peppercorn);
-
-PlantModel.crop(BlockID.peppercorncrop);
-
-TileEntity.registerPrototype(BlockID.peppercorncrop,cropPROTO);
-
-Item.registerUseFunctionForID( ItemID.peppercorn_seed , function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.peppercorncrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.peppercorn_seed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/candleberry.js
-
-﻿CropRegistry.registerWithID("candleberrycrop","candleberrycrop","candleberrycrop",ItemID.candleberryseed);
-CropRegistry.fruitPush(BlockID.candleberrycrop,ItemID.candleberry);
-
-PlantModel.crop(BlockID.candleberrycrop);
-
-TileEntity.registerPrototype(BlockID.candleberrycrop,cropPROTO);
-
-Item.registerUseFunctionForID(ItemID.candleberryseed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candleberrycrop ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleberryseed, item.count - 1, 0);
-	}
-});
-
-
-
-
-// file: CROPS/curryleaf.js
-
-CropRegistry.registerWithID("curryleaf","curryleaf","curryleafcrop",ItemID.curryleaf_seed);
-CropRegistry.fruitPush(BlockID.curryleaf,ItemID.curryleaf);
-
-PlantModel.crop(BlockID.curryleaf);
-
-TileEntity.registerPrototype(BlockID.curryleaf,cropPROTO);
-
-Item.registerUseFunctionForID(ItemID.curryleaf_seed, function(coords, item, block){
-	if(block.id == 60){
-		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.curryleaf ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.curryleaf_seed, item.count - 1, 0);
-	}
-});
+});*/
 
 
 
