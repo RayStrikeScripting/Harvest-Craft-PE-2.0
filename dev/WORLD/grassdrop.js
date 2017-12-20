@@ -20,7 +20,14 @@
 	 ItemID.spice_leaf_seed,
 	 ItemID.corn_seed,
 	 ItemID.peppercorn_seed,
-	 ItemID.cotton_seed
+	 ItemID.cotton_seed,
+	 ItemID.bean_seed,
+	 ItemID.rice_seed,
+	 ItemID.waterchestnut_seed,
+	 ItemID.rutabaga_seed,
+	 ItemID.mustard_seed,
+	 ItemID.ginger_seed,
+	 ItemID.spinach_seed
  ];
 Callback.addCallback("DestroyBlock", function(coords, block, player){
 	var trueIDs = {
