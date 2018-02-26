@@ -1,9 +1,7 @@
-CropRegistry.registerWithID("curryleaf","curryleaf","curryleafcrop",ItemID.curryleaf_seed);
-CropRegistry.fruitPush(BlockID.curryleaf,ItemID.curryleaf);
-Harvest.registerDroppingBlock(BlockID.curryleaf);
-
+CropRegistry.registerWithID("curryleaf","curryleaf","curryleafcrop",BLOCK_TYPE_CROP);
 PlantModel.crop(BlockID.curryleaf);
-
-TileEntity.registerPrototype(BlockID.curryleaf,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.curryleaf_seed,BlockID.curryleaf);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.curryleaf,
+	drop:ItemID.curryleaf,
+	seed:ItemID.curryleaf_seed
+});

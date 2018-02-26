@@ -1,9 +1,7 @@
-CropRegistry.registerWithID("corncrop","corncrop","corncrop",ItemID.corn_seed);
-CropRegistry.fruitPush(BlockID.corncrop,ItemID.corn);
-Harvest.registerDroppingBlock(BlockID.corncrop);
-
+CropRegistry.registerWithID("corncrop","corncrop","corncrop",BLOCK_TYPE_CROP);
 PlantModel.crop(BlockID.corncrop);
-
-TileEntity.registerPrototype(BlockID.corncrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.corn_seed,BlockID.corncrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.corncrop,
+	drop:ItemID.corn,
+	seed:ItemID.corn_seed
+});

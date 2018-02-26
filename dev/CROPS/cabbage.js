@@ -1,9 +1,7 @@
-CropRegistry.registerWithID("cabbagecrop","cabbagecrop","cabbagecrop",ItemID.cabbage_seed);
-CropRegistry.fruitPush(BlockID.cabbagecrop,ItemID.cabbage);
-Harvest.registerDroppingBlock(BlockID.cabbagecrop);
-
+CropRegistry.registerWithID("cabbagecrop","cabbagecrop","cabbagecrop",BLOCK_TYPE_CROP);
 PlantModel.crop(BlockID.cabbagecrop);
-
-TileEntity.registerPrototype(BlockID.cabbagecrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.cabbage_seed,BlockID.cabbagecrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.cabbagecrop,
+	drop:ItemID.cabbage,
+	seed:ItemID.cabbage_seed
+});

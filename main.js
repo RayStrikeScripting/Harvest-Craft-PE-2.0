@@ -2,7 +2,7 @@
 BUILD INFO:
   dir: dev
   target: main.js
-  files: 80
+  files: 79
 */
 
 
@@ -280,23 +280,6 @@ Translation.addTranslation("Cottage Pie", {ru: "Коттеджный пирог"
 Translation.addTranslation("Meat Pie", {ru: "Пирог с мясом"});
 Translation.addTranslation("Corned Beef", {ru: "Солонина"});
 Translation.addTranslation("Beef Wellington", {ru: "Биф Веллингтон"});
-Translation.addTranslation("Bean", {ru: "Бобы"});
-Translation.addTranslation("Rice", {ru: "Рис"});
-Translation.addTranslation("Water Chestnut", {ru: "Каштан"});
-Translation.addTranslation("Rutabaga", {ru: "Редис"});
-Translation.addTranslation("Mustard Seeds", {ru: "Горчичные семена"});
-Translation.addTranslation("Ginger", {ru: "Имбирь"});
-Translation.addTranslation("Spinach", {ru: "Шпинат"});
-Translation.addTranslation("Bean Seed", {ru: "Семя бобов"});
-Translation.addTranslation("Rice Seed", {ru: "Семя риса"});
-Translation.addTranslation("Water Chestnut Seed", {ru: "Семя каштана"});
-Translation.addTranslation("Rutabaga Seed", {ru: "Семя редиса"});
-Translation.addTranslation("Mustard Seed", {ru: "Горчичное семя"});
-Translation.addTranslation("Ginger Seed", {ru: "Семя имбиря"});
-Translation.addTranslation("Spinach Seed", {ru: "Семя шпината"});
-Translation.addTranslation("Meat Pie", {ru: "Мясной пирог"});
-Translation.addTranslation("Baked Beans", {ru: "Печеные бобы"});
-Translation.addTranslation("Dim Sum", {ru: "Дим-Сам"});
 
 
 
@@ -673,21 +656,6 @@ PlantModel.crop(BlockID.beancrop);
 TileEntity.registerPrototype(BlockID.beancrop,cropPROTO);
 
 CropRegistry.registerSeed(ItemID.bean_seed,BlockID.beancrop);
-
-
-
-
-// file: CROPS/waterchestnut.js
-
-CropRegistry.registerWithID("waterchestnutcrop","waterchestnutcrop","waterchestnutcrop",ItemID.waterchestnut_seed);
-CropRegistry.fruitPush(BlockID.waterchestnutcrop,ItemID.waterchestnut);
-Harvest.registerDroppingBlock(BlockID.waterchestnutcrop);
-
-PlantModel.crop(BlockID.waterchestnutcrop);
-
-TileEntity.registerPrototype(BlockID.waterchestnutcrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.waterchestnut_seed,BlockID.waterchestnutcrop);
 
 
 
@@ -3541,14 +3509,7 @@ Callback.addCallback("PostLoaded", function(){
 	 ItemID.spice_leaf_seed,
 	 ItemID.corn_seed,
 	 ItemID.peppercorn_seed,
-	 ItemID.cotton_seed,
-	 ItemID.bean_seed,
-	 ItemID.rice_seed,
-	 ItemID.waterchestnut_seed,
-	 ItemID.rutabaga_seed,
-	 ItemID.mustard_seed,
-	 ItemID.ginger_seed,
-	 ItemID.spinach_seed
+	 ItemID.cotton_seed
  ];
 Callback.addCallback("DestroyBlock", function(coords, block, player){
 	var trueIDs = {

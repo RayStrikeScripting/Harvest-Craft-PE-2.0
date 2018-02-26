@@ -1,9 +1,7 @@
-CropRegistry.registerWithID("chilipeppercrop","chilipeppercrop","chilipeppercrop",ItemID.chili_pepper_seed);
-CropRegistry.fruitPush(BlockID.chilipeppercrop,ItemID.chili_pepper);
-Harvest.registerDroppingBlock(BlockID.chilipeppercrop);
-
+CropRegistry.registerWithID("chilipeppercrop","chilipeppercrop","chilipeppercrop",BLOCK_TYPE_CROP);
 PlantModel.crop(BlockID.chilipeppercrop);
-
-TileEntity.registerPrototype(BlockID.chilipeppercrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.chili_pepper_seed,BlockID.chilipeppercrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.chilipeppercrop,
+	drop:ItemID.chili_pepper,
+	seed:ItemID.chili_pepper_seed
+});

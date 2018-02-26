@@ -1,9 +1,7 @@
-CropRegistry.registerWithID("onioncrop","onioncrop","onioncrop",ItemID.onion_seed);
-CropRegistry.fruitPush(BlockID.onioncrop,ItemID.onion);
-Harvest.registerDroppingBlock(BlockID.onioncrop);
-
+CropRegistry.registerWithID("onioncrop","onioncrop","onioncrop",BLOCK_TYPE_CROP);
 PlantModel.crop(BlockID.onioncrop);
-
-TileEntity.registerPrototype(BlockID.onioncrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.onion_seed,BlockID.onioncrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.onioncrop,
+	drop:ItemID.onion,
+	seed:ItemID.onion_seed
+});

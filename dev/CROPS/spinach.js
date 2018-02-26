@@ -1,9 +1,7 @@
-CropRegistry.registerWithID("spinachcrop","spinachcrop","spinachcrop",ItemID.spinach_seed);
-CropRegistry.fruitPush(BlockID.spinachcrop,ItemID.spinach);
-Harvest.registerDroppingBlock(BlockID.spinachcrop);
-
+CropRegistry.registerWithID("spinachcrop","spinachcrop","spinachcrop",BLOCK_TYPE_CROP);
 PlantModel.crop(BlockID.spinachcrop);
-
-TileEntity.registerPrototype(BlockID.spinachcrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.spinach_seed,BlockID.spinachcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.spinachcrop,
+	drop:ItemID.spinach,
+	seed:ItemID.spinach_seed
+});

@@ -1,9 +1,7 @@
-CropRegistry.registerWithID("waterchestnutcrop","waterchestnutcrop","waterchestnutcrop",ItemID.waterchestnut_seed);
-CropRegistry.fruitPush(BlockID.waterchestnutcrop,ItemID.waterchestnut);
-Harvest.registerDroppingBlock(BlockID.waterchestnutcrop);
-
+CropRegistry.registerWithID("waterchestnutcrop","waterchestnutcrop","waterchestnutcrop",BLOCK_TYPE_CROP);
 PlantModel.crop(BlockID.waterchestnutcrop);
-
-TileEntity.registerPrototype(BlockID.waterchestnutcrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.waterchestnut_seed,BlockID.waterchestnutcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.waterchestnutcrop,
+	drop:ItemID.waterchestnut,
+	seed:ItemID.waterchestnut_seed
+});

@@ -1,9 +1,7 @@
-CropRegistry.registerWithID("mustardseedscrop","mustardseedscrop","mustardseedscrop",ItemID.mustard_seed);
-CropRegistry.fruitPush(BlockID.mustardseedscrop,ItemID.mustardseeds);
-Harvest.registerDroppingBlock(BlockID.mustardseedscrop);
-
+CropRegistry.registerWithID("mustardseedscrop","mustardseedscrop","mustardseedscrop",BLOCK_TYPE_CROP);
 PlantModel.crop(BlockID.mustardseedscrop);
-
-TileEntity.registerPrototype(BlockID.mustardseedscrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.mustard_seed,BlockID.mustardseedscrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.mustardseedscrop,
+	drop:ItemID.mustardseeds,
+	seed:ItemID.mustard_seed
+});

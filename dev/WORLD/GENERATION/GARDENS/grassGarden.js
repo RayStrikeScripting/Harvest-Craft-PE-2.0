@@ -1,1 +1,1 @@
-addGeneration({id:BlockID.grassgarden,data:0},GrassGardenBiomes,	Random.Int(__config__.access("generation.group.gardens.grass.min"),	__config__.access("generation.group.gardens.grass.max")),__config__.access("generation.numbers.gardens.grass"));
+Harvest.addBlockGeneration({id:BlockID.grassgarden,data:0},GrassGardenBiomes,	Random.Int(__config__.access("generation.group.gardens.grass.min"),	__config__.access("generation.group.gardens.grass.max")),__config__.access("generation.numbers.gardens.grass"));

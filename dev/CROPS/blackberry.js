@@ -1,9 +1,7 @@
-CropRegistry.registerWithID("blackberrycrop","blackberrycrop","blackberrycrop",ItemID.blackberry_seed);
-CropRegistry.fruitPush(BlockID.blackberrycrop,ItemID.blackberry);
-Harvest.registerDroppingBlock(BlockID.blackberrycrop);
-
+CropRegistry.registerWithID("blackberrycrop","blackberrycrop","blackberrycrop",BLOCK_TYPE_CROP);
 PlantModel.crop(BlockID.blackberrycrop);
-
-TileEntity.registerPrototype(BlockID.blackberrycrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.blackberry_seed,BlockID.blackberrycrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.blackberrycrop,
+	drop:ItemID.blackberry,
+	seed:ItemID.blackberry_seed
+});

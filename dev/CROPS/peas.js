@@ -1,9 +1,7 @@
-CropRegistry.registerWithID("peascrop","peascrop","peascrop",ItemID.peas_seed);
-CropRegistry.fruitPush(BlockID.peascrop,ItemID.peas);
-Harvest.registerDroppingBlock(BlockID.peascrop);
-
+CropRegistry.registerWithID("peascrop","peascrop","peascrop",BLOCK_TYPE_CROP);
 PlantModel.crop(BlockID.peascrop);
-
-TileEntity.registerPrototype(BlockID.peascrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.peas_seed,BlockID.peascrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.peascrop,
+	drop:ItemID.peas,
+	seed:ItemID.peas_seed
+});

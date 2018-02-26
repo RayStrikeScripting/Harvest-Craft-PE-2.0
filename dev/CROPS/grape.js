@@ -1,9 +1,7 @@
-CropRegistry.registerWithID("grapecrop","grapecrop","grapecrop",ItemID.grape_seed);
-CropRegistry.fruitPush(BlockID.grapecrop,ItemID.grape);
-Harvest.registerDroppingBlock(BlockID.grapecrop);
-
+CropRegistry.registerWithID("grapecrop","grapecrop","grapecrop",BLOCK_TYPE_CROP);
 PlantModel.crop(BlockID.grapecrop);
-
-TileEntity.registerPrototype(BlockID.grapecrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.grape_seed,BlockID.grapecrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.grapecrop,
+	drop:ItemID.grape,
+	seed:ItemID.grape_seed
+});

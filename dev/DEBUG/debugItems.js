@@ -2,7 +2,6 @@
 Item.createItem("Atree", "Spawn Tree", {name: "stick", data: 0});
 Item.registerUseFunction("Atree",function(coords, item, block){
 	Debug.m("Item");	
-	Harvest.addTree(0,BlockID.appleBlock,8,coords.x,coords.y,coords.z);
 });
 
 IDRegistry.genItemID("AGE");

@@ -1,3 +1,1 @@
-Launch({
-	ChatColor: ModAPI.requireGlobal("ChatColor")
-});
+Launch();

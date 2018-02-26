@@ -1,9 +1,7 @@
-CropRegistry.registerWithID("rutabagacrop","rutabagacrop","rutabagacrop",ItemID.rutabaga_seed);
-CropRegistry.fruitPush(BlockID.rutabagacrop,ItemID.rutabaga);
-Harvest.registerDroppingBlock(BlockID.rutabagacrop);
-
+CropRegistry.registerWithID("rutabagacrop","rutabagacrop","rutabagacrop",BLOCK_TYPE_CROP);
 PlantModel.crop(BlockID.rutabagacrop);
-
-TileEntity.registerPrototype(BlockID.rutabagacrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.rutabaga_seed,BlockID.rutabagacrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.rutabagacrop,
+	drop:ItemID.rutabaga,
+	seed:ItemID.rutabaga_seed
+});

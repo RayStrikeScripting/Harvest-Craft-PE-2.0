@@ -1,49 +1,14 @@
-IDRegistry.genItemID("strawberry_smoothie");
-Item.createFoodItem("strawberry_smoothie", "Strawberry smoothie", {name: "strawberry_smoothie", meta: 0}, {food: 6});
-Recipes.addShapeless({id: ItemID.strawberry_smoothie, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: ItemID.strawberry, data: 0},{id: 332, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.juicer){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("strawberry_smoothie","Strawberry smoothie",6);
+Harvest.recipe({id:ItemID.raspberry_juice},[{id: ItemID.juicer, data: 0}, {id: ItemID.strawberry, data: 0},{id: 332, data: 0}]);
 
-IDRegistry.genItemID("raspberry_smoothie");
-Item.createFoodItem("raspberry_smoothie", "Raspberry smoothie", {name: "raspberry_smoothie", meta: 0}, {food: 6});
-Recipes.addShapeless({id: ItemID.raspberry_smoothie, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: ItemID.raspberry, data: 0},{id: 332, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.juicer){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("raspberry_smoothie","Raspberry smoothie",6);
+Harvest.recipe({id:ItemID.raspberry_juice},[{id: ItemID.juicer, data: 0}, {id: ItemID.raspberry, data: 0},{id: 332, data: 0}]);
 
-IDRegistry.genItemID("blackberry_smoothie");
-Item.createFoodItem("blackberry_smoothie", "Blackberry smoothie", {name: "blackberry_smoothie", meta: 0}, {food: 6});
-Recipes.addShapeless({id: ItemID.blackberry_smoothie, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: ItemID.blackberry, data: 0},{id: 332, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.juicer){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("blackberry_smoothie","Blackberry smoothie",6);
+Harvest.recipe({id:ItemID.raspberry_juice},[{id: ItemID.juicer, data: 0}, {id: ItemID.blackberry, data: 0},{id: 332, data: 0}]);
 
-IDRegistry.genItemID("blueberry_smoothie");
-Item.createFoodItem("blueberry_smoothie", "Blueberry smoothie", {name: "blueberry_smoothie", meta: 0}, {food: 6});
-Recipes.addShapeless({id: ItemID.blueberry_smoothie, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: ItemID.blueberry, data: 0},{id: 332, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.juicer){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("blueberry_smoothie","Blueberry smoothie",6);
+Harvest.recipe({id:ItemID.raspberry_juice},[{id: ItemID.juicer, data: 0}, {id: ItemID.blueberry, data: 0},{id: 332, data: 0}]);
 
-IDRegistry.genItemID("melon_smoothie");
-Item.createFoodItem("melon_smoothie", "Melon smoothie", {name: "melon_smoothie", meta: 0}, {food: 5});
-Recipes.addShapeless({id: ItemID.melon_smoothie, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: 360, data: 0},{id: 332, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.juicer){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("melon_smoothie","Melon smoothie",6);
+Harvest.recipe({id:ItemID.raspberry_juice},[{id: ItemID.juicer, data: 0}, {id: 360, data: 0},{id: 332, data: 0}]);

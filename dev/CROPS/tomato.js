@@ -1,9 +1,7 @@
-CropRegistry.registerWithID("tomatocrop","tomatocrop","tomatocrop",ItemID.tomato_seed);
-CropRegistry.fruitPush(BlockID.tomatocrop,ItemID.tomato);
-Harvest.registerDroppingBlock(BlockID.tomatocrop);
-
+CropRegistry.registerWithID("tomatocrop","tomatocrop","tomatocrop",BLOCK_TYPE_CROP);
 PlantModel.crop(BlockID.tomatocrop);
-
-TileEntity.registerPrototype(BlockID.tomatocrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.tomato_seed,BlockID.tomatocrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.tomatocrop,
+	drop:ItemID.tomato,
+	seed:ItemID.tomato_seed
+});

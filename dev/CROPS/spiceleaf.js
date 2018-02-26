@@ -1,9 +1,7 @@
-CropRegistry.registerWithID("spiceleafcrop","spiceleafcrop","spiceleafcrop",ItemID.spice_leaf_seed);
-CropRegistry.fruitPush(BlockID.spiceleafcrop,ItemID.spice_leaf_seed);
-Harvest.registerDroppingBlock(BlockID.spiceleafcrop);
-
+CropRegistry.registerWithID("spiceleafcrop","spiceleafcrop","spiceleafcrop",BLOCK_TYPE_CROP);
 PlantModel.crop(BlockID.spiceleafcrop);
-
-TileEntity.registerPrototype(BlockID.spiceleafcrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.spice_leaf_seed,BlockID.spiceleafcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.spiceleafcrop,
+	drop:ItemID.spice_leaf,
+	seed:ItemID.spice_leaf_seed
+});

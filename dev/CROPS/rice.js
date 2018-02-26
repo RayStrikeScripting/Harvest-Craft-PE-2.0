@@ -1,9 +1,7 @@
-CropRegistry.registerWithID("ricecrop","ricecrop","ricecrop",ItemID.rice_seed);
-CropRegistry.fruitPush(BlockID.ricecrop,ItemID.rice);
-Harvest.registerDroppingBlock(BlockID.ricecrop);
-
+CropRegistry.registerWithID("ricecrop","ricecrop","ricecrop",BLOCK_TYPE_CROP);
 PlantModel.crop(BlockID.ricecrop);
-
-TileEntity.registerPrototype(BlockID.ricecrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.rice_seed,BlockID.ricecrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.ricecrop,
+	drop:ItemID.rice,
+	seed:ItemID.rice_seed
+});

@@ -22,7 +22,6 @@ Callback.addCallback("ItemUse", function(coords,item,block){
 			case BlockID.sink_2:
 			case BlockID.sink_3:				
 				Player.setCarriedItem(item.id, item.count - 1, item.data);
-				//Player.addItemToInventory(325, 1, 8);
 				World.drop(coords.x,coords.y,coords.z,325,1,8);
 					break;
 		}	
@@ -34,7 +33,6 @@ Callback.addCallback("ItemUse", function(coords,item,block){
 			case BlockID.sink_2:
 			case BlockID.sink_3:				
 				Player.setCarriedItem(item.id, item.count - 1, item.data);
-				//Player.addItemToInventory(325, 1, 8);
 				World.drop(coords.x,coords.y,coords.z,373,1,0);
 					break;
 		}	

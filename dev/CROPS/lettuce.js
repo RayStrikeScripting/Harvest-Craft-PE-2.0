@@ -1,9 +1,7 @@
-CropRegistry.registerWithID("lettucecrop","lettucecrop","lettucecrop",ItemID.lettuce_seed);
-CropRegistry.fruitPush(BlockID.lettucecrop,ItemID.lettuce);
-Harvest.registerDroppingBlock(BlockID.lettucecrop);
-
+CropRegistry.registerWithID("lettucecrop","lettucecrop","lettucecrop",BLOCK_TYPE_CROP);
 PlantModel.crop(BlockID.lettucecrop);
-
-TileEntity.registerPrototype(BlockID.lettucecrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.lettuce_seed,BlockID.lettuce);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.lettuce,
+	drop:ItemID.lettuce,
+	seed:ItemID.lettuce_seed
+});

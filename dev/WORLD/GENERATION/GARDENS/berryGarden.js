@@ -1,1 +1,1 @@
-addGeneration({id:BlockID.berrygarden,data:0},BerryGardenBiomes,	Random.Int(__config__.access("generation.group.gardens.berry.min"),	__config__.access("generation.group.gardens.berry.max")),__config__.access("generation.numbers.gardens.berry"));
+Harvest.addBlockGeneration({id:BlockID.berrygarden,data:0},BerryGardenBiomes,	Random.Int(__config__.access("generation.group.gardens.berry.min"),	__config__.access("generation.group.gardens.berry.max")),__config__.access("generation.numbers.gardens.berry"));

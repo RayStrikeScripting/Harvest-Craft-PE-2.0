@@ -1,9 +1,7 @@
-CropRegistry.registerWithID("cucumbercrop","cucumbercrop","cucumbercrop",ItemID.cucumber_seed);
-CropRegistry.fruitPush(BlockID.cucumbercrop,ItemID.cucumber);
-Harvest.registerDroppingBlock(BlockID.cucumbercrop);
-
+CropRegistry.registerWithID("cucumbercrop","cucumbercrop","cucumbercrop",BLOCK_TYPE_CROP);
 PlantModel.crop(BlockID.cucumbercrop);
-
-TileEntity.registerPrototype(BlockID.cucumbercrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.cucumber_seed,BlockID.cucumbercrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.cucumbercrop,
+	drop:ItemID.cucumber,
+	seed:ItemID.cucumber_seed
+});

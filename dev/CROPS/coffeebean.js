@@ -1,9 +1,7 @@
-CropRegistry.registerWithID("coffeebeancrop","coffeebeancrop","coffeebeancrop",ItemID.coffee_seed);
-CropRegistry.fruitPush(BlockID.coffeebeancrop,ItemID.coffee_beans);
-Harvest.registerDroppingBlock(BlockID.coffeebeancrop);
-
+CropRegistry.registerWithID("coffeebeancrop","coffeebeancrop","coffeebeancrop",BLOCK_TYPE_CROP);
 PlantModel.crop(BlockID.coffeebeancrop);
-
-TileEntity.registerPrototype(BlockID.coffeebeancrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.coffee_seed,BlockID.coffeebeancrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.coffeebeancrop,
+	drop:ItemID.coffee_beans,
+	seed:ItemID.coffee_seed
+});
