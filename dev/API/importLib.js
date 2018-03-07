@@ -1,2 +1,2 @@
-importLib("PlantModel", "*");
-importLib("Harvest_Core", "*");
+IMPORT("Plant_Model");
+IMPORT("Harvest_Core");

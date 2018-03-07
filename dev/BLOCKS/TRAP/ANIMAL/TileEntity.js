@@ -7,6 +7,12 @@ if(__config__.access("traps.animal.TileEntity")){
 		getGuiScreen: function(){
 			return animalTrapGUI;
 		},
+		getTransportSlots: function(){
+			return {
+				input: ["slotBait"],
+				output: ["slot0","slot1","slot2","slot3","slot4","slot5","slot6","slot7","slot8","slot9","slot10","slot11","slot12","slot13","slot14","slot15","slot16","slot17"]
+			};
+		},
 		checker:function(){
 			if(World.getBlockID(this.x+1,this.y,this.z)==2&&
 			   World.getBlockID(this.x-1,this.y,this.z)==2&&

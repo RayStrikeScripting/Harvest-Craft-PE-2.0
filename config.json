@@ -48,17 +48,17 @@
 		}
 	},
 	"other":{
-		"plantAge":0.001,
-		"treeAge":0.001,
-		"grassDrop":400,
-		"candleBurning":0.08
-	},
-	"debug":{
-		"TileEntity":{
-			"other":{
-				"candle":true
-			}
-		}
+		"growChance":{
+			"crops":0.3,
+			"fruits":0.3,
+			"saplings":0.2
+		},
+		"ageSpeed":{
+			"crops":0.001,
+			"fruits":0.001,
+			"saplings":0.00001
+		},
+		"particles":10
 	},
 	"traps":{
 		"animal":{

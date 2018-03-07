@@ -26,7 +26,7 @@ BLOCKS/TRAP/ANIMAL/block.js
 BLOCKS/TRAP/ANIMAL/gui.js
 BLOCKS/TRAP/ANIMAL/TileEntity.js
 BLOCKS/fishTrap.js
-BLOCKS/CANDLES/block.js
+BLOCKS/candle.js
 
 GARDENS/BERRYGARDEN/block.js
 GARDENS/BERRYGARDEN/item.js
@@ -52,31 +52,4 @@ WORLD/GENERATION/salt.js
 WORLD/GENERATION/TREES/biomes.js
 WORLD/GENERATION/TREES/AppleTree.js
 
-CROPS/strawberry.js
-CROPS/raspberry.js
-CROPS/cranberry.js
-CROPS/blueberry.js
-CROPS/blackberry.js
-CROPS/grape.js
-CROPS/cucumber.js
-CROPS/onion.js
-CROPS/cabbage.js
-CROPS/tomato.js
-CROPS/garlic.js
-CROPS/bellpepper.js
-CROPS/lettuce.js
-CROPS/coffeebean.js
-CROPS/peas.js
-CROPS/chilipepper.js
-CROPS/spiceleaf.js
-CROPS/corn.js
-CROPS/candleberry.js
-CROPS/curryleaf.js
-CROPS/cotton.js
-CROPS/rutabaga.js
-CROPS/bean.js
-CROPS/waterchestnut.js
-CROPS/rice.js
-CROPS/mustardseeds.js
-CROPS/ginger.js
-CROPS/spinach.js
+CROPS/crops.js

@@ -1,1 +1,1 @@
-Harvest.addBlockGeneration({id:BlockID.herbgarden,data:0},HerbGardenBiomes,	Random.Int(__config__.access("generation.group.gardens.herb.min"),	__config__.access("generation.group.gardens.herb.max")),__config__.access("generation.numbers.gardens.herb"));
+var HerbGardenCount = {	min: __config__.access("generation.group.gardens.herb.min"),	max: __config__.access("generation.group.gardens.herb.max")};Harvest.addBlockGeneration({id:BlockID.herbgarden,data:0},HerbGardenBiomes,HerbGardenCount,__config__.access("generation.numbers.gardens.herb"));

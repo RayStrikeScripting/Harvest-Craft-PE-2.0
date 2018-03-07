@@ -1,1 +1,0 @@
-CropRegistry.registerWithID("cottoncrop","cottoncrop","cottoncrop",BLOCK_TYPE_CROP);PlantModel.crop(BlockID.cottoncrop);CropRegistry.deriveCropAsClass("harvestcraft_crop",{	id:BlockID.cottoncrop,	drop:ItemID.cotton,	seed:ItemID.cotton_seed});
