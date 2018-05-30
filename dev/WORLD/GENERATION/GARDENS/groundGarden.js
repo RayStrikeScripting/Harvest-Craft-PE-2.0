@@ -1,0 +1,1 @@
+var GroundGardenCount = {	min: __config__.access("generation.group.gardens.ground.min"),	max: __config__.access("generation.group.gardens.ground.max")};Harvest.addBlockGeneration({id:BlockID.groundgarden,data:0},GroundGardenBiomes,GroundGardenCount,__config__.access("generation.numbers.gardens.ground"));

@@ -1,0 +1,1 @@
+var AridGardenCount = {	min: __config__.access("generation.group.gardens.arid.min"),	max: __config__.access("generation.group.gardens.arid.max")};Harvest.addBlockGeneration({id:BlockID.aridgarden,data:0},DesertGardenBiomes,TextileGardenCount,__config__.access("generation.numbers.gardens.arid"));

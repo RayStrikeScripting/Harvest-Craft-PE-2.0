@@ -358,3 +358,361 @@ CropRegistry.deriveCropAsClass("harvestcraft_crop",{
 	drop:ItemID.spinach,
 	seed:ItemID.spinach_seed
 });
+
+
+
+// file: CROPS/cactusfruit.js
+
+CropRegistry.registerWithID("cactusfruitcrop","cactusfruitcrop","cactusfruitcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.cactusfruitcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.cactusfruitcrop,
+	drop:ItemID.cactusfruit,
+	seed:ItemID.cactusfruit_seed
+});
+
+
+
+// file: CROPS/cantaloupe.js
+
+CropRegistry.registerWithID("cantaloupecrop","cantaloupecrop","cantaloupecrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.cantaloupecrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.cantaloupecrop,
+	drop:ItemID.cantaloupe,
+	seed:ItemID.cantaloupe_seed
+});
+
+
+
+// file: CROPS/kiwi.js
+
+CropRegistry.registerWithID("kiwicrop","kiwicrop","kiwicrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.kiwicrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.kiwicrop,
+	drop:ItemID.kiwi,
+	seed:ItemID.kiwi_seed
+});
+
+
+
+// file: CROPS/pineapple.js
+
+CropRegistry.registerWithID("pineapplecrop","pineapplecrop","pineapplecrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.pineapplecrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.pineapplecrop,
+	drop:ItemID.pineapple,
+	seed:ItemID.pineapple_seed
+});
+
+
+//////////////////////////////////////////////////////////////////////////
+// file: CROPS/artichoke.js
+
+CropRegistry.registerWithID("artichokecrop","artichokecrop","artichokecrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.artichokecrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.artichokecrop,
+	drop:ItemID.artichoke,
+	seed:ItemID.artichoke_seed
+});
+
+
+
+// file: CROPS/asparagus.js
+
+CropRegistry.registerWithID("asparaguscrop","asparaguscrop","asparaguscrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.asparaguscrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.asparaguscrop,
+	drop:ItemID.asparagus,
+	seed:ItemID.asparagus_seed
+});
+
+
+
+// file: CROPS/bambooshoot.js
+
+CropRegistry.registerWithID("bambooshootcrop","bambooshootcrop","bambooshootcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.bambooshootcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.bambooshootcrop,
+	drop:ItemID.bambooshoot,
+	seed:ItemID.bambooshoot_seed
+});
+
+
+
+// file: CROPS/broccoli.js
+
+CropRegistry.registerWithID("broccolicrop","broccolicrop","broccolicrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.broccolicrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.broccolicrop,
+	drop:ItemID.broccoli,
+	seed:ItemID.broccoli_seed
+});
+
+
+
+// file: CROPS/brusselsprout.js
+
+CropRegistry.registerWithID("brusselsproutcrop","brusselsproutcrop","brusselsproutcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.brusselsproutcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.brusselsproutcrop,
+	drop:ItemID.brusselsprout,
+	seed:ItemID.brusselsprout_seed
+});
+
+
+
+// file: CROPS/cauliflower.js
+
+CropRegistry.registerWithID("cauliflowercrop","cauliflowercrop","cauliflowercrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.cauliflowercrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.cauliflowercrop,
+	drop:ItemID.cauliflower,
+	seed:ItemID.cauliflower_seed
+});
+
+
+
+
+// file: CROPS/celery.js
+
+CropRegistry.registerWithID("celerycrop","celerycrop","celerycrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.celerycrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.celerycrop,
+	drop:ItemID.celery,
+	seed:ItemID.celery_seed
+});
+
+
+
+
+// file: CROPS/radish.js
+
+CropRegistry.registerWithID("radishcrop","radishcrop","radishcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.radishcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.radishcrop,
+	drop:ItemID.radish,
+	seed:ItemID.radish_seed
+});
+
+
+
+
+// file: CROPS/eggplant.js
+
+CropRegistry.registerWithID("eggplantcrop","eggplantcrop","eggplantcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.eggplantcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.eggplantcrop,
+	drop:ItemID.eggplant,
+	seed:ItemID.eggplant_seed
+});
+
+
+
+// file: CROPS/leek.js
+
+CropRegistry.registerWithID("leekcrop","leekcrop","leekcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.leekcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.leekcrop,
+	drop:ItemID.leek,
+	seed:ItemID.leek_seed
+});
+
+
+
+// file: CROPS/okra.js
+
+CropRegistry.registerWithID("okracrop","okracrop","okracrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.okracrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.okracrop,
+	drop:ItemID.okra,
+	seed:ItemID.okra_seed
+});
+
+
+
+// file: CROPS/parsnip.js
+
+CropRegistry.registerWithID("parsnipcrop","parsnipcrop","parsnipcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.parsnipcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.parsnipcrop,
+	drop:ItemID.parsnip,
+	seed:ItemID.parsnip_seed
+});
+
+
+
+
+// file: CROPS/rhubarb.js
+
+CropRegistry.registerWithID("rhubarbcrop","rhubarbcrop","rhubarbcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.rhubarbcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.rhubarbcrop,
+	drop:ItemID.rhubarb,
+	seed:ItemID.rhubarb_seed
+});
+
+
+
+// file: CROPS/scallion.js
+
+CropRegistry.registerWithID("scallioncrop","scallioncrop","scallioncrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.scallioncrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.scallioncrop,
+	drop:ItemID.scallion,
+	seed:ItemID.scallion_seed
+});
+
+
+
+// file: CROPS/soybean.js
+
+CropRegistry.registerWithID("soybeancrop","soybeancrop","soybeancrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.soybeancrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.soybeancrop,
+	drop:ItemID.soybean,
+	seed:ItemID.soybean_seed
+});
+
+
+
+// file: CROPS/sweetpotato.js
+
+CropRegistry.registerWithID("sweetpotatocrop","sweetpotatocrop","sweetpotatocrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.sweetpotatocrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.sweetpotatocrop,
+	drop:ItemID.sweetpotato,
+	seed:ItemID.sweetpotato_seed
+});
+
+
+
+// file: CROPS/turnip.js
+
+CropRegistry.registerWithID("turnipcrop","turnipcrop","turnipcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.turnipcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.turnipcrop,
+	drop:ItemID.turnip,
+	seed:ItemID.turnip_seed
+});
+
+
+
+
+// file: CROPS/peanut.js
+
+CropRegistry.registerWithID("peanutcrop","peanutcrop","peanutcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.peanutcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.peanutcrop,
+	drop:ItemID.peanut,
+	seed:ItemID.peanut_seed
+});
+
+
+
+// file: CROPS/rye.js
+
+CropRegistry.registerWithID("ryecrop","ryecrop","ryecrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.ryecrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.ryecrop,
+	drop:ItemID.rye,
+	seed:ItemID.rye_seed
+});
+
+
+
+
+// file: CROPS/zucchini.js
+
+CropRegistry.registerWithID("zucchinicrop","zucchinicrop","zucchinicrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.zucchinicrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.zucchinicrop,
+	drop:ItemID.zucchini,
+	seed:ItemID.zucchini_seed
+});
+
+
+
+
+// file: CROPS/barley.js
+
+CropRegistry.registerWithID("barleycrop","barleycrop","barleycrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.barleycrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.barleycrop,
+	drop:ItemID.barley,
+	seed:ItemID.barley_seed
+});
+
+
+
+
+// file: CROPS/oats.js
+
+CropRegistry.registerWithID("oatscrop","oatscrop","oatscrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.oatscrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.oatscrop,
+	drop:ItemID.oats,
+	seed:ItemID.oats_seed
+});
+
+
+
+
+// file: CROPS/wintersquash.js
+
+CropRegistry.registerWithID("wintersquashcrop","wintersquashcrop","wintersquashcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.wintersquashcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.wintersquashcrop,
+	drop:ItemID.wintersquash,
+	seed:ItemID.wintersquash_seed
+});
+
+
+
+
+// file: CROPS/tealeaf.js
+
+CropRegistry.registerWithID("tealeafcrop","tealeafcrop","tealeafcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.tealeafcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.tealeafcrop,
+	drop:ItemID.tealeaf,
+	seed:ItemID.tealeaf_seed
+});
+
+
+
+// file: CROPS/beet.js
+
+CropRegistry.registerWithID("beetcrop","beetcrop","beetcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.beetcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.beetcrop,
+	drop:ItemID.beet,
+	seed:ItemID.beet_seed
+});

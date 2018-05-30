@@ -1,0 +1,1 @@
+var StalkGardenCount = {	min: __config__.access("generation.group.gardens.stalk.min"),	max: __config__.access("generation.group.gardens.stalk.max")};Harvest.addBlockGeneration({id:BlockID.stalkgarden,data:0},StalkGardenBiomes,StalkGardenCount,__config__.access("generation.numbers.gardens.stalk"));

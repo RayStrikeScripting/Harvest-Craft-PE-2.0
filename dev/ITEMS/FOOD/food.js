@@ -6,12 +6,22 @@ IDRegistry.genItemID("cocoa_powder");
 Item.createItem("cocoa_powder", "Cocoa powder", {name: "cocoa_powder", meta: 0});
 Harvest.recipe({id:ItemID.cocoa_powder},[{id: ItemID.mortar_bowl, data: 0}, {id: 351, data: 3}]);
 
+IDRegistry.genItemID("almondbutter");
+Item.createItem("almondbutter", "Almond butter", {name: "almondbutter", meta: 0});
+Harvest.recipe({id:ItemID.almondbutter},[{id: ItemID.juicer, data: 0}, {id: ItemID.almond, data: 0}]);
+
 Harvest.setFood("chocolate_milk","Chocolate milk",6);
 Harvest.recipe({id:ItemID.chocolate_milk},[{id: ItemID.cocoa_powder, data: 0}, {id: 325, data: 1}]);
 Harvest.recipe({id:ItemID.chocolate_milk},[{id: ItemID.cocoa_powder, data: 0}, {id: ItemID.fresh_milk, data: 0}]);
 
 Harvest.setFood("espresso","Espresso",8);
 Harvest.recipe({id:ItemID.espresso},[{id: ItemID.coffee_beans, data: 0}, {id: ItemID.coffee_beans, data: 0}, {id: ItemID.coffee_beans, data: 0}, {id: 353, data: 0}]);
+
+Harvest.setFood("chaitea","Chai tea",2);
+Harvest.recipe({id:ItemID.chaitea},[{id: ItemID.black_pepper, data: 0},{id: ItemID.tealeaf, data: 0}]);
+
+Harvest.setFood("raspberryicedtea","Raspberry ice tea",2);
+Harvest.recipe({id:ItemID.raspberryicedtea},[{id: ItemID.raspberry, data: 0},{id: ItemID.tealeaf, data: 0},{id: 332, data: 0}]);
 
 Harvest.setFood("hot_chocolate","Hot chocolate",2);
 Harvest.recipe({id:ItemID.hot_chocolate},[{id: ItemID.juicer, data: 0}, {id: ItemID.fresh_milk, data: 0}, {id: ItemID.cocoa_powder, data: 0}]);
@@ -23,9 +33,12 @@ Harvest.recipe({id:ItemID.vinegar},[{id: ItemID.pot, data: 0}, {id: ItemID.grape
 Harvest.setFood("cheese","Cheese",2);
 Harvest.recipe({id:ItemID.cheese},[{id: ItemID.pot, data: 0}, {id: ItemID.fresh_milk, data: 0}, {id: ItemID.salt, data: 0}]);
 
+Harvest.setFood("tortilla","Tortilla",6);
+Harvest.recipe({id:ItemID.tortilla},[{id: ItemID.skillet, data: 0}, {id: ItemID.fresh_water, data: 0}, {id: ItemID.flour, data: 0}]);
+
 Harvest.setFood("stock","Stock",3);
 Harvest.recipeDuoVariations({id:ItemID.stock},ItemID.pot,
-[352,363,319,423,411,365,ItemID.corn,ItemID.tomato,ItemID.cucumber,ItemID.rutabaga,ItemID.onion,ItemID.cabbage,ItemID.bellpepper,ItemID.peas,ItemID.bean,ItemID.rice,86,392]);
+[352,363,319,423,411,365,ItemID.corn,ItemID.beet,ItemID.zucchini,ItemID.tomato,ItemID.cucumber,ItemID.rutabaga,ItemID.onion,ItemID.cabbage,ItemID.bellpepper,ItemID.peas,ItemID.bean,ItemID.rice,ItemID.artichoke,ItemID.parsnip,ItemID.rhubarb,ItemID.scallion,ItemID.soybean,ItemID.turnip,ItemID.okra,ItemID.asparagus,ItemID.eggplant,ItemID.bambooshoot,ItemID.brusselsprout,ItemID.cauliflower,ItemID.celery,ItemID.radish,86,392]);
 
 Harvest.setFood("pot_roast","Pot roast",10);
 Harvest.recipe({id:ItemID.pot_roast}, [{id: ItemID.pot, data: 0}, {id: 363, data: 0}, {id: 393, data: 0}, {id: 391, data: 0}, {id: ItemID.stock, data: 0}]);
@@ -63,6 +76,12 @@ Harvest.recipe({id:ItemID.dough},[{id: ItemID.mixing_bowl, data: 0}, {id: ItemID
 Harvest.setFood("cranberry_bar","Cranberry bar",8);
 Harvest.recipe({id:ItemID.cranberry_bar},[{id: ItemID.bakeware, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.cranberry, data: 0}, {id: 353, data: 0}]);
 
+Harvest.setFood("figbar","Fig bar",10);
+Harvest.recipe({id:ItemID.figbar},[{id: ItemID.bakeware, data: 0}, {id:ItemID.fig, data: 0},{id: ItemID.dough, data: 0},{id: 353, data: 0}]);
+
+Harvest.setFood("lemonbar","Lemon bar",10);
+Harvest.recipe({id:ItemID.lemonbar},[{id: ItemID.bakeware, data: 0}, {id:ItemID.lemon, data: 0},{id: ItemID.dough, data: 0},{id: 353, data: 0}]);
+
 Harvest.setFood("pizza","Pizza",10);
 Harvest.recipe({id:ItemID.pizza},[{id: ItemID.bakeware, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.tomato, data: 0}, {id: 319, data: 0}, {id: ItemID.cheese, data: 0}]);
 
@@ -99,6 +118,10 @@ Harvest.recipe({id:ItemID.hearty_breakfast},[{id: ItemID.fried_egg, data: 0}, {i
 
 Harvest.setFood("steak_and_chips","Steak and chips",12);
 Harvest.recipe({id:ItemID.steak_and_chips},[{id: ItemID.skillet, data: 0}, {id: 363, data: 0}, {id: ItemID.fries, data: 0}]);
+
+Harvest.setFood("avocadoburrito","Avocado burrito",12);
+Harvest.recipe({id:ItemID.avocadoburrito},[{id: ItemID.cutting_board, data: 0}, {id: ItemID.avocado, data: 0}, {id: ItemID.tortilla, data: 0}, {id: 366, data: 0}]);
+Harvest.recipe({id:ItemID.avocadoburrito},[{id: ItemID.cutting_board, data: 0}, {id: ItemID.avocado, data: 0}, {id: ItemID.tortilla, data: 0}, {id: 320, data: 0}]);
 
 Harvest.setFood("roast_chicken","Roast chicken",9);
 Harvest.recipe({id:ItemID.roast_chicken},[{id: ItemID.bakeware, data: 0}, {id: 366, data: 0}, {id: ItemID.salt, data: 0}, {id: ItemID.black_pepper, data: 0}]);
@@ -314,3 +337,9 @@ Harvest.recipe({id:ItemID.cornedbeef},[{id: ItemID.pot, data: 0}, {id:363, data:
 Harvest.setFood("beefwellington","Beef Wellington",18);
 Harvest.recipe({id:ItemID.beefwellington},[{id:363, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.spinach, data: 0}, {id:40, data: 0}]);
 Harvest.recipe({id:ItemID.beefwellington}, [{id:363, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.spinach, data: 0}, {id:39, data: 0}]);
+
+Harvest.setFood("baconwrappeddates","Bacon wrapped dates",10);
+Harvest.recipe({id:ItemID.baconwrappeddates},[{id: ItemID.bakeware, data: 0}, {id:320, data: 0},{id: ItemID.date, data: 0}]);
+
+Harvest.setFood("candiedlemon","Carnied lemon",3);
+Harvest.recipe({id:ItemID.candiedlemon},[{id: ItemID.saucepan, data: 0}, {id:353, data: 0},{id: ItemID.lemon, data: 0}]);

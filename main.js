@@ -2,82 +2,255 @@
 BUILD INFO:
   dir: dev
   target: main.js
-  files: 79
+  files: 69
 */
-
-
-
-// file: OTHER/banner.js
-
-/*  __     __                     _______    ___               ____  _________      ________    __________________
-   |  |   |  |        _          |   ___  \  \   \            /   / |         |   /   ___   \  |                  |
-   |  |   |  |       / \         |  /    \ |  |   |          |   |  |   ______|  |   |    \  | |______      ______|
-   |  |   |  |      |   |        |  |    | |   \   \        /   /   |  |          \   \    |_/        |    |
-   |  |___|  |     /  __ \       |  \____/ /    |   |      |   |    |  |______     \   \              |    |
-   |         |    |   ||  |      |      __/      \   \    /   /     |         |     \   \             |    |
-   |   ___   |    /  /  \  \     |  |\  \         |   |  |   |      |   ______|      \   \            |    |
-   |  |   |  |   |   \__/   |    |  | \  \         \   \/   /       |  |         ____ \   \           |    |
-   |  |   |  |   /    ___    \   |  |  \  \         |      |        |  |______  |   /  \   \          |    |
-   |  |   |  |  |    /   \    |  |  |   \  \         \    /         |         |  \  \___\   \         |    |            
-   |__|   |__|  /___|     |___\  |__|    \__\         |__|          |_________|   \_________/         |____|  
-*/
-
-
-
-
-// file: OTHER/header.js
-
-Callback.addCallback("LevelLoaded", function(){
-	Game.message(ChatColor.GREEN + "HarvestCraft PE v2.3.2 by Nikolay Savenko");
-});	
-
 
 
 
 // file: API/importLib.js
 
-importLib("PlantModel", "*");
-importLib("Harvest_Core", "*");
+IMPORT("Plant_Model");
+IMPORT("Harvest_Core");
 
 
 
 
 // file: API/Prototypes.js
 
-﻿var rrr = Random.Int(1,3);
-var rrd = Random.Int(1,2);
-
-var BLOCK_TYPE_CANDLE = Block.createSpecialType({
+﻿var BLOCK_TYPE_CANDLE = Block.createSpecialType({
 	base: 50,
 	opaque: false,
 	lightopacity: 0,
 	lightlevel: 10 
+});  
+var ForestryAPI = modsAPI.ForestryAPI;
+
+var particles = __config__.access("other.particles");
+CropRegistry.registerClass("harvestcraft_crop");
+CropRegistry.registerClassConfig("harvestcraft_crop",{
+	ageSpeed:__config__.access("other.ageSpeed.crops"),
+	manure:{id:351,data:15},
+	farmland:[{id:60,data:0},{id:60,data:7}],
+	seedsPlaceFunc:true,
+	growStages:3
+});
+CropRegistry.setRegularFunctionsForClass("harvestcraft_crop",__config__.access("other.growChance.crops"),particles);
+CropRegistry.registerClassDeriveFunction("harvestcraft_crop",function(classs,idd){
+	Recipes.addFurnaceFuel(CropRegistry.getSeedFromCrop(idd), 0, 60);
+	var cfg = CropRegistry.getConfigFromCrop(idd);
+	Harvest.registerDroppingBlock(idd);
+	Block.setDestroyLevelForID (idd, 0);
+	ToolAPI.registerBlockMaterial(idd, "plant");
+	Block.setRandomTickCallback(idd,function(x,y,z,id,data){
+		for(var f in cfg.farmland){
+			if(World.getBlockID(x,y-1,z)!=cfg.farmland[f].id&&World.getBlockData(x,y-1,z)!=cfg.farmland[f].data){
+				World.destroyBlock(x,y,z,true);
+			}
+		}
+		var chance = cfg.ageSpeed;
+		if(Math.random()<chance&&data<2){
+			World.setBlock(x,y,z,id,data+1);
+		}
+	});
+	Block.registerDropFunction(idd, function(coords, blockID, blockData, level){
+		return[[ CropRegistry.getSeedFromCrop(idd), 1,0 ]];
+	});
+	if(ForestryAPI){
+		for(var m = 0;m<3;m++){	
+			ForestryAPI.BeeRegistry.FLOWERS_FLOWERS.push(idd+':'+m);
+		}
+	}
 });
 
-function addGeneration(block,biomes,count,chance){
-	Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
-		if(Math.random() <chance){
-			for(var ccount = 1;ccount<=count;ccount++){
-				var coords = GenerationUtils.randomCoords(chunkX, chunkZ, 64, 128);
-				coords = GenerationUtils.findSurface(coords.x, coords.y, coords.z);
-				if(biomes==null){
-					World.setBlock(coords.x, coords.y + 1, coords.z, block.id, block.data);
-					World.addTileEntity(coords.x, coords.y + 1, coords.z);	
-				}else{
-					for(var idd in biomes ){
-						var id = biomes[idd];
-						if((World.getBiome((chunkX + 0.5) * 16, (chunkZ + 0.5) * 16)==id)&&(World.getBlockID(coords.x, coords.y, coords.z) == 2)){
-							World.setBlock(coords.x, coords.y + 1, coords.z, block.id, block.data);
-							World.addTileEntity(coords.x, coords.y + 1, coords.z);	
-						}
-					}
-				}			
+
+CropRegistry.registerClass("harvestcraft_garden");
+CropRegistry.registerClassConfig("harvestcraft_garden",{
+	farmland:[{id:60,data:0},{id:2,data:0},{id:3,data:0},{id:60,data:7}],
+	seedsPlaceFunc:true
+});
+CropRegistry.registerClassDeriveFunction("harvestcraft_garden",function(classs,id){
+	Recipes.addFurnaceFuel(CropRegistry.getSeedFromCrop(id), 0, 120);
+	Block.setDestroyLevelForID (id, 0);
+	ToolAPI.registerBlockMaterial(id, "plant");
+	Harvest.registerDroppingBlock(id);
+	Callback.addCallback("ItemUse", function(coords, item, block){
+		if(block.id==id){
+			Harvest.drop(CropRegistry.getSeedFromCrop(id),1,coords);
+			World.setBlock(coords.x,coords.y,coords.z,0,0);
+		}
+	});
+	if(ForestryAPI){
+		ForestryAPI.BeeRegistry.FLOWERS_FLOWERS.push(id+':'+0);
+	}
+});
+
+
+CropRegistry.registerClass("harvestcraft_tropicalGarden");
+CropRegistry.registerClassConfig("harvestcraft_tropicalGarden",{
+	farmland:[{id:60,data:0},{id:2,data:0},{id:3,data:0},{id:60,data:7},{id:12,data:0}],
+	seedsPlaceFunc:true
+});
+CropRegistry.registerClassDeriveFunction("harvestcraft_tropicalGarden",function(classs,id){
+	Recipes.addFurnaceFuel(CropRegistry.getSeedFromCrop(id), 0, 120);
+	Block.setDestroyLevelForID (id, 0);
+	ToolAPI.registerBlockMaterial(id, "plant");
+	Harvest.registerDroppingBlock(id);
+	Callback.addCallback("ItemUse", function(coords, item, block){
+		if(block.id==id){
+			Harvest.drop(CropRegistry.getSeedFromCrop(id),1,coords);
+			World.setBlock(coords.x,coords.y,coords.z,0,0);
+		}
+	});
+	if(ForestryAPI){
+		ForestryAPI.BeeRegistry.FLOWERS_CACTI.push(id+':'+0);
+		ForestryAPI.BeeRegistry.FLOWERS_JUNGLE.push(id+':'+0);
+	}	
+});
+
+
+CropRegistry.registerClass("Harvestcraft_treeSapling");
+CropRegistry.registerClassConfig("Harvestcraft_treeSapling",{
+	ageSpeed:__config__.access("other.ageSpeed.saplings"),
+	manure:{id:351,data:15},
+	farmland:[{id:60,data:0},{id:2,data:0},{id:3,data:0},{id:60,data:7}],
+	seedsPlaceFunc:true
+});
+CropRegistry.registerClassDeriveFunction("Harvestcraft_treeSapling",function(classs,idd){
+	Recipes.addFurnaceFuel(CropRegistry.getSeedFromCrop(idd), 0, 140);
+	var cfg = CropRegistry.getConfigFromCrop(idd);
+	PlantModel.tree(idd,0);
+	Block.setDestroyLevelForID (idd, 0);
+	ToolAPI.registerBlockMaterial(idd, "plant");
+	Harvest.registerDroppingBlock(idd);
+	Block.setRandomTickCallback(idd,function(x,y,z,id,data){
+		var chance = cfg.ageSpeed;
+		if(Math.random()<chance){
+			TreeRegistry.deployTree(x,y,z,TreeRegistry.getTreeFromSaplingBlock(idd));
+		}
+	});
+	Callback.addCallback("ItemUse",function(coords,item,block){
+		var manure = cfg.manure;
+		var chance = __config__.access("other.growChance.saplings");
+		if(item.id==manure.id&&item.data==manure.data&&block.id==idd){
+			if(Math.random()<chance){
+				TreeRegistry.deployTree(coords.x,coords.y,coords.z,TreeRegistry.getTreeFromSaplingBlock(idd));
+			}	
+			if(particles){
+				for(var i = 0;i<particles;i++){
+					Particles.addParticle(Native.ParticleType.happyVillager, coords.x+Math.random()*.8,coords.y+Math.random()*.8,coords.z+Math.random()*.8,0,0,0,0)
+				}
 			}
 		}
 	});
-}
+	Block.registerDropFunction(idd, function(coords, blockID, blockData, level){
+		return[[ CropRegistry.getSeedFromCrop(idd), 1,0 ]];
+	});
+	if(ForestryAPI){
+		ForestryAPI.BeeRegistry.FLOWERS_JUNGLE.push(idd+':'+0);
+		ForestryAPI.BeeRegistry.FLOWERS_FLOWERS.push(idd+':'+0);
+	}
+});
 
-//addGeneration({id:0,data:0},[1,2,4,5,6,5],3,0.1);
+
+CropRegistry.registerClass("Harvestcraft_fruit");
+CropRegistry.registerClassConfig("Harvestcraft_fruit",{
+	ageSpeed:__config__.access("other.ageSpeed.fruits"),
+	manure:{id:351,data:15},
+	farmland:[{id:18,data:0}]
+});
+CropRegistry.setRegularFunctionsForClass("Harvestcraft_fruit",__config__.access("other.growChance.fruits"),particles);
+CropRegistry.registerClassDeriveFunction("Harvestcraft_fruit",function(classs,idd){
+	var cfg = CropRegistry.getConfigFromCrop(idd);
+	PlantModel.fruit(idd);
+	Block.setDestroyLevelForID (idd, 0);
+	ToolAPI.registerBlockMaterial(idd, "plant");
+	Block.setRandomTickCallback(idd,function(x,y,z,id,data){
+		var chance = cfg.ageSpeed;
+		if(Math.random()<chance&&data<2){
+			World.setBlock(x,y,z,id,data+1);
+		}
+	});
+	if(ForestryAPI){
+		ForestryAPI.BeeRegistry.FLOWERS_JUNGLE.push(idd+':'+0);
+		ForestryAPI.BeeRegistry.FLOWERS_FLOWERS.push(idd+':'+0);
+	}
+});
+//MIDDLE
+TreeRegistry.registerClass("Harvestcraft_middleFruitTree");
+TreeRegistry.registerClassConfig("Harvestcraft_middleFruitTree",{
+	fruitCount:7
+});
+
+var standartHarvestCraftTreePrototype = TreeRegistry.generateStandartTreePrototypeWithParams({leaves:{id:18,data:0},wood:{id:17,data:0}});
+
+TreeRegistry.registerClassPrototype("Harvestcraft_middleFruitTree",standartHarvestCraftTreePrototype);
+
+//JUNGLE
+TreeRegistry.registerClass("Harvestcraft_jungleFruitTree");
+TreeRegistry.registerClassConfig("Harvestcraft_jungleFruitTree",{
+	fruitCount:5
+});
+
+var jungleHarvestCraftTreePrototype = TreeRegistry.generateStandartTreePrototypeWithParams({leaves:{id:18,data:3},wood:{id:17,data:3}});
+
+TreeRegistry.registerClassPrototype("Harvestcraft_jungleFruitTree",jungleHarvestCraftTreePrototype);
+
+
+//TAIGA
+TreeRegistry.registerClass("Harvestcraft_taigaFruitTree");
+TreeRegistry.registerClassConfig("Harvestcraft_taigaFruitTree",{
+	fruitCount:4
+});
+
+var taigaHarvestCraftTreePrototype = TreeRegistry.generateStandartTreePrototypeWithParams({leaves:{id:18,data:4},wood:{id:162,data:0}});
+
+TreeRegistry.registerClassPrototype("Harvestcraft_taigaFruitTree",taigaHarvestCraftTreePrototype);
+
+
+/*
+var standartHarvestCraftTreePrototype = new TreePrototype();
+standartHarvestCraftTreePrototype.addStructure([
+	{
+		id:18,
+		data:0,
+		box:{
+			pos1:{x:-2,y:3,z:-2},
+			pos2:{x:2,y:4,z:2}
+		}
+	},
+	{
+		id:18,
+		data:0,
+		box:{
+			pos1:{x:-1,y:5,z:0},
+			pos2:{x:1,y:6,z:0}
+		}
+	},
+	{
+		id:18,
+		data:0,
+		box:{
+			pos1:{x:0,y:5,z:-1},
+			pos2:{x:0,y:6,z:1}
+		}
+	},
+	{
+		id:17,
+		data:0,
+		box:{
+			pos1:{x:0,y:0,z:0},
+			pos2:{x:0,y:5,z:0}
+		}
+	}
+]);
+standartHarvestCraftTreePrototype.addFruitsArea([
+	{
+		box:{
+			pos1:{x:-2,y:2,z:-2}, 
+			pos2:{x:2,y:2,z:2}
+		}
+	}
+]);*/
 
 
 
@@ -280,6 +453,219 @@ Translation.addTranslation("Cottage Pie", {ru: "Коттеджный пирог"
 Translation.addTranslation("Meat Pie", {ru: "Пирог с мясом"});
 Translation.addTranslation("Corned Beef", {ru: "Солонина"});
 Translation.addTranslation("Beef Wellington", {ru: "Биф Веллингтон"});
+Translation.addTranslation("Bean", {ru: "Бобы"});
+Translation.addTranslation("Rice", {ru: "Рис"});
+Translation.addTranslation("Water Chestnut", {ru: "Каштан"});
+Translation.addTranslation("Rutabaga", {ru: "Редис"});
+Translation.addTranslation("Mustard Seeds", {ru: "Горчичные семена"});
+Translation.addTranslation("Ginger", {ru: "Имбирь"});
+Translation.addTranslation("Spinach", {ru: "Шпинат"});
+Translation.addTranslation("Bean Seed", {ru: "Семя бобов"});
+Translation.addTranslation("Rice Seed", {ru: "Семя риса"});
+Translation.addTranslation("Water Chestnut Seed", {ru: "Семя каштана"});
+Translation.addTranslation("Rutabaga Seed", {ru: "Семя редиса"});
+Translation.addTranslation("Mustard Seed", {ru: "Горчичное семя"});
+Translation.addTranslation("Ginger Seed", {ru: "Семя имбиря"});
+Translation.addTranslation("Spinach Seed", {ru: "Семя шпината"});
+Translation.addTranslation("Meat Pie", {ru: "Мясной пирог"});
+Translation.addTranslation("Baked Beans", {ru: "Печеные бобы"});
+Translation.addTranslation("Dim Sum", {ru: "Дим-Сам"});
+////////////////////////////////
+Translation.addTranslation("Apricot", {ru: "Абрикос"});
+Translation.addTranslation("Cherry", {ru: "Вишня"});
+Translation.addTranslation("Avocado", {ru: "Авокадо"});
+Translation.addTranslation("Banana", {ru: "Банан"});
+Translation.addTranslation("Date", {ru: "Финик"});
+Translation.addTranslation("Dragonfruit", {ru: "Питайа"});
+Translation.addTranslation("Fig", {ru: "Инжир"});
+Translation.addTranslation("Grapefruit", {ru: "Грейпфрут"});
+Translation.addTranslation("Gooseberry", {ru: "Крыжовник"});
+Translation.addTranslation("Lemon", {ru: "Лимон"});
+Translation.addTranslation("Lime", {ru: "Лайм"});
+Translation.addTranslation("Mango", {ru: "Манго"});
+Translation.addTranslation("Olive", {ru: "Олива"});
+Translation.addTranslation("Orange", {ru: "Апельсин"});
+Translation.addTranslation("Papaya", {ru: "Папайа"});
+Translation.addTranslation("Peach", {ru: "Персик"});
+Translation.addTranslation("Pear", {ru: "Груша"});
+Translation.addTranslation("Persimmon", {ru: "Хурма"});
+Translation.addTranslation("Plum", {ru: "Слива"});
+Translation.addTranslation("Pomegranate", {ru: "Гранат"});
+Translation.addTranslation("Starfruit", {ru: "Карамбола"});
+Translation.addTranslation("Almond", {ru: "Миндаль"});
+Translation.addTranslation("Cashew", {ru: "Кешью"});
+Translation.addTranslation("Coconut", {ru: "Кокос"});
+Translation.addTranslation("Cactusfruit", {ru: "Плод кактуса"});
+Translation.addTranslation("Cantaloupe", {ru: "Канталупа"});
+Translation.addTranslation("Kiwi", {ru: "Киви"});
+Translation.addTranslation("Pineapple", {ru: "Ананас"});
+Translation.addTranslation("Artichoke", {ru: "Артишок"});
+Translation.addTranslation("Asparagus", {ru: "Спаржа"});
+Translation.addTranslation("Bambooshoot", {ru: "Бамбуковый побег"});
+Translation.addTranslation("Broccoli", {ru: "Брокколи"});
+Translation.addTranslation("Brusselsprout", {ru: "Брюссельская капуста"});
+Translation.addTranslation("Cauliflower", {ru: "Цветная капуста"});
+Translation.addTranslation("Celery", {ru: "Сельдерей"});
+Translation.addTranslation("Radish", {ru: "Редис"});
+Translation.addTranslation("Eggplant", {ru: "Баклажан"});
+Translation.addTranslation("Leek", {ru: "Лук-порей"});
+Translation.addTranslation("Okra", {ru: "Окра"});
+Translation.addTranslation("Parsnip", {ru: "Пастернак"});
+Translation.addTranslation("Rhubarb", {ru: "Ревень"});
+Translation.addTranslation("Scallion", {ru: "Лук-шалот"});
+Translation.addTranslation("Soybean", {ru: "Соевые бобы"});
+Translation.addTranslation("Sweet Potato", {ru: "Сладкий картофель"});
+Translation.addTranslation("Turnip", {ru: "Репа"});
+Translation.addTranslation("Peanut", {ru: "Арахис"});
+Translation.addTranslation("Rye", {ru: "Рожь"});
+Translation.addTranslation("Zucchini", {ru: "Цуккини"});
+Translation.addTranslation("Barley", {ru: "Ячмень"});
+Translation.addTranslation("Oats", {ru: "Овёс"});
+Translation.addTranslation("Beet", {ru: "Свёкла"});
+Translation.addTranslation("Wintersquash", {ru: "Зимняя тыква"});
+Translation.addTranslation("Tea leaf", {ru: "Чайный лист"});
+Translation.addTranslation("Apricot smoothie", {ru: "Абрикосовый смузи"});
+Translation.addTranslation("Pina collada", {ru: "Пинья колада"});
+Translation.addTranslation("Cherry smoothie", {ru: "Вишневый смузи"});
+Translation.addTranslation("Banana smoothie", {ru: "Банановый смузи"});
+Translation.addTranslation("Banana milkshake", {ru: "Банановый молочный коктель"});
+Translation.addTranslation("Goosseberry milkshake", {ru: "Крыжовниковый молочный коктель"});
+Translation.addTranslation("Fig smoothie", {ru: "Фиговый смузи"});
+Translation.addTranslation("Gooseberry smoothie", {ru: "Крыжовниковый смузи"});
+Translation.addTranslation("Lemon smoothie", {ru: "Лимонный смузи"});
+Translation.addTranslation("Lime smoothie", {ru: "Лаймовый смузи"});
+Translation.addTranslation("Mango smoothie", {ru: "Манговый смузи"});
+Translation.addTranslation("Orange smoothie", {ru: "Апельсиновый смузи"});
+Translation.addTranslation("Papaya smoothie", {ru: "Смузи из папайи"});
+Translation.addTranslation("Peach smoothie", {ru: "Персиковый смузи"});
+Translation.addTranslation("Pear smoothie", {ru: "Грушевый смузи"});
+Translation.addTranslation("Persimmon smoothie", {ru: "Хурмовый смузи"});
+Translation.addTranslation("Plum smoothie", {ru: "Сливовый смузи"});
+Translation.addTranslation("Pomegranate smoothie", {ru: "Гранатовый смузи"});
+Translation.addTranslation("Starfruit smoothie", {ru: "Смузи из карамболы"});
+Translation.addTranslation("Coconut smoothie", {ru: "Кокосовый смузи"});
+Translation.addTranslation("Apricot jelly", {ru: "Абрикосовое желе"});
+Translation.addTranslation("Cherry jelly", {ru: "Вишневый желе"});
+Translation.addTranslation("Fig jelly", {ru: "Фиговый желе"});
+Translation.addTranslation("Grapefruit jelly", {ru: "Грейпфрутовое желе"});
+Translation.addTranslation("Gooseberry jelly", {ru: "Желе из крыжовника"});
+Translation.addTranslation("Lemon jelly", {ru: "Лимонное желе"});
+Translation.addTranslation("Lime jelly", {ru: "Лаймовое желе"});
+Translation.addTranslation("Mango jelly", {ru: "Желе из манго"});
+Translation.addTranslation("Orange jelly", {ru: "Апельсиновое желе"});
+Translation.addTranslation("Papaya jelly", {ru: "Желе из папайи"});
+Translation.addTranslation("Peach jelly", {ru: "Персиковое желе"});
+Translation.addTranslation("Pear jelly", {ru: "Желе из груши"});
+Translation.addTranslation("Persimmon jelly", {ru: "Хурмовое желе"});
+Translation.addTranslation("Plum jelly", {ru: "Сливовое желе"});
+Translation.addTranslation("Pomegranate jelly", {ru: "Гранатовое желе"});
+Translation.addTranslation("Starfruit jelly", {ru: "Желе из карамболы"});
+Translation.addTranslation("Coconut jelly", {ru: "Кокосовое желе"});
+Translation.addTranslation("Apricot juice", {ru: "Абрикосовый сок"});
+Translation.addTranslation("Cherry juice", {ru: "Вишневый сок"});
+Translation.addTranslation("Fig juice", {ru: "Фиговый сок"});
+Translation.addTranslation("Grapefruit juice", {ru: "Грейпфрутовый сок"});
+Translation.addTranslation("Lemonade", {ru: "Лимонад"});
+Translation.addTranslation("Lime juice", {ru: "Лаймовый сок"});
+Translation.addTranslation("Mango juice", {ru: "Сок из манго"});
+Translation.addTranslation("Orange juice", {ru: "Апельсиновый сок"});
+Translation.addTranslation("Papaya juice", {ru: "Сок из папайи"});
+Translation.addTranslation("Peach juice", {ru: "Персиковый сок"});
+Translation.addTranslation("Pear juice", {ru: "Сок из груши"});
+Translation.addTranslation("Persimmon juice", {ru: "Хурмовый сок"});
+Translation.addTranslation("Plum juice", {ru: "Сливовый сок"});
+Translation.addTranslation("Pomegranate juice", {ru: "Гранатовый сок"});
+Translation.addTranslation("Starfruit juice", {ru: "Сок из карамболы"});
+Translation.addTranslation("Coconut milk", {ru: "Кокосовое молоко"});
+Translation.addTranslation("Pineapple yogurt", {ru: "Ананасовый йогурт"});
+Translation.addTranslation("Apricot yogurt", {ru: "Абрикосовый йогурт"});
+Translation.addTranslation("Cherry yogurt", {ru: "Вишневый йогурт"});
+Translation.addTranslation("Banana yogurt", {ru: "Банановый йогурт"});
+Translation.addTranslation("Fig yogurt", {ru: "Фиговый йогурт"});
+Translation.addTranslation("Grapefruit yogurt", {ru: "Грейпфрутовый йогурт"});
+Translation.addTranslation("Gooseberry yogurt", {ru: "Йогурт из крыжовника"});
+Translation.addTranslation("Lemon yogurt", {ru: "Лимонный йогурт"});
+Translation.addTranslation("Lime yogurt", {ru: "Лаймовый йогурт"});
+Translation.addTranslation("Mango yogurt", {ru: "Йогурт из манго"});
+Translation.addTranslation("Orange yogurt", {ru: "Апельсиновый йогурт"});
+Translation.addTranslation("Papaya yogurt", {ru: "Йогурт из папайи"});
+Translation.addTranslation("Peach yogurt", {ru: "Персиковый йогурт"});
+Translation.addTranslation("Pear yogurt", {ru: "Йогурт из груши"});
+Translation.addTranslation("Persimmon yogurt", {ru: "Хурмовый йогурт"});
+Translation.addTranslation("Plum yogurt", {ru: "Сливовый йогурт"});
+Translation.addTranslation("Pomegranate yogurt", {ru: "Гранатовый йогурт"});
+Translation.addTranslation("Starfruit yogurt", {ru: "Йогурт из карамболы"});
+Translation.addTranslation("Coconut yogurt", {ru: "Кокосовый йогурт"});
+Translation.addTranslation("Cactusfruit Seed", {ru: "Семя кактуса"});
+Translation.addTranslation("Cantaloupe Seed", {ru: "Семя канталупы"});
+Translation.addTranslation("Kiwi Seed", {ru: "Семя киви"});
+Translation.addTranslation("Pineapple Seed", {ru: "Семя ананаса"});
+Translation.addTranslation("Artichoke Seed", {ru: "Семя артишока"});
+Translation.addTranslation("Asparagus Seed", {ru: "Семя спаржи"});
+Translation.addTranslation("Bambooshoot Seed", {ru: "Семя бамбукового побега"});
+Translation.addTranslation("Broccoli Seed", {ru: "Семя броколли"});
+Translation.addTranslation("Brusselsprout Seed", {ru: "Семя брюссельской капусты"});
+Translation.addTranslation("Cauliflower Seed", {ru: "Семя цветной капусты"});
+Translation.addTranslation("Celery Seed", {ru: "Семя сельдерея"});
+Translation.addTranslation("Radish Seed", {ru: "Семя редиса"});
+Translation.addTranslation("Eggplant Seed", {ru: "Семя баклажана"});
+Translation.addTranslation("Leek Seed", {ru: "Семя лука-порея"});
+Translation.addTranslation("Okra Seed", {ru: "Семя окры"});
+Translation.addTranslation("Parsnip Seed", {ru: "Семя пастернака"});
+Translation.addTranslation("Rhubarb Seed", {ru: "Семя ревеня"});
+Translation.addTranslation("Scallion Seed", {ru: "Семя лука-шалота"});
+Translation.addTranslation("Soybean Seed", {ru: "Семя соевого боба"});
+Translation.addTranslation("Sweet Potato Seed", {ru: "Семя сладкого картофеля"});
+Translation.addTranslation("Turnip Seed", {ru: "Семя репы"});
+Translation.addTranslation("Peanut Seed", {ru: "Семя арахиса"});
+Translation.addTranslation("Rye Seed", {ru: "Семя ржи"});
+Translation.addTranslation("Zucchini Seed", {ru: "Семя цуккини"});
+Translation.addTranslation("Barley Seed", {ru: "Семя ячменя"});
+Translation.addTranslation("Oats Seed", {ru: "Семя овса"});
+Translation.addTranslation("Wintersquash Seed", {ru: "Семя зимней тыквы"});
+Translation.addTranslation("Tealeaf Seed", {ru: "Семя чайного листа"});
+Translation.addTranslation("Beet Seed", {ru: "Семя свёклы"});
+Translation.addTranslation("Apricot Tree Sapling", {ru: "Саженец абрикоса"});
+Translation.addTranslation("Cherry Tree Sapling", {ru: "Саженец вишни"});
+Translation.addTranslation("Avocado Tree Sapling", {ru: "Саженец авокадо"});
+Translation.addTranslation("Banana Tree Sapling", {ru: "Саженец банана"});
+Translation.addTranslation("Date Tree Sapling", {ru: "Саженец финика"});
+Translation.addTranslation("Dragonfruit Tree Sapling", {ru: "Саженец питайи"});
+Translation.addTranslation("Fig Tree Sapling", {ru: "Саженец фига"});
+Translation.addTranslation("Grapefruit Tree Sapling", {ru: "Саженец грейпфрута"});
+Translation.addTranslation("Gooseberry Tree Sapling", {ru: "Саженец крыжовника"});
+Translation.addTranslation("Lime Tree Sapling", {ru: "Саженец лайма"});
+Translation.addTranslation("Lemon Tree Sapling", {ru: "Саженец лимона"});
+Translation.addTranslation("Mango Tree Sapling", {ru: "Саженец манго"});
+Translation.addTranslation("Olive Tree Sapling", {ru: "Саженец оливы"});
+Translation.addTranslation("Orange Tree Sapling", {ru: "Саженец апельсина"});
+Translation.addTranslation("Papaya Tree Sapling", {ru: "Саженец папайи"});
+Translation.addTranslation("Peach Tree Sapling", {ru: "Саженец персика"});
+Translation.addTranslation("Pear Tree Sapling", {ru: "Саженец груши"});
+Translation.addTranslation("Persimmon Tree Sapling", {ru: "Саженец хурмы"});
+Translation.addTranslation("Plum Tree Sapling", {ru: "Саженец сливы"});
+Translation.addTranslation("Pomegranate Tree Sapling", {ru: "Саженец граната"});
+Translation.addTranslation("Starfruit Tree Sapling", {ru: "Саженец карамболы"});
+Translation.addTranslation("Almond Tree Sapling", {ru: "Саженец миндаля"});
+Translation.addTranslation("Peppercorn Tree Sapling", {ru: "Саженец перца"});
+Translation.addTranslation("Cashew Tree Sapling", {ru: "Саженец кешью"});
+Translation.addTranslation("Coconut Tree Sapling", {ru: "Саженец кокоса"});
+Translation.addTranslation("Kiwi smoothie", {ru: "Смузи из киви"});
+Translation.addTranslation("Kiwi yogurt", {ru: "Йогурт из киви"});
+Translation.addTranslation("Coconut cream", {ru: "Кокосовый крем"});
+Translation.addTranslation("Chai tea", {ru: "Чай масала"});
+Translation.addTranslation("Raspberry ice tea", {ru: "Малиновый холодный чай"});
+Translation.addTranslation("Fig bar", {ru: "Фиговый батончик"});
+Translation.addTranslation("Lemon bar", {ru: "Лимонный батончик"});
+Translation.addTranslation("Bacon wrapped dates", {ru: "Финики обёрнутые беконом"});
+Translation.addTranslation("Carnied lemon", {ru: "Карамельные лимоны"});
+Translation.addTranslation("Arid garden", {ru: "Пустынный куст"});
+Translation.addTranslation("Tropical garden", {ru: "Тропический куст"});
+Translation.addTranslation("Leafy garden", {ru: "Лиственный куст"});
+Translation.addTranslation("Frosty garden", {ru: "Морозный сад"});
+Translation.addTranslation("Ground garden", {ru: "Земляной куст"});
+Translation.addTranslation("Stalk garden", {ru: "Стебельковый куст"});
+Translation.addTranslation("Gourd garden", {ru: "Тыквенный куст"});
 
 
 
@@ -290,7 +676,6 @@ Translation.addTranslation("Beef Wellington", {ru: "Биф Веллингтон"
 Item.createItem("Atree", "Spawn Tree", {name: "stick", data: 0});
 Item.registerUseFunction("Atree",function(coords, item, block){
 	Debug.m("Item");	
-	Harvest.addTree(0,BlockID.appleBlock,8,coords.x,coords.y,coords.z);
 });
 
 IDRegistry.genItemID("AGE");
@@ -300,422 +685,25 @@ Item.registerUseFunction("AGE",function(coords, item, block){
 	Game.message(te.isCrop);
  });
  
+IDRegistry.genItemID("waaa");
+Item.createItem("waaa", "Check water", {name: "stick", data: 0});
+Item.registerUseFunction("waaa",function(coords, item, block){
+	var bblok = World.getBlockID(coords.x,coords.y+1,coords.z);
+	Debug.m("Block id: "+bblok+", is transparent: "+GenerationUtils.isTransparentBlock(bblok));
+});*/
+
 IDRegistry.genItemID("data");
 Item.createItem("data", "data", {name: "stick", data: 0});
 Item.registerUseFunction("data",function(coords, item, block){
 	Debug.m("ID:"+World.getBlockID(coords.x,coords.y,coords.z));
 	Debug.m("DATA:"+World.getBlockData(coords.x,coords.y,coords.z)); 	
 });
+
 IDRegistry.genItemID("biome");
 Item.createItem("biome", "Get biome", {name: "stick", data: 0});
 Item.registerUseFunction("biome",function(coords, item, block){
 	Debug.m("Biome id: "+World.getBiome(coords.x, coords.z) );
-});*/
-
-
-
-
-// file: CROPS/strawberry.js
-
-CropRegistry.registerWithID("strawberrycrop","strawberrycrop","strawberrycrop",ItemID.strawberry_seed);
-CropRegistry.fruitPush(BlockID.strawberrycrop,ItemID.strawberry);
-Harvest.registerDroppingBlock(BlockID.strawberrycrop);
-
-PlantModel.crop(BlockID.strawberrycrop);
-
-TileEntity.registerPrototype(BlockID.strawberrycrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.strawberry_seed,BlockID.strawberrycrop);
-
-
-
-
-// file: CROPS/raspberry.js
-
-CropRegistry.registerWithID("raspberrycrop","raspberrycrop","raspberry_crop",ItemID.raspberry_seed);
-CropRegistry.fruitPush(BlockID.raspberrycrop,ItemID.raspberry);
-Harvest.registerDroppingBlock(BlockID.raspberrycrop);
-
-PlantModel.crop(BlockID.raspberrycrop);
-
-TileEntity.registerPrototype(BlockID.raspberrycrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.raspberry_seed,BlockID.raspberrycrop);
-
-
-
-
-// file: CROPS/cranberry.js
-
-CropRegistry.registerWithID("cranberrycrop","cranberrycrop","cranberrycrop",ItemID.cranberry_seed);
-CropRegistry.fruitPush(BlockID.cranberrycrop,ItemID.cranberry);
-Harvest.registerDroppingBlock(BlockID.cranberrycrop);
-
-PlantModel.crop(BlockID.cranberrycrop);
-
-TileEntity.registerPrototype(BlockID.cranberrycrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.cranberry_seed,BlockID.cranberrycrop);
-
-
-
-
-// file: CROPS/blueberry.js
-
-CropRegistry.registerWithID("blueberrycrop","blueberrycrop","blueberrycrop",ItemID.blueberry_seed);
-CropRegistry.fruitPush(BlockID.blueberrycrop,ItemID.blueberry);
-Harvest.registerDroppingBlock(BlockID.blueberrycrop);
-
-PlantModel.crop(BlockID.blueberrycrop);
-
-TileEntity.registerPrototype(BlockID.blueberrycrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.blueberry_seed,BlockID.blueberrycrop);
-
-
-
-
-// file: CROPS/blackberry.js
-
-CropRegistry.registerWithID("blackberrycrop","blackberrycrop","blackberrycrop",ItemID.blackberry_seed);
-CropRegistry.fruitPush(BlockID.blackberrycrop,ItemID.blackberry);
-Harvest.registerDroppingBlock(BlockID.blackberrycrop);
-
-PlantModel.crop(BlockID.blackberrycrop);
-
-TileEntity.registerPrototype(BlockID.blackberrycrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.blackberry_seed,BlockID.blackberrycrop);
-
-
-
-
-// file: CROPS/grape.js
-
-CropRegistry.registerWithID("grapecrop","grapecrop","grapecrop",ItemID.grape_seed);
-CropRegistry.fruitPush(BlockID.grapecrop,ItemID.grape);
-Harvest.registerDroppingBlock(BlockID.grapecrop);
-
-PlantModel.crop(BlockID.grapecrop);
-
-TileEntity.registerPrototype(BlockID.grapecrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.grape_seed,BlockID.grapecrop);
-
-
-
-
-// file: CROPS/cucumber.js
-
-CropRegistry.registerWithID("cucumbercrop","cucumbercrop","cucumbercrop",ItemID.cucumber_seed);
-CropRegistry.fruitPush(BlockID.cucumbercrop,ItemID.cucumber);
-Harvest.registerDroppingBlock(BlockID.cucumbercrop);
-
-PlantModel.crop(BlockID.cucumbercrop);
-
-TileEntity.registerPrototype(BlockID.cucumbercrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.cucumber_seed,BlockID.cucumbercrop);
-
-
-
-
-// file: CROPS/onion.js
-
-CropRegistry.registerWithID("onioncrop","onioncrop","onioncrop",ItemID.onion_seed);
-CropRegistry.fruitPush(BlockID.onioncrop,ItemID.onion);
-Harvest.registerDroppingBlock(BlockID.onioncrop);
-
-PlantModel.crop(BlockID.onioncrop);
-
-TileEntity.registerPrototype(BlockID.onioncrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.onion_seed,BlockID.onioncrop);
-
-
-
-
-// file: CROPS/cabbage.js
-
-CropRegistry.registerWithID("cabbagecrop","cabbagecrop","cabbagecrop",ItemID.cabbage_seed);
-CropRegistry.fruitPush(BlockID.cabbagecrop,ItemID.cabbage);
-Harvest.registerDroppingBlock(BlockID.cabbagecrop);
-
-PlantModel.crop(BlockID.cabbagecrop);
-
-TileEntity.registerPrototype(BlockID.cabbagecrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.cabbage_seed,BlockID.cabbagecrop);
-
-
-
-
-// file: CROPS/tomato.js
-
-CropRegistry.registerWithID("tomatocrop","tomatocrop","tomatocrop",ItemID.tomato_seed);
-CropRegistry.fruitPush(BlockID.tomatocrop,ItemID.tomato);
-Harvest.registerDroppingBlock(BlockID.tomatocrop);
-
-PlantModel.crop(BlockID.tomatocrop);
-
-TileEntity.registerPrototype(BlockID.tomatocrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.tomato_seed,BlockID.tomatocrop);
-
-
-
-
-// file: CROPS/garlic.js
-
-CropRegistry.registerWithID("garliccrop","garliccrop","garliccrop",ItemID.garlic_seed);
-CropRegistry.fruitPush(BlockID.garliccrop,ItemID.garlic);
-Harvest.registerDroppingBlock(BlockID.garliccrop);
-
-PlantModel.crop(BlockID.garliccrop);
-
-TileEntity.registerPrototype(BlockID.garliccrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.garlic_seed,BlockID.garliccrop);
-
-
-
-
-// file: CROPS/bellpepper.js
-
-CropRegistry.registerWithID("bellpeppercrop","bellpeppercrop","bellpeppercrop",ItemID.bellpepper_seed);
-CropRegistry.fruitPush(BlockID.bellpeppercrop,ItemID.bellpepper);
-Harvest.registerDroppingBlock(BlockID.bellpeppercrop);
-
-PlantModel.crop(BlockID.bellpeppercrop);
-
-TileEntity.registerPrototype(BlockID.bellpeppercrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.bellpepper_seed,BlockID.bellpeppercrop);
-
-
-
-
-// file: CROPS/lettuce.js
-
-CropRegistry.registerWithID("lettucecrop","lettucecrop","lettucecrop",ItemID.lettuce_seed);
-CropRegistry.fruitPush(BlockID.lettucecrop,ItemID.lettuce);
-Harvest.registerDroppingBlock(BlockID.lettucecrop);
-
-PlantModel.crop(BlockID.lettucecrop);
-
-TileEntity.registerPrototype(BlockID.lettucecrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.lettuce_seed,BlockID.lettuce);
-
-
-
-
-// file: CROPS/coffeebean.js
-
-CropRegistry.registerWithID("coffeebeancrop","coffeebeancrop","coffeebeancrop",ItemID.coffee_seed);
-CropRegistry.fruitPush(BlockID.coffeebeancrop,ItemID.coffee_beans);
-Harvest.registerDroppingBlock(BlockID.coffeebeancrop);
-
-PlantModel.crop(BlockID.coffeebeancrop);
-
-TileEntity.registerPrototype(BlockID.coffeebeancrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.coffee_seed,BlockID.coffeebeancrop);
-
-
-
-
-// file: CROPS/peas.js
-
-CropRegistry.registerWithID("peascrop","peascrop","peascrop",ItemID.peas_seed);
-CropRegistry.fruitPush(BlockID.peascrop,ItemID.peas);
-Harvest.registerDroppingBlock(BlockID.peascrop);
-
-PlantModel.crop(BlockID.peascrop);
-
-TileEntity.registerPrototype(BlockID.peascrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.peas_seed,BlockID.peascrop);
-
-
-
-
-// file: CROPS/chilipepper.js
-
-CropRegistry.registerWithID("chilipeppercrop","chilipeppercrop","chilipeppercrop",ItemID.chili_pepper_seed);
-CropRegistry.fruitPush(BlockID.chilipeppercrop,ItemID.chili_pepper);
-Harvest.registerDroppingBlock(BlockID.chilipeppercrop);
-
-PlantModel.crop(BlockID.chilipeppercrop);
-
-TileEntity.registerPrototype(BlockID.chilipeppercrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.chili_pepper_seed,BlockID.chilipeppercrop);
-
-
-
-
-// file: CROPS/spiceleaf.js
-
-CropRegistry.registerWithID("spiceleafcrop","spiceleafcrop","spiceleafcrop",ItemID.spice_leaf_seed);
-CropRegistry.fruitPush(BlockID.spiceleafcrop,ItemID.spice_leaf_seed);
-Harvest.registerDroppingBlock(BlockID.spiceleafcrop);
-
-PlantModel.crop(BlockID.spiceleafcrop);
-
-TileEntity.registerPrototype(BlockID.spiceleafcrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.spice_leaf_seed,BlockID.spiceleafcrop);
-
-
-
-
-// file: CROPS/corn.js
-
-CropRegistry.registerWithID("corncrop","corncrop","corncrop",ItemID.corn_seed);
-CropRegistry.fruitPush(BlockID.corncrop,ItemID.corn);
-Harvest.registerDroppingBlock(BlockID.corncrop);
-
-PlantModel.crop(BlockID.corncrop);
-
-TileEntity.registerPrototype(BlockID.corncrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.corn_seed,BlockID.corncrop);
-
-
-
-
-// file: CROPS/candleberry.js
-
-﻿CropRegistry.registerWithID("candleberrycrop","candleberrycrop","candleberrycrop",ItemID.candleberryseed);
-CropRegistry.fruitPush(BlockID.candleberrycrop,ItemID.candleberry);
-Harvest.registerDroppingBlock(BlockID.candleberrycrop);
-
-PlantModel.crop(BlockID.candleberrycrop);
-
-TileEntity.registerPrototype(BlockID.candleberrycrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.candleberryseed,BlockID.candleberrycrop);
-
-
-
-
-// file: CROPS/curryleaf.js
-
-CropRegistry.registerWithID("curryleaf","curryleaf","curryleafcrop",ItemID.curryleaf_seed);
-CropRegistry.fruitPush(BlockID.curryleaf,ItemID.curryleaf);
-Harvest.registerDroppingBlock(BlockID.curryleaf);
-
-PlantModel.crop(BlockID.curryleaf);
-
-TileEntity.registerPrototype(BlockID.curryleaf,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.curryleaf_seed,BlockID.curryleaf);
-
-
-
-
-// file: CROPS/cotton.js
-
-CropRegistry.registerWithID("cottoncrop","cottoncrop","cottoncrop",ItemID.cotton_seed);
-CropRegistry.fruitPush(BlockID.cottoncrop,ItemID.cotton);
-Harvest.registerDroppingBlock(BlockID.cottoncrop);
-
-PlantModel.crop(BlockID.cottoncrop);
-
-TileEntity.registerPrototype(BlockID.cottoncrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.cotton_seed,BlockID.cottoncrop);
-
-
-
-
-// file: CROPS/rutabaga.js
-
-CropRegistry.registerWithID("rutabagacrop","rutabagacrop","rutabagacrop",ItemID.rutabaga_seed);
-CropRegistry.fruitPush(BlockID.rutabagacrop,ItemID.rutabaga);
-Harvest.registerDroppingBlock(BlockID.rutabagacrop);
-
-PlantModel.crop(BlockID.rutabagacrop);
-
-TileEntity.registerPrototype(BlockID.rutabagacrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.rutabaga_seed,BlockID.rutabagacrop);
-
-
-
-
-// file: CROPS/bean.js
-
-CropRegistry.registerWithID("beancrop","beancrop","beancrop",ItemID.bean_seed);
-CropRegistry.fruitPush(BlockID.beancrop,ItemID.bean);
-Harvest.registerDroppingBlock(BlockID.beancrop);
-
-PlantModel.crop(BlockID.beancrop);
-
-TileEntity.registerPrototype(BlockID.beancrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.bean_seed,BlockID.beancrop);
-
-
-
-
-// file: CROPS/rice.js
-
-CropRegistry.registerWithID("ricecrop","ricecrop","ricecrop",ItemID.rice_seed);
-CropRegistry.fruitPush(BlockID.ricecrop,ItemID.rice);
-Harvest.registerDroppingBlock(BlockID.ricecrop);
-
-PlantModel.crop(BlockID.ricecrop);
-
-TileEntity.registerPrototype(BlockID.ricecrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.rice_seed,BlockID.ricecrop);
-
-
-
-
-// file: CROPS/mustardseeds.js
-
-CropRegistry.registerWithID("mustardseedscrop","mustardseedscrop","mustardseedscrop",ItemID.mustard_seed);
-CropRegistry.fruitPush(BlockID.mustardseedscrop,ItemID.mustardseeds);
-Harvest.registerDroppingBlock(BlockID.mustardseedscrop);
-
-PlantModel.crop(BlockID.mustardseedscrop);
-
-TileEntity.registerPrototype(BlockID.mustardseedscrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.mustard_seed,BlockID.mustardseedscrop);
-
-
-
-
-// file: CROPS/ginger.js
-
-CropRegistry.registerWithID("gingercrop","gingercrop","gingercrop",ItemID.ginger_seed);
-CropRegistry.fruitPush(BlockID.gingercrop,ItemID.ginger);
-Harvest.registerDroppingBlock(BlockID.gingercrop);
-
-PlantModel.crop(BlockID.gingercrop);
-
-TileEntity.registerPrototype(BlockID.gingercrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.ginger_seed,BlockID.gingercrop);
-
-
-
-
-// file: CROPS/spinach.js
-
-CropRegistry.registerWithID("spinachcrop","spinachcrop","spinachcrop",ItemID.spinach_seed);
-CropRegistry.fruitPush(BlockID.spinachcrop,ItemID.spinach);
-Harvest.registerDroppingBlock(BlockID.spinachcrop);
-
-PlantModel.crop(BlockID.spinachcrop);
-
-TileEntity.registerPrototype(BlockID.spinachcrop,cropPROTO);
-
-CropRegistry.registerSeed(ItemID.spinach_seed,BlockID.spinachcrop);
+});
 
 
 
@@ -724,35 +712,48 @@ CropRegistry.registerSeed(ItemID.spinach_seed,BlockID.spinachcrop);
 
 IDRegistry.genItemID("cutting_board");
 Item.createItem("cutting_board", "Cutting board", {name: "cutting_board", meta: 0}, {stack: 1});
-Recipes.addShaped({id: ItemID.cutting_board, count: 1, data: 0}, ["a  ", " b ", "  c"], ["a", 265, 0, "b", 280, 0, "c", 5, 0]);
+Harvest.registerTool(ItemID.cutting_board);
 
 IDRegistry.genItemID("pot");
 Item.createItem("pot", "Pot", {name: "pot", meta: 0}, {stack: 1});
-Recipes.addShaped({id: ItemID.pot, count: 1, data: 0}, ["abb", " bb"], ["a", 280, 0, "b", 265, 0]);
+Harvest.registerTool(ItemID.pot);
 
 IDRegistry.genItemID("skillet");
 Item.createItem("skillet", "Skillet", {name: "skillet", meta: 0}, {stack: 1});
-Recipes.addShaped({id: ItemID.skillet, count: 1, data: 0}, ["a  ", " a ", "  b"], ["a", 265, 0, "b", 280, 0]);
+Harvest.registerTool(ItemID.skillet);
 
 IDRegistry.genItemID("saucepan");
 Item.createItem("saucepan", "Saucepan", {name: "saucepan", meta: 0}, {stack: 1});
-Recipes.addShaped({id: ItemID.saucepan, count: 1, data: 0}, ["a  ", "b  "], ["a", 265, 0, "b", 280, 0]);
+Harvest.registerTool(ItemID.saucepan);
 
 IDRegistry.genItemID("bakeware");
 Item.createItem("bakeware", "Bakeware", {name: "bakeware", meta: 0}, {stack: 1});
-Recipes.addShaped({id: ItemID.bakeware, count: 1, data: 0}, ["aaa", "a a", "aaa"], ["a", 336, 0]);
+Harvest.registerTool(ItemID.bakeware);
 
 IDRegistry.genItemID("mixing_bowl");
 Item.createItem("mixing_bowl", "Mixing bowl", {name: "mixing_bowl", meta: 0}, {stack: 1});
-Recipes.addShaped({id: ItemID.mixing_bowl, count: 1, data: 0}, ["aba", " a "], ["a", 5, 0, "b", 280, 0]);
+Harvest.registerTool(ItemID.mixing_bowl);
 
 IDRegistry.genItemID("mortar_bowl");
 Item.createItem("mortar_bowl", "Mortar bowl", {name: "mortar_bowl", meta: 0}, {stack: 1});
-Recipes.addShaped({id: ItemID.mortar_bowl, count: 1, data: 0}, ["aba", " a "], ["a", 1, 0, "b", 280, 0]);
+Harvest.registerTool(ItemID.mortar_bowl);
 
 IDRegistry.genItemID("juicer");
 Item.createItem("juicer", "Juicer", {name: "juicer", meta: 0}, {stack: 1});
-Recipes.addShaped({id: ItemID.juicer, count: 1, data: 0}, ["a  ", "b  "], ["a", 1, 0, "b", 70, 0]);
+Harvest.registerTool(ItemID.juicer);
+
+Harvest.registerTool(325);
+
+Callback.addCallback("PostLoaded", function(){
+	Recipes.addShaped({id: ItemID.juicer, count: 1, data: 0}, ["a  ", "b  "], ["a", 1, 0, "b", 70, 0]);
+	Recipes.addShaped({id: ItemID.mortar_bowl, count: 1, data: 0}, ["aba", " a "], ["a", 1, 0, "b", 280, 0]);
+	Recipes.addShaped({id: ItemID.mixing_bowl, count: 1, data: 0}, ["aba", " a "], ["a", 5, 0, "b", 280, 0]);
+	Recipes.addShaped({id: ItemID.bakeware, count: 1, data: 0}, ["aaa", "a a", "aaa"], ["a", 336, 0]);
+	Recipes.addShaped({id: ItemID.saucepan, count: 1, data: 0}, ["a  ", "b  "], ["a", 265, 0, "b", 280, 0]);
+	Recipes.addShaped({id: ItemID.skillet, count: 1, data: 0}, ["a  ", " a ", "  b"], ["a", 265, 0, "b", 280, 0]);
+	Recipes.addShaped({id: ItemID.pot, count: 1, data: 0}, ["abb", " bb"], ["a", 280, 0, "b", 265, 0]);
+	Recipes.addShaped({id: ItemID.cutting_board, count: 1, data: 0}, ["a  ", " b ", "  c"], ["a", 265, 0, "b", 280, 0, "c", 5, 0]);
+});
 
 
 
@@ -768,93 +769,109 @@ Item.createItem("veggieBait", "Veggie bait", {name: "veggie_bait", meta: 0}, {})
 /*
 IDRegistry.genItemID("fishBait");
 Item.createItem("fishBait", "Fish bait", {name: "fish_bait", meta: 0}, {});*/
-
-Recipes.addShapeless({id: ItemID.graitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: 295, data: 0},{id: 295, data: 0},{id: 295, data: 0}]);
-Recipes.addShapeless({id: ItemID.fruitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: 260, data: 0},{id: 260, data: 0},{id: 260, data: 0}]);
-Recipes.addShapeless({id: ItemID.fruitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.strawberry, data: 0},{id: ItemID.strawberry, data: 0},{id: ItemID.strawberry, data: 0}]);
-Recipes.addShapeless({id: ItemID.fruitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.raspberry, data: 0},{id: ItemID.raspberry, data: 0},{id: ItemID.raspberry, data: 0}]);
-Recipes.addShapeless({id: ItemID.fruitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.cranberry, data: 0},{id: ItemID.cranberry, data: 0},{id: ItemID.cranberry, data: 0}]);
-Recipes.addShapeless({id: ItemID.fruitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.blueberry, data: 0},{id: ItemID.blueberry, data: 0},{id: ItemID.blueberry, data: 0}]);
-Recipes.addShapeless({id: ItemID.fruitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.blackberry, data: 0},{id: ItemID.blackberry, data: 0},{id: ItemID.blackberry, data: 0}]);
-Recipes.addShapeless({id: ItemID.fruitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.grape, data: 0},{id: ItemID.grape, data: 0},{id: ItemID.grape, data: 0}]);
-Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.cucumber, data: 0},{id: ItemID.cucumber, data: 0},{id: ItemID.cucumber, data: 0}]);
-Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.onion, data: 0},{id: ItemID.onion, data: 0},{id: ItemID.onion, data: 0}]);
-Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.cabbage, data: 0},{id: ItemID.cabbage, data: 0},{id: ItemID.cabbage, data: 0}]);
-Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.tomato, data: 0},{id: ItemID.tomato, data: 0},{id: ItemID.tomato, data: 0}]);
-Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.bellpepper, data: 0},{id: ItemID.bellpepper, data: 0},{id: ItemID.bellpepper, data: 0}]);
-Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.garlic, data: 0},{id: ItemID.garlic, data: 0},{id: ItemID.garlic, data: 0}]);
-Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.lettuce, data: 0},{id: ItemID.lettuce, data: 0},{id: ItemID.lettuce, data: 0}]);
-Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.peas, data: 0},{id: ItemID.peas, data: 0},{id: ItemID.peas, data: 0}]);
-Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.chili_pepper, data: 0},{id: ItemID.chili_pepper, data: 0},{id: ItemID.chili_pepper, data: 0}]);
-Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.corn, data: 0},{id: ItemID.corn, data: 0},{id: ItemID.corn, data: 0}]);
-//Recipes.addShapeless({id: ItemID.fishBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: 349, data: 0},{id: 349 data: 0},{id: 349, data: 0}]);
-//Recipes.addShapeless({id: ItemID.fishBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: 460, data: 0},{id: 460 data: 0},{id: 460, data: 0}]);
-//Recipes.addShapeless({id: ItemID.fishBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: 461, data: 0},{id: 461 data: 0},{id: 461, data: 0}]);
+Callback.addCallback("LevelLoaded", function(){
+	Recipes.addShapeless({id: ItemID.graitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: 295, data: 0},{id: 295, data: 0},{id: 295, data: 0}]);
+	Recipes.addShapeless({id: ItemID.graitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.rhubarb, data: 0},{id: ItemID.rhubarb, data: 0},{id: ItemID.rhubarb, data: 0}]);
+	Recipes.addShapeless({id: ItemID.graitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.rye, data: 0},{id: ItemID.rye, data: 0},{id: ItemID.rye, data: 0}]);
+	Recipes.addShapeless({id: ItemID.graitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.barley, data: 0},{id: ItemID.barley, data: 0},{id: ItemID.barley, data: 0}]);
+	Recipes.addShapeless({id: ItemID.graitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.oats, data: 0},{id: ItemID.oats, data: 0},{id: ItemID.oats, data: 0}]);
+	Recipes.addShapeless({id: ItemID.fruitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: 260, data: 0},{id: 260, data: 0},{id: 260, data: 0}]);
+	Recipes.addShapeless({id: ItemID.fruitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.cactusfruit, data: 0},{id: ItemID.cactusfruit, data: 0},{id: ItemID.cactusfruit, data: 0}]);
+	Recipes.addShapeless({id: ItemID.fruitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.cantaloupe, data: 0},{id: ItemID.cantaloupe, data: 0},{id: ItemID.cantaloupe, data: 0}]);
+	Recipes.addShapeless({id: ItemID.fruitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.strawberry, data: 0},{id: ItemID.strawberry, data: 0},{id: ItemID.strawberry, data: 0}]);
+	Recipes.addShapeless({id: ItemID.fruitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.raspberry, data: 0},{id: ItemID.raspberry, data: 0},{id: ItemID.raspberry, data: 0}]);
+	Recipes.addShapeless({id: ItemID.fruitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.cranberry, data: 0},{id: ItemID.cranberry, data: 0},{id: ItemID.cranberry, data: 0}]);
+	Recipes.addShapeless({id: ItemID.fruitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.blueberry, data: 0},{id: ItemID.blueberry, data: 0},{id: ItemID.blueberry, data: 0}]);
+	Recipes.addShapeless({id: ItemID.fruitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.blackberry, data: 0},{id: ItemID.blackberry, data: 0},{id: ItemID.blackberry, data: 0}]);
+	Recipes.addShapeless({id: ItemID.fruitBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.grape, data: 0},{id: ItemID.grape, data: 0},{id: ItemID.grape, data: 0}]);
+	Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.cucumber, data: 0},{id: ItemID.cucumber, data: 0},{id: ItemID.cucumber, data: 0}]);
+	Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.zucchini, data: 0},{id: ItemID.zucchini, data: 0},{id: ItemID.zucchini, data: 0}]);
+	Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.onion, data: 0},{id: ItemID.onion, data: 0},{id: ItemID.onion, data: 0}]);
+	Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.cabbage, data: 0},{id: ItemID.cabbage, data: 0},{id: ItemID.cabbage, data: 0}]);
+	Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.tomato, data: 0},{id: ItemID.tomato, data: 0},{id: ItemID.tomato, data: 0}]);
+	Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.soybean, data: 0},{id: ItemID.soybean, data: 0},{id: ItemID.soybean, data: 0}]);
+	Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.bellpepper, data: 0},{id: ItemID.bellpepper, data: 0},{id: ItemID.bellpepper, data: 0}]);
+	Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.artichoke, data: 0},{id: ItemID.artichoke, data: 0},{id: ItemID.artichoke, data: 0}]);
+	Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.asparagus, data: 0},{id: ItemID.asparagus, data: 0},{id: ItemID.asparagus, data: 0}]);
+	Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.bambooshoot, data: 0},{id: ItemID.bambooshoot, data: 0},{id: ItemID.bambooshoot, data: 0}]);
+	Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.radish, data: 0},{id: ItemID.radish, data: 0},{id: ItemID.radish, data: 0}]);
+	Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.parsnip, data: 0},{id: ItemID.parsnip, data: 0},{id: ItemID.parsnip, data: 0}]);
+	Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.brusselsprout, data: 0},{id: ItemID.brusselsprout, data: 0},{id: ItemID.brusselsprout, data: 0}]);
+	Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.beet, data: 0},{id: ItemID.beet, data: 0},{id: ItemID.beet, data: 0}]);
+	Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.garlic, data: 0},{id: ItemID.garlic, data: 0},{id: ItemID.garlic, data: 0}]);
+	Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.lettuce, data: 0},{id: ItemID.lettuce, data: 0},{id: ItemID.lettuce, data: 0}]);
+	Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.peas, data: 0},{id: ItemID.peas, data: 0},{id: ItemID.peas, data: 0}]);
+	Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.chili_pepper, data: 0},{id: ItemID.chili_pepper, data: 0},{id: ItemID.chili_pepper, data: 0}]);
+	Recipes.addShapeless({id: ItemID.veggieBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: ItemID.corn, data: 0},{id: ItemID.corn, data: 0},{id: ItemID.corn, data: 0}]);
+	//Recipes.addShapeless({id: ItemID.fishBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: 349, data: 0},{id: 349 data: 0},{id: 349, data: 0}]);
+	//Recipes.addShapeless({id: ItemID.fishBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: 460, data: 0},{id: 460 data: 0},{id: 460, data: 0}]);
+	//Recipes.addShapeless({id: ItemID.fishBait, count: 1, data: 0}, [{id: 287, data: 0}, {id: 461, data: 0},{id: 461 data: 0},{id: 461, data: 0}]);
+});
 
 
 
 
 // file: ITEMS/FOOD/fruits.js
 
-IDRegistry.genItemID("strawberry");
-Item.createFoodItem("strawberry", "Strawberry", {name: "strawberry", meta: 0}, {food: 1});
-IDRegistry.genItemID("raspberry");
-Item.createFoodItem("raspberry", "Raspberry", {name: "raspberry", meta: 0}, {food: 1});
-IDRegistry.genItemID("cranberry");
-Item.createFoodItem("cranberry", "Cranberry", {name: "cranberry", meta: 0}, {food: 1});
-IDRegistry.genItemID("blueberry");
-Item.createFoodItem("blueberry", "Blueberry", {name: "blueberry", meta: 0}, {food: 1});
-IDRegistry.genItemID("blackberry");
-Item.createFoodItem("blackberry", "Blackberry", {name: "blackberry", meta: 0}, {food: 1});
-IDRegistry.genItemID("candleberry");
-Item.createFoodItem("candleberry", "Candle berry", {name: "candleberryItem", meta: 0}, {food: 1});
-IDRegistry.genItemID("grape");
-Item.createFoodItem("grape", "Grape", {name: "grape", meta: 0}, {food: 1});
-IDRegistry.genItemID("cucumber");
-Item.createFoodItem("cucumber", "Cucumber", {name: "cucumber", meta: 0}, {food: 1});
-IDRegistry.genItemID("onion");
-Item.createFoodItem("onion", "Onion", {name: "onion", meta: 0}, {food: 1});
-IDRegistry.genItemID("cabbage");
-Item.createFoodItem("cabbage", "Cabbage", {name: "cabbage", meta: 0}, {food: 1});
-IDRegistry.genItemID("tomato");
-Item.createFoodItem("tomato", "Tomato", {name: "tomato", meta: 0}, {food: 1});
-IDRegistry.genItemID("bellpepper");
-Item.createFoodItem("bellpepper", "Bellpepper", {name: "bellpepper", meta: 0}, {food: 1});
-IDRegistry.genItemID("garlic");
-Item.createFoodItem("garlic", "Garlic", {name: "garlic", meta: 0}, {food: 1});
-IDRegistry.genItemID("lettuce");
-Item.createFoodItem("lettuce", "Lettuce", {name: "lettuce", meta: 0}, {food: 1});
-IDRegistry.genItemID("coffee_beans");
-Item.createFoodItem("coffee_beans", "Coffee beans", {name: "coffee_beans", meta: 0}, {food: 1});
-IDRegistry.genItemID("peas");
-Item.createFoodItem("peas", "Peas", {name: "peas", meta: 0}, {food: 1});
-IDRegistry.genItemID("chili_pepper");
-Item.createFoodItem("chili_pepper", "Chilli pepper", {name: "chili_pepper", meta: 0}, {food: 1});
-IDRegistry.genItemID("spice_leaf");
-Item.createFoodItem("spice_leaf", "Spice leaf", {name: "spice_leaf", meta: 0}, {food: 1});
-IDRegistry.genItemID("corn");
-Item.createFoodItem("corn", "Corn", {name: "corn", meta: 0}, {food: 1});
-IDRegistry.genItemID("peppercorn");
-Item.createFoodItem("peppercorn", "Peppercorn", {name: "pepper_corn", meta: 0}, {food: 1});
-IDRegistry.genItemID("curryleaf");
-Item.createFoodItem("curryleaf", "Curryleaf", {name: "curryleaf", meta: 0}, {food: 1});
-IDRegistry.genItemID("cotton");
-Item.createItem("cotton", "Cotton", {name: "cotton", meta: 0}, {});
-Recipes.addShapeless({id: 287, count: 2, data: 0}, [{id: ItemID.cotton, data: 0},{id: ItemID.cotton, data: 0},{id: ItemID.cotton, data: 0}]);
-IDRegistry.genItemID("bean");
-Item.createFoodItem("bean", "Bean", {name: "bean", meta: 0}, {food: 1});
-IDRegistry.genItemID("rice");
-Item.createFoodItem("rice", "Rice", {name: "rice", meta: 0}, {food: 1});
-IDRegistry.genItemID("waterchestnut");
-Item.createFoodItem("waterchestnut", "Water Chestnut", {name: "waterchestnut", meta: 0}, {food: 1});
-IDRegistry.genItemID("rutabaga");
-Item.createFoodItem("rutabaga", "Rutabaga", {name: "rutabaga", meta: 0}, {food: 1});
-IDRegistry.genItemID("mustardseeds");
-Item.createFoodItem("mustardseeds", "Mustard Seeds", {name: "mustardseeds", meta: 0}, {food: 1});
-IDRegistry.genItemID("ginger");
-Item.createFoodItem("ginger", "Ginger", {name: "ginger", meta: 0}, {food: 1});
-IDRegistry.genItemID("spinach");
-Item.createFoodItem("spinach", "Spinach", {name: "spinach", meta: 0}, {food: 1});
+Harvest.setFood("strawberry","Strawberry",1);
+Harvest.setFood("raspberry","Raspberry",1);
+Harvest.setFood("cranberry","Cranberry",1);
+Harvest.setFood("blueberry","Blueberry",1);
+Harvest.setFood("blackberry","Blackberry",1);
+Harvest.setFood("candleberry","Candle berry",1);
+Harvest.setFood("grape","Grape",1);
+Harvest.setFood("cucumber","Cucumber",1);
+Harvest.setFood("onion","Onion",1);
+Harvest.setFood("cabbage","Cabbage",1);
+Harvest.setFood("tomato","Tomato",1);
+Harvest.setFood("bellpepper","Bellpepper",1);
+Harvest.setFood("garlic","Garlic",1);
+Harvest.setFood("lettuce","Lettuce",1);
+Harvest.setFood("coffee_beans","Coffee beans",1);
+Harvest.setFood("peas","Peas",1);
+Harvest.setFood("chili_pepper","Chilli pepper",1);
+Harvest.setFood("spice_leaf","Spice leaf",1);
+Harvest.setFood("corn","Corn",1);
+Harvest.setFood("peppercorn","Peppercorn",1);
+Harvest.setFood("curryleaf","Curryleaf",1);
+Harvest.setFood("cotton","Cotton",1);
+Harvest.setFood("bean","Bean",1);
+Harvest.setFood("rice","Rice",1);
+Harvest.setFood("waterchestnut","Water Chestnut",1);
+Harvest.setFood("rutabaga","Rutabaga",1);
+Harvest.setFood("mustardseeds","Mustard Seeds",1);
+Harvest.setFood("ginger","Ginger",1);
+Harvest.setFood("spinach","Spinach",1);
+Harvest.setFood("cactusfruit","Cactusfruit",1);
+Harvest.setFood("cantaloupe","Cantaloupe",1);
+Harvest.setFood("kiwi","Kiwi",1);
+Harvest.setFood("pineapple","Pineapple",1);
+Harvest.setFood("artichoke","Artichoke",1);
+Harvest.setFood("asparagus","Asparagus",1);
+Harvest.setFood("bambooshoot","Bambooshoot",1);
+Harvest.setFood("broccoli","Broccoli",1);
+Harvest.setFood("brusselsprout","Brusselsprout",1);
+Harvest.setFood("cauliflower","Cauliflower",1);
+Harvest.setFood("celery","Celery",1);
+Harvest.setFood("radish","Radish",1);
+Harvest.setFood("eggplant","Eggplant",1);
+Harvest.setFood("leek","Leek",1);
+Harvest.setFood("okra","Okra",1);
+Harvest.setFood("parsnip","Parsnip",1);
+Harvest.setFood("rhubarb","Rhubarb",1);
+Harvest.setFood("scallion","Scallion",1);
+Harvest.setFood("soybean","Soybean",1);
+Harvest.setFood("sweetpotato","Sweet Potato",1);
+Harvest.setFood("turnip","Turnip",1);
+Harvest.setFood("peanut","Peanut",1);
+Harvest.setFood("rye","Rye",1);
+Harvest.setFood("zucchini","Zucchini",1);
+Harvest.setFood("barley","Barley",1);
+Harvest.setFood("oats","Oats",1);
+Harvest.setFood("beet","Beet",1);
+Harvest.setFood("wintersquash","Wintersquash",1);
+IDRegistry.genItemID("tealeaf");
+Item.createItem("tealeaf", "Tea leaf", {name: "tealeaf", meta: 0});
 
 
 
@@ -863,506 +880,649 @@ Item.createFoodItem("spinach", "Spinach", {name: "spinach", meta: 0}, {food: 1})
 
 IDRegistry.genItemID("strawberry_seed");
 Item.createItem("strawberry_seed", "Strawberry seed", {name: "strawberry_seed", meta: 0});
-Recipes.addShapeless({id: ItemID.strawberry_seed, count: 1, data: 0}, [{id: ItemID.strawberry, data: 0}]);
+Harvest.recipe({id:ItemID.strawberry_seed},[{id: ItemID.strawberry, data: 0}]);
+Harvest.addGrassDrop(ItemID.strawberry_seed);
 
 IDRegistry.genItemID("raspberry_seed");
 Item.createItem("raspberry_seed", "Raspberry seed", {name: "raspberry_seed", meta: 0});
-Recipes.addShapeless({id: ItemID.raspberry_seed, count: 1, data: 0}, [{id: ItemID.raspberry, data: 0}]);
+Harvest.recipe({id:ItemID.raspberry_seed},[{id: ItemID.raspberry, data: 0}]);
+Harvest.addGrassDrop(ItemID.raspberry_seed);
 
 IDRegistry.genItemID("cranberry_seed");
 Item.createItem("cranberry_seed", "Cranberry seed", {name: "cranberry_seed", meta: 0});
-Recipes.addShapeless({id: ItemID.cranberry_seed, count: 1, data: 0}, [{id: ItemID.cranberry, data: 0}]);
+Harvest.recipe({id:ItemID.cranberry_seed},[{id: ItemID.cranberry, data: 0}]);
+Harvest.addGrassDrop(ItemID.cranberry_seed);
 
 IDRegistry.genItemID("blueberry_seed");
 Item.createItem("blueberry_seed", "Blueberry seed", {name: "blueberry_seed", meta: 0});
-Recipes.addShapeless({id: ItemID.blueberry_seed, count: 1, data: 0}, [{id: ItemID.blueberry, data: 0}]);
+Harvest.recipe({id:ItemID.blueberry_seed},[{id: ItemID.blueberry, data: 0}]);
+Harvest.addGrassDrop(ItemID.blueberry_seed);
 
 IDRegistry.genItemID("blackberry_seed");
 Item.createItem("blackberry_seed", "Blackberry seed", {name: "blackberry_seed", meta: 0});
-Recipes.addShapeless({id: ItemID.blackberry_seed, count: 1, data: 0}, [{id: ItemID.blackberry, data: 0}]);
+Harvest.recipe({id:ItemID.blackberry_seed},[{id: ItemID.blackberry, data: 0}]);
+Harvest.addGrassDrop(ItemID.blackberry_seed);
 
 IDRegistry.genItemID("candleberryseed");
 Item.createItem("candleberryseed", "Candle berry seed", {name: "candleberryseedItem", meta: 0});
-Recipes.addShapeless({id: ItemID.candleberryseed, count: 1, data: 0}, [{id: ItemID.candleberry , data: 0}]);
+Harvest.recipe({id:ItemID.candleberryseed},[{id: ItemID.candleberry, data: 0}]);
+Harvest.addGrassDrop(ItemID.candleberryseed);
 
 IDRegistry.genItemID("grape_seed");
 Item.createItem("grape_seed", "Grape seed", {name: "grape_seed", meta: 0});
-Recipes.addShapeless({id: ItemID.grape_seed, count: 1, data: 0}, [{id: ItemID.grape, data: 0}]);
+Harvest.recipe({id:ItemID.grape_seed},[{id: ItemID.grape, data: 0}]);
+Harvest.addGrassDrop(ItemID.grape_seed);
 
 IDRegistry.genItemID("cucumber_seed");
 Item.createItem("cucumber_seed", "Cucumber seed", {name: "cucumber_seed", meta: 0});
-Recipes.addShapeless({id: ItemID.cucumber_seed, count: 1, data: 0}, [{id: ItemID.cucumber, data: 0}]);
+Harvest.recipe({id:ItemID.cucumber_seed},[{id: ItemID.cucumber, data: 0}]);
+Harvest.addGrassDrop(ItemID.cucumber_seed);
 
 IDRegistry.genItemID("onion_seed");
 Item.createItem("onion_seed", "Onion seed", {name: "onion_seed", meta: 0});
-Recipes.addShapeless({id: ItemID.onion_seed, count: 1, data: 0}, [{id: ItemID.onion, data: 0}]);
+Harvest.recipe({id:ItemID.onion_seed},[{id: ItemID.onion, data: 0}]);
+Harvest.addGrassDrop(ItemID.onion_seed);
 
 IDRegistry.genItemID("cabbage_seed");
 Item.createItem("cabbage_seed", "Cabbage seed", {name: "cabbage_seed", meta: 0});
-Recipes.addShapeless({id: ItemID.cabbage_seed, count: 1, data: 0}, [{id: ItemID.cabbage, data: 0}]);
+Harvest.recipe({id:ItemID.cabbage_seed},[{id: ItemID.cabbage, data: 0}]);
+Harvest.addGrassDrop(ItemID.cabbage_seed);
 
 IDRegistry.genItemID("tomato_seed");
 Item.createItem("tomato_seed", "Tomato seed", {name: "tomato_seed", meta: 0});
-Recipes.addShapeless({id: ItemID.tomato_seed, count: 1, data: 0}, [{id: ItemID.tomato, data: 0}]);
-
+Harvest.recipe({id:ItemID.tomato_seed},[{id: ItemID.tomato, data: 0}]);
+Harvest.addGrassDrop(ItemID.tomato_seed);
 
 IDRegistry.genItemID("bellpepper_seed");
 Item.createItem("bellpepper_seed", "Bellpepper seed", {name: "bellpepper_seed", meta: 0});
-Recipes.addShapeless({id: ItemID.bellpepper_seed, count: 1, data: 0}, [{id: ItemID.bellpepper, data: 0}]);
+Harvest.recipe({id:ItemID.bellpepper_seed},[{id: ItemID.bellpepper, data: 0}]);
+Harvest.addGrassDrop(ItemID.bellpepper_seed);
 
 IDRegistry.genItemID("garlic_seed");
 Item.createItem("garlic_seed", "Garlic seed", {name: "garlic_seed", meta: 0});
-Recipes.addShapeless({id: ItemID.garlic_seed, count: 1, data: 0}, [{id: ItemID.garlic, data: 0}]);
+Harvest.recipe({id:ItemID.garlic_seed},[{id: ItemID.garlic, data: 0}]);
+Harvest.addGrassDrop(ItemID.garlic_seed);
 
 IDRegistry.genItemID("lettuce_seed");
 Item.createItem("lettuce_seed", "Lettuce seed", {name: "lettuce_seed", meta: 0});
-Recipes.addShapeless({id: ItemID.lettuce_seed, count: 1, data: 0}, [{id: ItemID.lettuce, data: 0}]);
+Harvest.recipe({id:ItemID.lettuce_seed},[{id: ItemID.lettuce, data: 0}]);
+Harvest.addGrassDrop(ItemID.lettuce_seed);
 
 IDRegistry.genItemID("coffee_seed");
 Item.createItem("coffee_seed", "Coffee seed", {name: "coffee_seed", meta: 0});
-Recipes.addShapeless({id: ItemID.coffee_seed, count: 1, data: 0}, [{id: ItemID.coffee_beans, data: 0}]);
+Harvest.recipe({id:ItemID.coffee_seed},[{id: ItemID.coffee_beans, data: 0}]);
+Harvest.addGrassDrop(ItemID.coffee_seed);
 
 IDRegistry.genItemID("peas_seed");
 Item.createItem("peas_seed", "Peas seed", {name: "peas_seed", meta: 0});
-Recipes.addShapeless({id: ItemID.peas_seed, count: 1, data: 0}, [{id: ItemID.peas, data: 0}]);
+Harvest.recipe({id:ItemID.peas_seed},[{id: ItemID.peas, data: 0}]);
+Harvest.addGrassDrop(ItemID.peas_seed);
 
 IDRegistry.genItemID("chili_pepper_seed");
 Item.createItem("chili_pepper_seed", "Chilli pepper seed", {name: "chili_pepper_seed", meta: 0});
-Recipes.addShapeless({id: ItemID.chili_pepper_seed, count: 1, data: 0}, [{id: ItemID.chili_pepper, data: 0}]);
+Harvest.recipe({id:ItemID.chili_pepper_seed},[{id: ItemID.chili_pepper, data: 0}]);
+Harvest.addGrassDrop(ItemID.chili_pepper_seed);
 
 IDRegistry.genItemID("spice_leaf_seed");
 Item.createItem("spice_leaf_seed", "Spice leaf seed", {name: "spice_leaf_seed", meta: 0});
-Recipes.addShapeless({id: ItemID.spice_leaf_seed, count: 1, data: 0}, [{id: ItemID.spice_leaf, data: 0}]);
+Harvest.recipe({id:ItemID.spice_leaf_seed},[{id: ItemID.spice_leaf, data: 0}]);
+Harvest.addGrassDrop(ItemID.spice_leaf_seed);
 
 IDRegistry.genItemID("corn_seed");
 Item.createItem("corn_seed", "Corn seed", {name: "corn_seed", meta: 0});
-Recipes.addShapeless({id: ItemID.corn_seed, count: 1, data: 0}, [{id: ItemID.corn, data: 0}]);
+Harvest.recipe({id:ItemID.corn_seed},[{id: ItemID.corn, data: 0}]);
+Harvest.addGrassDrop(ItemID.corn_seed);
 
 IDRegistry.genItemID("peppercorn_seed");
 Item.createItem("peppercorn_seed", "Peppercorn seed", {name: "peppercorn_seed", meta: 0});
-Recipes.addShapeless({id: ItemID.peppercorn_seed, count: 1, data: 0}, [{id: ItemID.peppercorn, data: 0}]);
+Harvest.recipe({id:ItemID.peppercorn_seed},[{id: ItemID.peppercorn, data: 0}]);
+Harvest.addGrassDrop(ItemID.peppercorn_seed);
 
 IDRegistry.genItemID("curryleaf_seed");
 Item.createItem("curryleaf_seed", "Curryleaf seed", {name: "curryleafseed", meta: 0});
-Recipes.addShapeless({id: ItemID.curryleaf_seed, count: 1, data: 0}, [{id: ItemID.curryleaf, data: 0}]);
+Harvest.recipe({id:ItemID.curryleaf_seed},[{id: ItemID.curryleaf, data: 0}]);
+Harvest.addGrassDrop(ItemID.curryleaf_seed);
 
 IDRegistry.genItemID("cotton_seed");
 Item.createItem("cotton_seed", "Cotton seed", {name: "cottonSeed", meta: 0});
-Recipes.addShapeless({id: ItemID.cotton_seed, count: 1, data: 0}, [{id: ItemID.cotton, data: 0}]);
+Harvest.recipe({id:ItemID.cotton_seed},[{id: ItemID.cotton, data: 0}]);
+Harvest.addGrassDrop(ItemID.cotton_seed);
 
 IDRegistry.genItemID("bean_seed");
 Item.createItem("bean_seed", "Bean Seed", {name: "beanseed", meta: 0});
-Recipes.addShapeless({id: ItemID.bean_seed, count: 1, data: 0}, [{id: ItemID.bean, data: 0}]);
+Harvest.recipe({id:ItemID.bean_seed},[{id: ItemID.bean, data: 0}]);
+Harvest.addGrassDrop(ItemID.bean_seed);
 
 IDRegistry.genItemID("rice_seed");
 Item.createItem("rice_seed", "Rice Seed", {name: "riceseed", meta: 0});
-Recipes.addShapeless({id: ItemID.rice_seed, count: 1, data: 0}, [{id: ItemID.rice, data: 0}]);
+Harvest.recipe({id:ItemID.rice_seed},[{id: ItemID.rice, data: 0}]);
+Harvest.addGrassDrop(ItemID.rice_seed);
 
 IDRegistry.genItemID("waterchestnut_seed");
 Item.createItem("waterchestnut_seed", "Water Chestnut Seed", {name: "waterchestnutseed", meta: 0});
-Recipes.addShapeless({id: ItemID.waterchestnut_seed, count: 1, data: 0}, [{id: ItemID.waterchestnut, data: 0}]);
+Harvest.recipe({id:ItemID.waterchestnut_seed},[{id: ItemID.waterchestnut, data: 0}]);
+Harvest.addGrassDrop(ItemID.waterchestnut_seed);
 
 IDRegistry.genItemID("rutabaga_seed");
 Item.createItem("rutabaga_seed", "Rutabaga Seed", {name: "rutabagaseed", meta: 0});
-Recipes.addShapeless({id: ItemID.rutabaga_seed, count: 1, data: 0}, [{id: ItemID.rutabaga, data: 0}]);
+Harvest.recipe({id:ItemID.rutabaga_seed},[{id: ItemID.rutabaga, data: 0}]);
+Harvest.addGrassDrop(ItemID.rutabaga_seed);
 
 IDRegistry.genItemID("mustard_seed");
 Item.createItem("mustard_seed", "Mustard Seed", {name: "mustardseed", meta: 0});
-Recipes.addShapeless({id: ItemID.mustard_seed, count: 1, data: 0}, [{id: ItemID.mustardseeds, data: 0}]);
+Harvest.recipe({id:ItemID.mustard_seed},[{id: ItemID.mustardseeds, data: 0}]);
+Harvest.addGrassDrop(ItemID.mustard_seed);
 
 IDRegistry.genItemID("ginger_seed");
 Item.createItem("ginger_seed", "Ginger Seed", {name: "gingerseed", meta: 0});
-Recipes.addShapeless({id: ItemID.ginger_seed, count: 1, data: 0}, [{id: ItemID.ginger, data: 0}]);
+Harvest.recipe({id:ItemID.ginger_seed},[{id: ItemID.ginger, data: 0}]);
+Harvest.addGrassDrop(ItemID.ginger_seed);
 
 IDRegistry.genItemID("spinach_seed");
 Item.createItem("spinach_seed", "Spinach Seed", {name: "spinachseed", meta: 0});
-Recipes.addShapeless({id: ItemID.spinach_seed, count: 1, data: 0}, [{id: ItemID.spinach, data: 0}]);
+Harvest.recipe({id:ItemID.spinach_seed},[{id: ItemID.spinach, data: 0}]);
+Harvest.addGrassDrop(ItemID.spinach_seed);
+
+IDRegistry.genItemID("cactusfruit_seed");
+Item.createItem("cactusfruit_seed", "Cactusfruit Seed", {name: "cactusfruitseed", meta: 0});
+Harvest.recipe({id:ItemID.cactusfruit_seed},[{id: ItemID.cactusfruit, data: 0}]);
+Harvest.addGrassDrop(ItemID.cactusfruit_seed);
+
+IDRegistry.genItemID("cantaloupe_seed");
+Item.createItem("cantaloupe_seed", "Cantaloupe Seed", {name: "cantaloupeseed", meta: 0});
+Harvest.recipe({id:ItemID.cantaloupe_seed},[{id: ItemID.cantaloupe, data: 0}]);
+Harvest.addGrassDrop(ItemID.cantaloupe_seed);
+
+IDRegistry.genItemID("kiwi_seed");
+Item.createItem("kiwi_seed", "Kiwi Seed", {name: "kiwiseed", meta: 0});
+Harvest.recipe({id:ItemID.kiwi_seed},[{id: ItemID.kiwi, data: 0}]);
+Harvest.addGrassDrop(ItemID.kiwi_seed);
+
+IDRegistry.genItemID("pineapple_seed");
+Item.createItem("pineapple_seed", "Pineapple Seed", {name: "pineappleseed", meta: 0});
+Harvest.recipe({id:ItemID.pineapple_seed},[{id: ItemID.pineapple, data: 0}]);
+Harvest.addGrassDrop(ItemID.pineapple_seed);
+
+IDRegistry.genItemID("artichoke_seed");
+Item.createItem("artichoke_seed", "Artichoke Seed", {name: "artichokeseed", meta: 0});
+Harvest.recipe({id:ItemID.artichoke_seed},[{id: ItemID.artichoke, data: 0}]);
+Harvest.addGrassDrop(ItemID.artichoke_seed);
+
+IDRegistry.genItemID("asparagus_seed");
+Item.createItem("asparagus_seed", "Asparagus Seed", {name: "asparagusseed", meta: 0});
+Harvest.recipe({id:ItemID.asparagus_seed},[{id: ItemID.asparagus, data: 0}]);
+Harvest.addGrassDrop(ItemID.asparagus_seed);
+
+IDRegistry.genItemID("bambooshoot_seed");
+Item.createItem("bambooshoot_seed", "Bambooshoot Seed", {name: "bambooshootseed", meta: 0});
+Harvest.recipe({id:ItemID.bambooshoot_seed},[{id: ItemID.bambooshoot, data: 0}]);
+Harvest.addGrassDrop(ItemID.bambooshoot_seed);
+
+IDRegistry.genItemID("broccoli_seed");
+Item.createItem("broccoli_seed", "Broccoli Seed", {name: "broccoliseed", meta: 0});
+Harvest.recipe({id:ItemID.broccoli_seed},[{id: ItemID.broccoli, data: 0}]);
+Harvest.addGrassDrop(ItemID.broccoli_seed);
+
+IDRegistry.genItemID("brusselsprout_seed");
+Item.createItem("brusselsprout_seed", "Brusselsprout Seed", {name: "brusselsproutseed", meta: 0});
+Harvest.recipe({id:ItemID.brusselsprout_seed},[{id: ItemID.brusselsprout, data: 0}]);
+Harvest.addGrassDrop(ItemID.brusselsprout_seed);
+
+IDRegistry.genItemID("cauliflower_seed");
+Item.createItem("cauliflower_seed", "Cauliflower Seed", {name: "cauliflowerseed", meta: 0});
+Harvest.recipe({id:ItemID.cauliflower_seed},[{id: ItemID.cauliflower, data: 0}]);
+Harvest.addGrassDrop(ItemID.cauliflower_seed);
+
+IDRegistry.genItemID("celery_seed");
+Item.createItem("celery_seed", "Celery Seed", {name: "celeryseed", meta: 0});
+Harvest.recipe({id:ItemID.celery_seed},[{id: ItemID.celery, data: 0}]);
+Harvest.addGrassDrop(ItemID.celery_seed);
+
+IDRegistry.genItemID("radish_seed");
+Item.createItem("radish_seed", "Radish Seed", {name: "radishseed", meta: 0});
+Harvest.recipe({id:ItemID.radish_seed},[{id: ItemID.radish, data: 0}]);
+Harvest.addGrassDrop(ItemID.radish_seed);
+
+IDRegistry.genItemID("eggplant_seed");
+Item.createItem("eggplant_seed", "Eggplant Seed", {name: "eggplantseed", meta: 0});
+Harvest.recipe({id:ItemID.eggplant_seed},[{id: ItemID.eggplant, data: 0}]);
+Harvest.addGrassDrop(ItemID.eggplant_seed);
+
+IDRegistry.genItemID("leek_seed");
+Item.createItem("leek_seed", "Leek Seed", {name: "leekseed", meta: 0});
+Harvest.recipe({id:ItemID.leek_seed},[{id: ItemID.leek, data: 0}]);
+Harvest.addGrassDrop(ItemID.leek_seed);
+
+IDRegistry.genItemID("okra_seed");
+Item.createItem("okra_seed", "Okra Seed", {name: "okraseed", meta: 0});
+Harvest.recipe({id:ItemID.okra_seed},[{id: ItemID.okra, data: 0}]);
+Harvest.addGrassDrop(ItemID.okra_seed);
+
+IDRegistry.genItemID("parsnip_seed");
+Item.createItem("parsnip_seed", "Parsnip Seed", {name: "parsnipseed", meta: 0});
+Harvest.recipe({id:ItemID.parsnip_seed},[{id: ItemID.parsnip, data: 0}]);
+Harvest.addGrassDrop(ItemID.parsnip_seed);
+
+IDRegistry.genItemID("rhubarb_seed");
+Item.createItem("rhubarb_seed", "Rhubarb Seed", {name: "rhubarbseed", meta: 0});
+Harvest.recipe({id:ItemID.rhubarb_seed},[{id: ItemID.rhubarb, data: 0}]);
+Harvest.addGrassDrop(ItemID.rhubarb_seed);
+
+IDRegistry.genItemID("scallion_seed");
+Item.createItem("scallion_seed", "Scallion Seed", {name: "scallionseed", meta: 0});
+Harvest.recipe({id:ItemID.scallion_seed},[{id: ItemID.scallion, data: 0}]);
+Harvest.addGrassDrop(ItemID.scallion_seed);
+
+IDRegistry.genItemID("soybean_seed");
+Item.createItem("soybean_seed", "Soybean Seed", {name: "soybeanseed", meta: 0});
+Harvest.recipe({id:ItemID.soybean_seed},[{id: ItemID.soybean, data: 0}]);
+Harvest.addGrassDrop(ItemID.soybean_seed);
+
+IDRegistry.genItemID("sweetpotato_seed");
+Item.createItem("sweetpotato_seed", "Sweet Potato Seed", {name: "sweetpotatoseed", meta: 0});
+Harvest.recipe({id:ItemID.sweetpotato_seed},[{id: ItemID.sweetpotato, data: 0}]);
+Harvest.addGrassDrop(ItemID.sweetpotato_seed);
+
+IDRegistry.genItemID("turnip_seed");
+Item.createItem("turnip_seed", "Turnip Seed", {name: "turnipseed", meta: 0});
+Harvest.recipe({id:ItemID.turnip_seed},[{id: ItemID.turnip, data: 0}]);
+Harvest.addGrassDrop(ItemID.turnip_seed);
+
+IDRegistry.genItemID("peanut_seed");
+Item.createItem("peanut_seed", "Peanut Seed", {name: "peanutseed", meta: 0});
+Harvest.recipe({id:ItemID.peanut_seed},[{id: ItemID.peanut, data: 0}]);
+Harvest.addGrassDrop(ItemID.peanut_seed);
+
+IDRegistry.genItemID("rye_seed");
+Item.createItem("rye_seed", "Rye Seed", {name: "ryeseed", meta: 0});
+Harvest.recipe({id:ItemID.rye_seed},[{id: ItemID.rye, data: 0}]);
+Harvest.addGrassDrop(ItemID.rye_seed);
+
+IDRegistry.genItemID("zucchini_seed");
+Item.createItem("zucchini_seed", "Zucchini Seed", {name: "zucchiniseed", meta: 0});
+Harvest.recipe({id:ItemID.zucchini_seed},[{id: ItemID.zucchini, data: 0}]);
+Harvest.addGrassDrop(ItemID.zucchini_seed);
+
+IDRegistry.genItemID("barley_seed");
+Item.createItem("turnip_seed", "Barley Seed", {name: "barleyseed", meta: 0});
+Harvest.recipe({id:ItemID.turnip_seed},[{id: ItemID.barley, data: 0}]);
+Harvest.addGrassDrop(ItemID.turnip_seed);
+
+IDRegistry.genItemID("oats_seed");
+Item.createItem("oats_seed", "Oats Seed", {name: "oatsseed", meta: 0});
+Harvest.recipe({id:ItemID.oats_seed},[{id: ItemID.oats, data: 0}]);
+Harvest.addGrassDrop(ItemID.oats_seed);
+
+IDRegistry.genItemID("wintersquash_seed");
+Item.createItem("wintersquash_seed", "Wintersquash Seed", {name: "wintersquashseed", meta: 0});
+Harvest.recipe({id:ItemID.wintersquash_seed},[{id: ItemID.wintersquash, data: 0}]);
+Harvest.addGrassDrop(ItemID.wintersquash_seed);
+
+IDRegistry.genItemID("tealeaf_seed");
+Item.createItem("tealeaf_seed", "Tealeaf Seed", {name: "teaseed", meta: 0});
+Harvest.recipe({id:ItemID.tealeaf_seed},[{id: ItemID.tealeaf, data: 0}]);
+Harvest.addGrassDrop(ItemID.tealeaf_seed);
+
+IDRegistry.genItemID("beet_seed");
+Item.createItem("beet_seed", "Beet Seed", {name: "beetseed", meta: 0});
+Harvest.recipe({id:ItemID.beet_seed},[{id: ItemID.beet, data: 0}]);
+Harvest.addGrassDrop(ItemID.beet_seed);
 
 
 
 
 // file: ITEMS/FOOD/juice.js
 
-IDRegistry.genItemID("strawberry_juice");
-Item.createFoodItem("strawberry_juice", "Strawberry juice", {name: "strawberry_juice", meta: 0}, {food: 5});
-Recipes.addShapeless({id: ItemID.strawberry_juice, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: ItemID.strawberry, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.juicer){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("strawberry_juice","Strawberry juice",5);
+Harvest.recipe({id:ItemID.strawberry_juice},[{id: ItemID.juicer, data: 0}, {id: ItemID.strawberry, data: 0}]);
 
-IDRegistry.genItemID("raspberry_juice");
-Item.createFoodItem("raspberry_juice", "Raspberry juice", {name: "raspberry_juice", meta: 0}, {food: 5});
-Recipes.addShapeless({id: ItemID.raspberry_juice, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: ItemID.raspberry, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.juicer){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("raspberry_juice","Raspberry juice",5);
+Harvest.recipe({id:ItemID.raspberry_juice},[{id: ItemID.juicer, data: 0}, {id: ItemID.strawberry, data: 0}]);
 
-IDRegistry.genItemID("cranberry_juice");
-Item.createFoodItem("cranberry_juice", "Cranberry juice", {name: "cranberry_juice", meta: 0}, {food: 5});
-Recipes.addShapeless({id: ItemID.cranberry_juice, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: ItemID.cranberry, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.juicer){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("cranberry_juice","Cranberry juice",5);
+Harvest.recipe({id:ItemID.cranberry_juice},[{id: ItemID.juicer, data: 0}, {id: ItemID.cranberry, data: 0}]);
 
-IDRegistry.genItemID("blackberry_juice");
-Item.createFoodItem("blackberry_juice", "Blackberry juice", {name: "blackberry_juice", meta: 0}, {food: 5});
-Recipes.addShapeless({id: ItemID.blackberry_juice, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: ItemID.blackberry, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.juicer){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("blackberry_juice","Blackberry juice",5);
+Harvest.recipe({id:ItemID.blackberry_juice},[{id: ItemID.juicer, data: 0}, {id: ItemID.blackberry, data: 0}]);
 
-IDRegistry.genItemID("grape_juice");
-Item.createFoodItem("grape_juice", "Grape juice", {name: "grape_juice", meta: 0}, {food: 5});
-Recipes.addShapeless({id: ItemID.grape_juice, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: ItemID.grape, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.juicer){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("grape_juice","Grape juice",5);
+Harvest.recipe({id:ItemID.grape_juice},[{id: ItemID.juicer, data: 0}, {id: ItemID.grape, data: 0}]);
 
-IDRegistry.genItemID("melon_juice");
-Item.createFoodItem("melon_juice", "Melon juice", {name: "melon_juice", meta: 0}, {food: 4});
-Recipes.addShapeless({id: ItemID.melon_juice, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: 360, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.juicer){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("melon_juice","Melon juice",5);
+Harvest.recipe({id:ItemID.melon_juice},[{id: ItemID.juicer, data: 0}, {id: 360, data: 0}]);
 
-IDRegistry.genItemID("blueberry_juice");
-Item.createFoodItem("blueberry_juice", "Blueberry juice", {name: "blueberry_juice", meta: 0}, {food: 5});
-Recipes.addShapeless({id: ItemID.blueberry_juice, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: ItemID.blueberry, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.juicer){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("blueberry_juice","Blueberry juice",5);
+Harvest.recipe({id:ItemID.blueberry_juice}, [{id: ItemID.juicer, data: 0}, {id: ItemID.blueberry, data: 0}]);
 
-IDRegistry.genItemID("carrot_juice");
-Item.createFoodItem("carrot_juice", "Carrot juice", {name: "carrot_juice", meta: 0}, {food: 5});
-Recipes.addShapeless({id: ItemID.carrot_juice, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: 391, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.juicer){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("carrot_juice","Carrot juice",5);
+Harvest.recipe({id:ItemID.carrot_juice},[{id: ItemID.juicer, data: 0}, {id: 391, data: 0}]);
 
-IDRegistry.genItemID("apple_juice");
-Item.createFoodItem("apple_juice", "Apple juice", {name: "apple_juice", meta: 0}, {food: 5});
-Recipes.addShapeless({id: ItemID.apple_juice, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: 260, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.juicer){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("apple_juice","Apple juice",5);
+Harvest.recipe({id:ItemID.apple_juice}, [{id: ItemID.juicer, data: 0}, {id: 260, data: 0}]);
+
+Harvest.setFood("cactusfruitjuice","Cactusfruit juice",5);
+Harvest.recipe({id:ItemID.cactusfruitjuice}, [{id: ItemID.juicer, data: 0}, {id: ItemID.cactusfruit, data: 0}]);
+
+Harvest.setFood("kiwijuice","Kiwi juice",5);
+Harvest.recipe({id:ItemID.kiwijuice}, [{id: ItemID.juicer, data: 0}, {id: ItemID.kiwi, data: 0}]);
+
+Harvest.setFood("apricotjuice","Apricot juice",5);
+Harvest.recipe({id:ItemID.apricotjuice}, [{id: ItemID.juicer, data: 0}, {id: ItemID.apricot, data: 0}]);
+
+Harvest.setFood("cherryjuice","Cherry juice",5);
+Harvest.recipe({id:ItemID.cherryjuice}, [{id: ItemID.juicer, data: 0}, {id: ItemID.cherry, data: 0}]);
+
+Harvest.setFood("figjuice","Fig juice",5);
+Harvest.recipe({id:ItemID.figjuice}, [{id: ItemID.juicer, data: 0}, {id: ItemID.fig, data: 0}]);
+
+Harvest.setFood("grapefruitjuice","Grapefruit juice",5);
+Harvest.recipe({id:ItemID.grapefruitjuice}, [{id: ItemID.juicer, data: 0}, {id: ItemID.grapefruit, data: 0}]);
+
+Harvest.setFood("lemonade","Lemonade",5);
+Harvest.recipe({id:ItemID.lemonade}, [{id: ItemID.juicer, data: 0}, {id: ItemID.lemon, data: 0}]);
+
+Harvest.setFood("limejuice","Lime juice",5);
+Harvest.recipe({id:ItemID.limejuice}, [{id: ItemID.juicer, data: 0}, {id: ItemID.lime, data: 0}]);
+
+Harvest.setFood("mangojuice","Mango juice",5);
+Harvest.recipe({id:ItemID.mangojuice}, [{id: ItemID.juicer, data: 0}, {id: ItemID.mango, data: 0}]);
+
+Harvest.setFood("orangejuice","Orange juice",5);
+Harvest.recipe({id:ItemID.orangejuice}, [{id: ItemID.juicer, data: 0}, {id: ItemID.orange, data: 0}]);
+
+Harvest.setFood("papayajuice","Papaya juice",5);
+Harvest.recipe({id:ItemID.papayajuice}, [{id: ItemID.juicer, data: 0}, {id: ItemID.papaya, data: 0}]);
+
+Harvest.setFood("peachjuice","Peach juice",5);
+Harvest.recipe({id:ItemID.peachjuice}, [{id: ItemID.juicer, data: 0}, {id: ItemID.peach, data: 0}]);
+
+Harvest.setFood("pearjuice","Pear juice",5);
+Harvest.recipe({id:ItemID.pearjuice}, [{id: ItemID.juicer, data: 0}, {id: ItemID.pear, data: 0}]);
+
+Harvest.setFood("persimmonjuice","Persimmon juice",5);
+Harvest.recipe({id:ItemID.persimmonjuice}, [{id: ItemID.juicer, data: 0}, {id: ItemID.persimmon, data: 0}]);
+
+Harvest.setFood("plumjuice","Plum juice",5);
+Harvest.recipe({id:ItemID.plumjuice}, [{id: ItemID.juicer, data: 0}, {id: ItemID.plum, data: 0}]);
+
+Harvest.setFood("pomegranatejuice","Pomegranate juice",5);
+Harvest.recipe({id:ItemID.pomegranatejuice}, [{id: ItemID.juicer, data: 0}, {id: ItemID.pomegranate, data: 0}]);
+
+Harvest.setFood("starfruitjuice","Starfruit juice",5);
+Harvest.recipe({id:ItemID.starfruitjuice}, [{id: ItemID.juicer, data: 0}, {id: ItemID.starfruit, data: 0}]);
+
+Harvest.setFood("coconutmilk","Coconut milk",5);
+Harvest.recipe({id:ItemID.coconutmilk}, [{id: ItemID.juicer, data: 0}, {id: ItemID.coconut, data: 0}]);
 
 
 
 
 // file: ITEMS/FOOD/smothie.js
 
-IDRegistry.genItemID("strawberry_smoothie");
-Item.createFoodItem("strawberry_smoothie", "Strawberry smoothie", {name: "strawberry_smoothie", meta: 0}, {food: 6});
-Recipes.addShapeless({id: ItemID.strawberry_smoothie, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: ItemID.strawberry, data: 0},{id: 332, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.juicer){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("strawberry_smoothie","Strawberry smoothie",6);
+Harvest.recipe({id:ItemID.raspberry_juice},[{id: ItemID.juicer, data: 0}, {id: ItemID.strawberry, data: 0},{id: 332, data: 0}]);
 
-IDRegistry.genItemID("raspberry_smoothie");
-Item.createFoodItem("raspberry_smoothie", "Raspberry smoothie", {name: "raspberry_smoothie", meta: 0}, {food: 6});
-Recipes.addShapeless({id: ItemID.raspberry_smoothie, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: ItemID.raspberry, data: 0},{id: 332, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.juicer){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("raspberry_smoothie","Raspberry smoothie",6);
+Harvest.recipe({id:ItemID.raspberry_juice},[{id: ItemID.juicer, data: 0}, {id: ItemID.raspberry, data: 0},{id: 332, data: 0}]);
 
-IDRegistry.genItemID("blackberry_smoothie");
-Item.createFoodItem("blackberry_smoothie", "Blackberry smoothie", {name: "blackberry_smoothie", meta: 0}, {food: 6});
-Recipes.addShapeless({id: ItemID.blackberry_smoothie, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: ItemID.blackberry, data: 0},{id: 332, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.juicer){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("blackberry_smoothie","Blackberry smoothie",6);
+Harvest.recipe({id:ItemID.raspberry_juice},[{id: ItemID.juicer, data: 0}, {id: ItemID.blackberry, data: 0},{id: 332, data: 0}]);
 
-IDRegistry.genItemID("blueberry_smoothie");
-Item.createFoodItem("blueberry_smoothie", "Blueberry smoothie", {name: "blueberry_smoothie", meta: 0}, {food: 6});
-Recipes.addShapeless({id: ItemID.blueberry_smoothie, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: ItemID.blueberry, data: 0},{id: 332, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.juicer){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("blueberry_smoothie","Blueberry smoothie",6);
+Harvest.recipe({id:ItemID.raspberry_juice},[{id: ItemID.juicer, data: 0}, {id: ItemID.blueberry, data: 0},{id: 332, data: 0}]);
 
-IDRegistry.genItemID("melon_smoothie");
-Item.createFoodItem("melon_smoothie", "Melon smoothie", {name: "melon_smoothie", meta: 0}, {food: 5});
-Recipes.addShapeless({id: ItemID.melon_smoothie, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: 360, data: 0},{id: 332, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.juicer){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("melon_smoothie","Melon smoothie",6);
+Harvest.recipe({id:ItemID.raspberry_juice},[{id: ItemID.juicer, data: 0}, {id: 360, data: 0},{id: 332, data: 0}]);
+
+Harvest.setFood("kiwismoothie","Kiwi smoothie",6);
+Harvest.recipe({id:ItemID.kiwismoothie},[{id: ItemID.juicer, data: 0}, {id: ItemID.kiwi, data: 0},{id: 332, data: 0}]);
+
+Harvest.setFood("apricotsmoothie","Apricot smoothie",6);
+Harvest.recipe({id:ItemID.apricotsmoothie},[{id: ItemID.juicer, data: 0}, {id: ItemID.apricot, data: 0},{id: 332, data: 0}]);
+
+Harvest.setFood("pinacolada","Pina collada",6);
+Harvest.recipe({id:ItemID.pinacolada},[{id: ItemID.juicer, data: 0}, {id: ItemID.pineapple, data: 0},{id: ItemID.coconut, data: 0}]);
+
+Harvest.setFood("cherrysmoothie","Cherry smoothie",6);
+Harvest.recipe({id:ItemID.cherrysmoothie},[{id: ItemID.juicer, data: 0}, {id: ItemID.cherry, data: 0},{id: 332, data: 0}]);
+
+Harvest.setFood("bananasmoothie","Banana smoothie",6);
+Harvest.recipe({id:ItemID.bananasmoothie},[{id: ItemID.juicer, data: 0}, {id: ItemID.banana, data: 0},{id: 332, data: 0}]);
+
+Harvest.setFood("bananamilkshake","Banana milkshake",6);
+Harvest.recipe({id:ItemID.bananasmoothie},[{id: ItemID.juicer, data: 0}, {id: ItemID.banana, data: 0},{id: 325, data: 1},{id: 332, data: 0}]);
+
+Harvest.setFood("gooseberrymilkshake","Goosseberry milkshake",6);
+Harvest.recipe({id:ItemID.gooseberrymilkshake},[{id: ItemID.juicer, data: 0}, {id: ItemID.gooseberry, data: 0},{id: 325, data: 1},{id: 332, data: 0}]);
+
+Harvest.setFood("figsmoothie","Fig smoothie",6);
+Harvest.recipe({id:ItemID.figsmoothie},[{id: ItemID.juicer, data: 0}, {id: ItemID.fig, data: 0},{id: 332, data: 0}]);
+
+Harvest.setFood("gooseberrysmoothie","Gooseberry smoothie",6);
+Harvest.recipe({id:ItemID.gooseberrysmoothie},[{id: ItemID.juicer, data: 0}, {id: ItemID.gooseberry, data: 0},{id: 332, data: 0}]);
+
+Harvest.setFood("lemonsmoothie","Lemon smoothie",6);
+Harvest.recipe({id:ItemID.lemonsmoothie},[{id: ItemID.juicer, data: 0}, {id: ItemID.lemon, data: 0},{id: 332, data: 0}]);
+
+Harvest.setFood("limesmoothie","Lime smoothie",6);
+Harvest.recipe({id:ItemID.limesmoothie},[{id: ItemID.juicer, data: 0}, {id: ItemID.lime, data: 0},{id: 332, data: 0}]);
+
+Harvest.setFood("mangosmoothie","Mango smoothie",6);
+Harvest.recipe({id:ItemID.mangosmoothie},[{id: ItemID.juicer, data: 0}, {id: ItemID.mango, data: 0},{id: 332, data: 0}]);
+
+Harvest.setFood("orangesmoothie","Orange smoothie",6);
+Harvest.recipe({id:ItemID.orangesmoothie},[{id: ItemID.juicer, data: 0}, {id: ItemID.orange, data: 0},{id: 332, data: 0}]);
+
+Harvest.setFood("papayasmoothie","Papaya smoothie",6);
+Harvest.recipe({id:ItemID.papayasmoothie},[{id: ItemID.juicer, data: 0}, {id: ItemID.papaya, data: 0},{id: 332, data: 0}]);
+
+Harvest.setFood("peachsmoothie","Peach smoothie",6);
+Harvest.recipe({id:ItemID.peachsmoothie},[{id: ItemID.juicer, data: 0}, {id: ItemID.peach, data: 0},{id: 332, data: 0}]);
+
+Harvest.setFood("pearsmoothie","Pear smoothie",6);
+Harvest.recipe({id:ItemID.pearsmoothie},[{id: ItemID.juicer, data: 0}, {id: ItemID.pear, data: 0},{id: 332, data: 0}]);
+
+Harvest.setFood("persimmonsmoothie","Persimmon smoothie",6);
+Harvest.recipe({id:ItemID.persimmonsmoothie},[{id: ItemID.juicer, data: 0}, {id: ItemID.persimmon, data: 0},{id: 332, data: 0}]);
+
+Harvest.setFood("plumsmoothie","Plum smoothie",6);
+Harvest.recipe({id:ItemID.plumsmoothie},[{id: ItemID.juicer, data: 0}, {id: ItemID.plum, data: 0},{id: 332, data: 0}]);
+
+Harvest.setFood("pomegranatesmoothie","Pomegranate smoothie",6);
+Harvest.recipe({id:ItemID.pomegranatesmoothie},[{id: ItemID.juicer, data: 0}, {id: ItemID.pomegranate, data: 0},{id: 332, data: 0}]);
+
+Harvest.setFood("starfruitsmoothie","Starfruit smoothie",6);
+Harvest.recipe({id:ItemID.starfruitsmoothie},[{id: ItemID.juicer, data: 0}, {id: ItemID.starfruit, data: 0},{id: 332, data: 0}]);
+
+Harvest.setFood("coconutsmoothie","Coconut smoothie",6);
+Harvest.recipe({id:ItemID.coconutsmoothie},[{id: ItemID.juicer, data: 0}, {id: ItemID.coconut, data: 0},{id: 332, data: 0}]);
 
 
 
 
 // file: ITEMS/FOOD/yogurt.js
 
-IDRegistry.genItemID("plain_yogurt");
-Item.createFoodItem("plain_yogurt", "Plain yogurt", {name: "plain_yogurt", meta: 0}, {food: 2});
-Recipes.addShapeless({id: ItemID.plain_yogurt, count: 4, data: 0}, [{id: ItemID.fresh_milk, data: 0}, {id: 334, data: 0}]);
-Recipes.addShapeless({id: ItemID.plain_yogurt, count: 2, data: 0}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.fresh_milk, data: 0}]);
-Recipes.addShapeless({id: ItemID.plain_yogurt, count: 4, data: 0}, [{id: 325, data: 1}, {id: 334, data: 0}], function(api, field, result){ 
-	for (var i in field){ 
-		if (field[i].id != 325){ 
-			api.decreaseFieldSlot(i); 
-		} 
-		else{
-			field[i].data = 0
-		}
-	} 
-});
-Recipes.addShapeless({id: ItemID.plain_yogurt, count: 2, data: 0}, [{id: ItemID.plain_yogurt, data: 0}, {id: 325, data: 1}], function(api, field, result){ 
-	for (var i in field){ 
-		if (field[i].id != 325){ 
-			api.decreaseFieldSlot(i); 
-		} 
-		else{
-			field[i].data = 0
-		}
-	} 
-});
+Harvest.setFood("plain_yogurt","Plain yogurt",2);
+Harvest.recipe({id:ItemID.plain_yogurt,count: 4},[{id: ItemID.fresh_milk, data: 0}, {id: 334, data: 0}]);
+Harvest.recipe({id:ItemID.plain_yogurt,count: 4},[{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.fresh_milk, data: 0}]);
+Harvest.recipe({id:ItemID.plain_yogurt,count: 4},[{id: 325, data: 1}, {id: 334, data: 0}]);
 
-IDRegistry.genItemID("strawberry_yogurt");
-Item.createFoodItem("strawberry_yogurt", "Strawberry yogurt", {name: "strawberry_yogurt", meta: 0}, {food: 8}); 
-Recipes.addShapeless({id: ItemID.strawberry_yogurt, count: 1, data: 0}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.strawberry, data: 0}]);
+Harvest.setFood("strawberry_yogurt","Strawberry yogurt",8);
+Harvest.recipe({id:ItemID.strawberry_yogurt}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.strawberry, data: 0}]);
 
-IDRegistry.genItemID("raspberry_yogurt");
-Item.createFoodItem("raspberry_yogurt", "Raspberry yogurt", {name: "raspberry_yogurt", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.raspberry_yogurt, count: 1, data: 0}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.raspberry, data: 0}]);
+Harvest.setFood("raspberry_yogurt","Raspberry yogurt",8);
+Harvest.recipe({id:ItemID.raspberry_yogurt},[{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.raspberry, data: 0}]);
 
-IDRegistry.genItemID("grape_yogurt");
-Item.createFoodItem("grape_yogurt", "Grape yogurt", {name: "grape_yogurt", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.grape_yogurt, count: 1, data: 0}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.grape, data: 0}]);
+Harvest.setFood("grape_yogurt","Grape yogurt",8);
+Harvest.recipe({id:ItemID.grape_yogurt}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.grape, data: 0}]);
 
-IDRegistry.genItemID("apple_yogurt");
-Item.createFoodItem("apple_yogurt", "Apple yogurt", {name: "apple_yogurt", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.apple_yogurt, count: 1, data: 0}, [{id: ItemID.plain_yogurt, data: 0}, {id: 260, data: 0}]);
+Harvest.setFood("apple_yogurt","Apple yogurt",8);
+Harvest.recipe({id:ItemID.apple_yogurt}, [{id: ItemID.plain_yogurt, data: 0}, {id: 260, data: 0}]);
 
-IDRegistry.genItemID("blackberry_yogurt");
-Item.createFoodItem("blackberry_yogurt", "Blackberry yogurt", {name: "blackberry_yogurt", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.blackberry_yogurt, count: 1, data: 0}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.blackberry, data: 0}]);
+Harvest.setFood("blackberry_yogurt","Blackberry yogurt",8);
+Harvest.recipe({id:ItemID.blackberry_yogurt},[{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.blackberry, data: 0}]);
 
-IDRegistry.genItemID("blueberry_yogurt");
-Item.createFoodItem("blueberry_yogurt", "Blueberry yogurt", {name: "blueberry_yogurt", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.blueberry_yogurt, count: 1, data: 0}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.blueberry, data: 0}]);
+Harvest.setFood("blueberry_yogurt","Blueberry yogurt",8);
+Harvest.recipe({id:ItemID.blueberry_yogurt},[{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.blueberry, data: 0}]);
 
-IDRegistry.genItemID("pumpkin_yogurt");
-Item.createFoodItem("pumpkin_yogurt", "Pumpkin yogurt", {name: "pumpkin_yogurt", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.pumpkin_yogurt, count: 1, data: 0}, [{id: ItemID.plain_yogurt, data: 0}, {id: 86, data: 0}]);
+Harvest.setFood("pumpkin_yogurt","Pumpkin yogurt",8);
+Harvest.recipe({id:ItemID.pumpkin_yogurt}, [{id: ItemID.plain_yogurt, data: 0}, {id: 86, data: 0}]);
 
-IDRegistry.genItemID("melon_yogurt");
-Item.createFoodItem("melon_yogurt", "Melon yogurt", {name: "melon_yogurt", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.melon_yogurt, count: 1, data: 0}, [{id: ItemID.plain_yogurt, data: 0}, {id: 360, data: 0}]);
+Harvest.setFood("melon_yogurt","Melon yogurt",8);
+Harvest.recipe({id:ItemID.melon_yogurt},[{id: ItemID.plain_yogurt, data: 0}, {id: 360, data: 0}]);
 
-IDRegistry.genItemID("chocolate_yogurt");
-Item.createFoodItem("chocolate_yogurt", "Chocolate yogurt", {name: "chocolate_yogurt", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.chocolate_yogurt, count: 1, data: 0}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.strawberry_yogurt, data: 0}]);
+Harvest.setFood("chocolate_yogurt","Chocolate yogurt",8);
+Harvest.recipe({id:ItemID.chocolate_yogurt}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.cocoa_powder, data: 0}]);
+
+Harvest.setFood("kiwiyogurt","Kiwi yogurt",8);
+Harvest.recipe({id:ItemID.kiwiyogurt}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.kiwi, data: 0}]);
+
+Harvest.setFood("pineappleyogurt","Pineapple yogurt",8);
+Harvest.recipe({id:ItemID.pineappleyogurt}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.pineapple, data: 0}]);
+
+Harvest.setFood("apricotyogurt","Apricot yogurt",8);
+Harvest.recipe({id:ItemID.apricotyogurt}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.apricot, data: 0}]);
+
+Harvest.setFood("cherryyogurt","Cherry yogurt",8);
+Harvest.recipe({id:ItemID.cherryyogurt}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.cherry, data: 0}]);
+
+Harvest.setFood("bananayogurt","Banana yogurt",8);
+Harvest.recipe({id:ItemID.bananayogurt}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.banana, data: 0}]);
+
+Harvest.setFood("figyogurt","Fig yogurt",8);
+Harvest.recipe({id:ItemID.figyogurt}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.fig, data: 0}]);
+
+Harvest.setFood("grapefruityogurt","Grapefruit yogurt",8);
+Harvest.recipe({id:ItemID.grapefruityogurt}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.grapefruit, data: 0}]);
+
+Harvest.setFood("gooseberryyogurt","Gooseberry yogurt",8);
+Harvest.recipe({id:ItemID.gooseberryyogurt}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.gooseberry, data: 0}]);
+
+Harvest.setFood("lemonyogurt","Lemon yogurt",8);
+Harvest.recipe({id:ItemID.lemonyogurt}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.lemon, data: 0}]);
+
+Harvest.setFood("limeyogurt","Lime yogurt",8);
+Harvest.recipe({id:ItemID.limeyogurt}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.lime, data: 0}]);
+
+Harvest.setFood("mangoyogurt","Mango yogurt",8);
+Harvest.recipe({id:ItemID.mangoyogurt}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.mango, data: 0}]);
+
+Harvest.setFood("orangeyogurt","Orange yogurt",8);
+Harvest.recipe({id:ItemID.orangeyogurt}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.orange, data: 0}]);
+
+Harvest.setFood("papayayogurt","Papaya yogurt",8);
+Harvest.recipe({id:ItemID.papayayogurt}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.papaya, data: 0}]);
+
+Harvest.setFood("peachyogurt","Peach yogurt",8);
+Harvest.recipe({id:ItemID.peachyogurt}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.peach, data: 0}]);
+
+Harvest.setFood("pearyogurt","Pear yogurt",8);
+Harvest.recipe({id:ItemID.pearyogurt}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.pear, data: 0}]);
+
+Harvest.setFood("persimmonyogurt","Persimmon yogurt",8);
+Harvest.recipe({id:ItemID.persimmonyogurt}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.persimmon, data: 0}]);
+
+Harvest.setFood("plumyogurt","Plum yogurt",8);
+Harvest.recipe({id:ItemID.plumyogurt}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.plum, data: 0}]);
+
+Harvest.setFood("pomegranateyogurt","Pomegranate yogurt",8);
+Harvest.recipe({id:ItemID.pomegranateyogurt}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.pomegranate, data: 0}]);
+
+Harvest.setFood("starfruityogurt","Starfruit yogurt",8);
+Harvest.recipe({id:ItemID.starfruityogurt}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.starfruit, data: 0}]);
+
+Harvest.setFood("coconutyogurt","Coconut yogurt",8);
+Harvest.recipe({id:ItemID.coconutyogurt}, [{id: ItemID.plain_yogurt, data: 0}, {id: ItemID.coconut, data: 0}]);
+
+
+
+
+// file: ITEMS/FOOD/jelly.js
+
+Harvest.setFood("apricotjelly","Apricot jelly",4);
+Harvest.recipe({id:ItemID.apricotjelly},[{id: ItemID.bakeware, data: 0},{id: ItemID.saucepan, data: 0},{id: ItemID.apricot, data: 0},  {id: 353, data: 0}]);
+
+Harvest.setFood("cherryjelly","Cherry jelly",4);
+Harvest.recipe({id:ItemID.cherryjelly},[{id: ItemID.bakeware, data: 0},{id: ItemID.saucepan, data: 0},{id: ItemID.cherry, data: 0},  {id: 353, data: 0}]);
+
+Harvest.setFood("figjelly","Fig jelly",4);
+Harvest.recipe({id:ItemID.figjelly},[{id: ItemID.bakeware, data: 0},{id: ItemID.saucepan, data: 0},{id: ItemID.fig, data: 0},  {id: 353, data: 0}]);
+
+Harvest.setFood("grapefruitjelly","Grapefruit jelly",4);
+Harvest.recipe({id:ItemID.grapefruitjelly},[{id: ItemID.bakeware, data: 0},{id: ItemID.saucepan, data: 0},{id: ItemID.grapefruit, data: 0},  {id: 353, data: 0}]);
+
+Harvest.setFood("gooseberryjelly","Gooseberry jelly",4);
+Harvest.recipe({id:ItemID.gooseberryjelly},[{id: ItemID.bakeware, data: 0},{id: ItemID.saucepan, data: 0},{id: ItemID.gooseberry, data: 0},  {id: 353, data: 0}]);
+
+Harvest.setFood("lemonjelly","Lemon jelly",4);
+Harvest.recipe({id:ItemID.lemonjelly},[{id: ItemID.bakeware, data: 0},{id: ItemID.saucepan, data: 0},{id: ItemID.lemon, data: 0},  {id: 353, data: 0}]);
+
+Harvest.setFood("limejelly","Lime jelly",4);
+Harvest.recipe({id:ItemID.limejelly},[{id: ItemID.bakeware, data: 0},{id: ItemID.saucepan, data: 0},{id: ItemID.lime, data: 0},  {id: 353, data: 0}]);
+
+Harvest.setFood("mangojelly","Mango jelly",4);
+Harvest.recipe({id:ItemID.mangojelly},[{id: ItemID.bakeware, data: 0},{id: ItemID.saucepan, data: 0},{id: ItemID.mango, data: 0},  {id: 353, data: 0}]);
+
+Harvest.setFood("orangejelly","Orange jelly",4);
+Harvest.recipe({id:ItemID.orangejelly},[{id: ItemID.bakeware, data: 0},{id: ItemID.saucepan, data: 0},{id: ItemID.orange, data: 0},  {id: 353, data: 0}]);
+
+Harvest.setFood("papayajelly","Papaya jelly",4);
+Harvest.recipe({id:ItemID.papayajelly},[{id: ItemID.bakeware, data: 0},{id: ItemID.saucepan, data: 0},{id: ItemID.papaya, data: 0},  {id: 353, data: 0}]);
+
+Harvest.setFood("peachjelly","Peach jelly",4);
+Harvest.recipe({id:ItemID.peachjelly},[{id: ItemID.bakeware, data: 0},{id: ItemID.saucepan, data: 0},{id: ItemID.peach, data: 0},  {id: 353, data: 0}]);
+
+Harvest.setFood("pearjelly","Pear jelly",4);
+Harvest.recipe({id:ItemID.pearjelly},[{id: ItemID.bakeware, data: 0},{id: ItemID.saucepan, data: 0},{id: ItemID.pear, data: 0},  {id: 353, data: 0}]);
+
+Harvest.setFood("persimmonjelly","Persimmon jelly",4);
+Harvest.recipe({id:ItemID.persimmonjelly},[{id: ItemID.bakeware, data: 0},{id: ItemID.saucepan, data: 0},{id: ItemID.persimmon, data: 0},  {id: 353, data: 0}]);
+
+Harvest.setFood("plumjelly","Plum jelly",4);
+Harvest.recipe({id:ItemID.plumjelly},[{id: ItemID.bakeware, data: 0},{id: ItemID.saucepan, data: 0},{id: ItemID.plum, data: 0},  {id: 353, data: 0}]);
+
+Harvest.setFood("pomegranatejelly","Pomegranate jelly",4);
+Harvest.recipe({id:ItemID.pomegranatejelly},[{id: ItemID.bakeware, data: 0},{id: ItemID.saucepan, data: 0},{id: ItemID.pomegranate, data: 0},  {id: 353, data: 0}]);
+
+Harvest.setFood("starfruitjelly","Starfruit jelly",4);
+Harvest.recipe({id:ItemID.starfruitjelly},[{id: ItemID.bakeware, data: 0},{id: ItemID.saucepan, data: 0},{id: ItemID.starfruit, data: 0},  {id: 353, data: 0}]);
+
+Harvest.setFood("coconutcream","Coconut cream",2);
+Harvest.recipe({id:ItemID.coconutcream},[{id: ItemID.pot, data: 0},{id: ItemID.coconutcream, data: 0}]);
 
 
 
 
 // file: ITEMS/FOOD/salad.js
 
-IDRegistry.genItemID("beet_salad");
-Item.createFoodItem("beet_salad", "Beet salad", {name: "beet_salad", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.beet_salad, count: 1, data: 0}, [{id: ItemID.mixing_bowl, data: 0}, {id: 457, data: 0}, {id: ItemID.lettuce, data: 0}, {id: ItemID.vinegar, data: 0}, {id: ItemID.cheese, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.mixing_bowl){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("beet_salad","Beet salad",10);
+Harvest.recipe({id:ItemID.beet_salad}, [{id: ItemID.mixing_bowl, data: 0}, {id: 457, data: 0}, {id: ItemID.lettuce, data: 0}, {id: ItemID.vinegar, data: 0}, {id: ItemID.cheese, data: 0}]);
 
-IDRegistry.genItemID("fruit_salad");
-Item.createFoodItem("fruit_salad", "Fruit salad", {name: "fruit_salad", meta: 0}, {food: 6});
-Recipes.addShapeless({id: ItemID.fruit_salad, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.strawberry, data: 0}, {id: ItemID.raspberry, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.cutting_board){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.fruit_salad, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.strawberry, data: 0}, {id: 260, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.cutting_board){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.fruit_salad, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.strawberry, data: 0}, {id: ItemID.raspberry, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.cutting_board){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.fruit_salad, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.strawberry, data: 0}, {id: ItemID.cranberry, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.cutting_board){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.fruit_salad, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.strawberry, data: 0}, {id: ItemID.blueberry, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.cutting_board){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.fruit_salad, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.strawberry, data: 0}, {id: ItemID.blackberry, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.cutting_board){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.fruit_salad, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.strawberry, data: 0}, {id: ItemID.grape, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.cutting_board){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("fruit_salad","Fruit salad",6);
+Harvest.recipeVariations({id:ItemID.fruit_salad},ItemID.cutting_board,[ItemID.wintersquash,ItemID.starfruit,ItemID.pomegranate,ItemID.plum,ItemID.persimmon,ItemID.pear,ItemID.papaya,ItemID.orange,ItemID.mango,ItemID.lime,ItemID.lemon,ItemID.gooseberry,ItemID.grapefruit,ItemID.fig,ItemID.dragonfruit,ItemID.date,ItemID.banana,ItemID.cherry,ItemID.strawberry,ItemID.raspberry,260,ItemID.cranberry,ItemID.blueberry,ItemID.blackberry,ItemID.grape,ItemID.cactusfruit,ItemID.cantaloupe]);
 
-IDRegistry.genItemID("spring_salad");
-Item.createFoodItem("spring_salad", "Spring salad", {name: "spring_salad", meta: 0}, {food: 9});
-Recipes.addShapeless({id: ItemID.spring_salad, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.lettuce, data: 0}, {id: ItemID.onion, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.cutting_board){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.spring_salad, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.lettuce, data: 0}, {id: ItemID.cucumber, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.cutting_board){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.spring_salad, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.lettuce, data: 0}, {id: ItemID.bellpepper, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.cutting_board){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.spring_salad, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.lettuce, data: 0}, {id: ItemID.tomato, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.cutting_board){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.spring_salad, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.lettuce, data: 0}, {id: ItemID.peas, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.cutting_board){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.spring_salad, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.lettuce, data: 0}, {id: 391, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.cutting_board){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("spring_salad","Spring salad",9);
+Harvest.recipeVariations({id:ItemID.spring_salad},ItemID.cutting_board,[ItemID.avocado,ItemID.lettuce,ItemID.onion,ItemID.cucumber,ItemID.bellpepper,ItemID.zucchini,ItemID.tomato,ItemID.leek,ItemID.rhubarb,ItemID.peas,391,ItemID.rutabaga,ItemID.broccoli,ItemID.cauliflower,ItemID.radish]);
 
-if(ItemID.pomidor!=null){
-	Recipes.addShapeless({id: ItemID.spring_salad, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.lettuce, data: 0}, {id: ItemID.pomidor, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.cutting_board){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-};
+Harvest.setFood("cucumber_salad","Cucumber salad",11);
+Harvest.recipe({id:ItemID.cucumber_salad}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.spring_salad, data: 0}, {id: ItemID.cucumber, data: 0}]);
 
-if(ItemID.ogurec!=null){
-	Recipes.addShapeless({id: ItemID.spring_salad, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.lettuce, data: 0}, {id: ItemID.ogurec, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.cutting_board){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-};
-
-IDRegistry.genItemID("cucumber_salad");
-Item.createFoodItem("cucumber_salad", "Cucumber salad", {name: "cucumber_salad", meta: 0}, {food: 11});
-Recipes.addShapeless({id: ItemID.cucumber_salad, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.spring_salad, data: 0}, {id: ItemID.cucumber, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.cutting_board){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-
-IDRegistry.genItemID("ceasar_salade");
-Item.createFoodItem("ceasar_salade", "Ceasar salade", {name: "ceasar_salade", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.ceasar_salade, count: 1, data: 0}, [{id: ItemID.mixing_bowl, data: 0}, {id: ItemID.lettuce, data: 0}, {id: ItemID.toast, data: 0}, {id: ItemID.cheese, data: 0}, {id: ItemID.garlic, data: 0}, {id: ItemID.black_pepper, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.mixing_bowl){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("ceasar_salade","Ceasar salad",10);
+Harvest.recipe({id:ItemID.ceasar_salade}, [{id: ItemID.mixing_bowl, data: 0}, {id: ItemID.lettuce, data: 0}, {id: ItemID.toast, data: 0}, {id: ItemID.cheese, data: 0}, {id: ItemID.garlic, data: 0}, {id: ItemID.black_pepper, data: 0}]);
 
 
 
 
 // file: ITEMS/FOOD/meat.js
 
-IDRegistry.genItemID("venisonRaw");
-Item.createFoodItem("venisonRaw", "Raw venison", {name: "venison", meta: 0}, {food:3});
+Harvest.setFood("venisonRaw","Raw venison",3);
 
-IDRegistry.genItemID("venisonCooked");
-Item.createFoodItem("venisonCooked", "Cooked venison", {name: "venison", meta: 1}, {food:8});
+Harvest.setFood("venisonCooked","Cooked venison",8);
 Recipes.addFurnace(ItemID.venisonRaw, ItemID.venisonCooked, 0);
 
-IDRegistry.genItemID("turkeyRaw");
-Item.createFoodItem("turkeyRaw", "Raw turkey", {name: "turkey", meta: 0}, {food:2});
+Harvest.setFood("turkeyRaw","Raw turkey",2);
 
-IDRegistry.genItemID("turkeyCooked");
-Item.createFoodItem("turkeyCooked", "Cooked turkey", {name: "turkey", meta: 1}, {food:5});
+Harvest.setFood("turkeyCooked","Cooked turkey",5);
 Recipes.addFurnace(ItemID.turkeyRaw, ItemID.turkeyCooked, 0);
 
 
@@ -1372,1249 +1532,349 @@ Recipes.addFurnace(ItemID.turkeyRaw, ItemID.turkeyCooked, 0);
 
 IDRegistry.genItemID("black_pepper");
 Item.createItem("black_pepper", "Black pepper", {name: "black_pepper", meta: 0});
-Recipes.addShapeless({id: ItemID.black_pepper, count: 1, data: 0}, [{id: ItemID.mortar_bowl, data: 0}, {id: ItemID.peppercorn, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.mortar_bowl){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.recipe({id:ItemID.black_pepper},[{id: ItemID.mortar_bowl, data: 0}, {id: ItemID.peppercorn, data: 0}]);
+
 IDRegistry.genItemID("cocoa_powder");
 Item.createItem("cocoa_powder", "Cocoa powder", {name: "cocoa_powder", meta: 0});
-Recipes.addShapeless({id: ItemID.cocoa_powder, count: 1, data: 0}, [{id: ItemID.mortar_bowl, data: 0}, {id: 351, data: 3}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.mortar_bowl){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("chocolate_milk");
-Item.createFoodItem("chocolate_milk", "Chocolate milk", {name: "chocolate_milk", meta: 0}, {food: 6});
-Recipes.addShapeless({id: ItemID.chocolate_milk, count: 1, data: 0}, [{id: ItemID.cocoa_powder, data: 0}, {id: 325, data: 1}]);
-Recipes.addShapeless({id: ItemID.chocolate_milk, count: 1, data: 0}, [{id: ItemID.cocoa_powder, data: 0}, {id: ItemID.fresh_milk, data: 0}]);
+Harvest.recipe({id:ItemID.cocoa_powder},[{id: ItemID.mortar_bowl, data: 0}, {id: 351, data: 3}]);
 
-IDRegistry.genItemID("espresso");
-Item.createFoodItem("espresso", "Espresso", {name: "espresso", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.espresso, count: 1, data: 0}, [{id: ItemID.coffee_beans, data: 0}, {id: ItemID.coffee_beans, data: 0}, {id: ItemID.coffee_beans, data: 0}, {id: 353, data: 0}]);
+IDRegistry.genItemID("almondbutter");
+Item.createItem("almondbutter", "Almond butter", {name: "almondbutter", meta: 0});
+Harvest.recipe({id:ItemID.almondbutter},[{id: ItemID.juicer, data: 0}, {id: ItemID.almond, data: 0}]);
 
-IDRegistry.genItemID("hot_chocolate");
-Item.createFoodItem("hot_chocolate", "Hot chocolate", {name: "hot_chocolate", meta: 0}, {food: 2});
-Recipes.addShapeless({id: ItemID.hot_chocolate, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: ItemID.fresh_milk, data: 0}, {id: ItemID.cocoa_powder, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.juicer){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("chocolate_milk","Chocolate milk",6);
+Harvest.recipe({id:ItemID.chocolate_milk},[{id: ItemID.cocoa_powder, data: 0}, {id: 325, data: 1}]);
+Harvest.recipe({id:ItemID.chocolate_milk},[{id: ItemID.cocoa_powder, data: 0}, {id: ItemID.fresh_milk, data: 0}]);
+
+Harvest.setFood("espresso","Espresso",8);
+Harvest.recipe({id:ItemID.espresso},[{id: ItemID.coffee_beans, data: 0}, {id: ItemID.coffee_beans, data: 0}, {id: ItemID.coffee_beans, data: 0}, {id: 353, data: 0}]);
+
+Harvest.setFood("chaitea","Chai tea",2);
+Harvest.recipe({id:ItemID.chaitea},[{id: ItemID.black_pepper, data: 0},{id: ItemID.tealeaf, data: 0}]);
+
+Harvest.setFood("raspberryicedtea","Raspberry ice tea",2);
+Harvest.recipe({id:ItemID.raspberryicedtea},[{id: ItemID.raspberry, data: 0},{id: ItemID.tealeaf, data: 0},{id: 332, data: 0}]);
+
+Harvest.setFood("hot_chocolate","Hot chocolate",2);
+Harvest.recipe({id:ItemID.hot_chocolate},[{id: ItemID.juicer, data: 0}, {id: ItemID.fresh_milk, data: 0}, {id: ItemID.cocoa_powder, data: 0}]);
 
 IDRegistry.genItemID("vinegar");
 Item.createItem("vinegar", "Vinegar", {name: "vinegar", meta: 0});
-Recipes.addShapeless({id: ItemID.vinegar, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.grape_juice, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.recipe({id:ItemID.vinegar},[{id: ItemID.pot, data: 0}, {id: ItemID.grape_juice, data: 0}]);
 
-IDRegistry.genItemID("cheese");
-Item.createFoodItem("cheese", "Cheese", {name: "cheese", meta: 0}, {food: 2});
-Recipes.addShapeless({id: ItemID.cheese, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.fresh_milk, data: 0}, {id: ItemID.salt, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-//BlockID.pomidor
-//BlockID.ogurec
-IDRegistry.genItemID("stock");
-Item.createFoodItem("stock", "Stock", {name: "stock", meta: 0}, {food: 3});
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 352, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 363, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 319, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 423, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 411, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 365, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.corn, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.tomato, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.cucumber, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.rutabaga, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.onion, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.cabbage, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.bellpepper, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.peas, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.bean, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.rice, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 86, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.stock, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 392, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("cheese","Cheese",2);
+Harvest.recipe({id:ItemID.cheese},[{id: ItemID.pot, data: 0}, {id: ItemID.fresh_milk, data: 0}, {id: ItemID.salt, data: 0}]);
 
-IDRegistry.genItemID("pot_roast");
-Item.createFoodItem("pot_roast", "Pot roast", {name: "pot_roast", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.pot_roast, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 363, data: 0}, {id: 393, data: 0}, {id: 391, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("tortilla","Tortilla",6);
+Harvest.recipe({id:ItemID.tortilla},[{id: ItemID.skillet, data: 0}, {id: ItemID.fresh_water, data: 0}, {id: ItemID.flour, data: 0}]);
 
-IDRegistry.genItemID("vegetable_soup");
-Item.createFoodItem("vegetable_soup", "Vegetable soup", {name: "vegetable_soup", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.vegetable_soup, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 40, data: 0}, {id: 393, data: 0}, {id: 391, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.vegetable_soup, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 39, data: 0}, {id: 393, data: 0}, {id: 391, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("stock","Stock",3);
+Harvest.recipeDuoVariations({id:ItemID.stock},ItemID.pot,
+[352,363,319,423,411,365,ItemID.corn,ItemID.beet,ItemID.zucchini,ItemID.tomato,ItemID.cucumber,ItemID.rutabaga,ItemID.onion,ItemID.cabbage,ItemID.bellpepper,ItemID.peas,ItemID.bean,ItemID.rice,ItemID.artichoke,ItemID.parsnip,ItemID.rhubarb,ItemID.scallion,ItemID.soybean,ItemID.turnip,ItemID.okra,ItemID.asparagus,ItemID.eggplant,ItemID.bambooshoot,ItemID.brusselsprout,ItemID.cauliflower,ItemID.celery,ItemID.radish,86,392]);
+
+Harvest.setFood("pot_roast","Pot roast",10);
+Harvest.recipe({id:ItemID.pot_roast}, [{id: ItemID.pot, data: 0}, {id: 363, data: 0}, {id: 393, data: 0}, {id: 391, data: 0}, {id: ItemID.stock, data: 0}]);
+
+Harvest.setFood("vegetable_soup","Vegetable soup",8);
+Harvest.recipe({id:ItemID.vegetable_soup},[{id: ItemID.pot, data: 0}, {id: 40, data: 0}, {id: 393, data: 0}, {id: 391, data: 0}, {id: ItemID.stock, data: 0}]);
+Harvest.recipe({id:ItemID.vegetable_soup},[{id: ItemID.pot, data: 0}, {id: 39, data: 0}, {id: 393, data: 0}, {id: 391, data: 0}, {id: ItemID.stock, data: 0}]);
 
 IDRegistry.genItemID("heavy_cream");
 Item.createItem("heavy_cream", "Heavy cream", {name: "heavy_cream", meta: 0});
-Recipes.addShapeless({id: ItemID.heavy_cream, count: 1, data: 0}, [{id: ItemID.mixing_bowl, data: 0}, {id: 352, data: 1}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.mixing_bowl && field[i].id != 352){
-			api.decreaseFieldSlot(i);
-		}
-		else{
-			field[i].data = 0
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.heavy_cream, count: 1, data: 0}, [{id: ItemID.mixing_bowl, data: 0}, {id: ItemID.fresh_milk, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.mixing_bowl){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.recipe({id:ItemID.heavy_cream},[{id: ItemID.mixing_bowl, data: 0}, {id: 352, data: 1}]);
+Harvest.recipe({id:ItemID.heavy_cream},[{id: ItemID.mixing_bowl, data: 0}, {id: ItemID.fresh_milk, data: 0}]);
 
-IDRegistry.genItemID("pumpkin_soup");
-Item.createFoodItem("pumpkin_soup", "Pumpkin soup", {name: "pumpkin_soup", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.pumpkin_soup, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 86, data: 0}, {id: ItemID.heavy_cream, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("pumpkin_soup","Pumpkin soup",8);
+Harvest.recipe({id:ItemID.pumpkin_soup},[{id: ItemID.pot, data: 0}, {id: 86, data: 0}, {id: ItemID.heavy_cream, data: 0}, {id: ItemID.stock, data: 0}]);
 
-IDRegistry.genItemID("cornflakes");
-Item.createFoodItem("cornflakes", "Cornflakes", {name: "cornflakes", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.cornflakes, count: 1, data: 0}, [{id: ItemID.mixing_bowl, data: 0}, {id: ItemID.fresh_milk, data: 0}, {id: ItemID.corn, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.mixing_bowl){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("cornflakes","Cornflakes",8);
+Harvest.recipe({id:ItemID.cornflakes},[{id: ItemID.mixing_bowl, data: 0}, {id: ItemID.fresh_milk, data: 0}, {id: ItemID.corn, data: 0}]);
 
-IDRegistry.genItemID("fried_egg");
-Item.createFoodItem("fried_egg", "Fried egg", {name: "fried_egg", meta: 0}, {food: 4});
-Recipes.addShapeless({id: ItemID.fried_egg, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 344, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.skillet){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("fried_egg","Fried egg",4);
+Harvest.recipe({id:ItemID.fried_egg},[{id: ItemID.skillet, data: 0}, {id: 344, data: 0}]);
 
-IDRegistry.genItemID("boiled_egg");
-Item.createFoodItem("boiled_egg", "Boiled egg", {name: "boiled_egg", meta: 0}, {food: 2});
-Recipes.addShapeless({id: ItemID.boiled_egg, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 344, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("boiled_egg","Boiled egg",2);
+Harvest.recipe({id:ItemID.boiled_egg},[{id: ItemID.pot, data: 0}, {id: 344, data: 0}]);
 
-IDRegistry.genItemID("pancakes");
-Item.createFoodItem("pancakes", "Pancakes", {name: "pancakes", meta: 0}, {food: 6});
-Recipes.addShapeless({id: ItemID.pancakes, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.fresh_milk, data: 0}, {id: 344, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.skillet){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.pancakes, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: ItemID.flour, data: 0}, {id: 325, data: 1}, {id: 344, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.skillet){
-			api.decreaseFieldSlot(i);
-		}
-		else{
-			field[i].data = 0
-		}
-	}
-});
+Harvest.setFood("pancakes","Pancakes",6);
+Harvest.recipe({id:ItemID.pancakes},[{id: ItemID.skillet, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.fresh_milk, data: 0}, {id: 344, data: 0}]);
+Harvest.recipe({id:ItemID.pancakes},[{id: ItemID.skillet, data: 0}, {id: ItemID.flour, data: 0}, {id: 325, data: 1}, {id: 344, data: 0}]);
 
 IDRegistry.genItemID("dough");
 Item.createItem("dough", "Dough", {name: "dough", meta: 0});
-Recipes.addShapeless({id: ItemID.dough, count: 1, data: 0}, [{id: ItemID.mixing_bowl, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.fresh_water, data: 0}, {id: ItemID.salt, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.mixing_bowl){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.dough, count: 1, data: 0}, [{id: ItemID.mixing_bowl, data: 0}, {id: ItemID.flour, data: 0}, {id: 325, data: 8}, {id: ItemID.salt, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.mixing_bowl){
-			api.decreaseFieldSlot(i);
-		}
-		else{
-			field[i].data = 0
-		}
-	}
-});
+Harvest.recipe({id:ItemID.dough},[{id: ItemID.mixing_bowl, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.fresh_water, data: 0}, {id: ItemID.salt, data: 0}]);
+Harvest.recipe({id:ItemID.dough},[{id: ItemID.mixing_bowl, data: 0}, {id: ItemID.flour, data: 0}, {id: 325, data: 8}, {id: ItemID.salt, data: 0}]);
 
-IDRegistry.genItemID("cranberry_bar");
-Item.createFoodItem("cranberry_bar", "Cranberry bar", {name: "cranberry_bar", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.cranberry_bar, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.cranberry, data: 0}, {id: 353, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("cranberry_bar","Cranberry bar",8);
+Harvest.recipe({id:ItemID.cranberry_bar},[{id: ItemID.bakeware, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.cranberry, data: 0}, {id: 353, data: 0}]);
 
-IDRegistry.genItemID("pizza");
-Item.createFoodItem("pizza", "Pizza", {name: "pizza", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.pizza, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.tomato, data: 0}, {id: 319, data: 0}, {id: ItemID.cheese, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("figbar","Fig bar",10);
+Harvest.recipe({id:ItemID.figbar},[{id: ItemID.bakeware, data: 0}, {id:ItemID.fig, data: 0},{id: ItemID.dough, data: 0},{id: 353, data: 0}]);
 
-IDRegistry.genItemID("fries");
-Item.createFoodItem("fries", "Fries", {name: "fries", meta: 0}, {food: 4});
-Recipes.addShapeless({id: ItemID.fries, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: 394, data: 0}, {id: ItemID.salt, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("lemonbar","Lemon bar",10);
+Harvest.recipe({id:ItemID.lemonbar},[{id: ItemID.bakeware, data: 0}, {id:ItemID.lemon, data: 0},{id: ItemID.dough, data: 0},{id: 353, data: 0}]);
 
-IDRegistry.genItemID("breaded_porkchop");
-Item.createFoodItem("breaded_porkchop", "Breaded porkchop", {name: "breaded_porkchop", meta: 0}, {food: 5});
-Recipes.addShapeless({id: ItemID.breaded_porkchop, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 319, data: 0}, {id: ItemID.flour, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.skillet){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("pizza","Pizza",10);
+Harvest.recipe({id:ItemID.pizza},[{id: ItemID.bakeware, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.tomato, data: 0}, {id: 319, data: 0}, {id: ItemID.cheese, data: 0}]);
+
+Harvest.setFood("fries","Fries",4);
+Harvest.recipe({id:ItemID.fries},[{id: ItemID.bakeware, data: 0}, {id: 394, data: 0}, {id: ItemID.salt, data: 0}]);
+
+Harvest.setFood("breaded_porkchop","Breaded porkchop",5);
+Harvest.recipe({id:ItemID.breaded_porkchop},[{id: ItemID.skillet, data: 0}, {id: 319, data: 0}, {id: ItemID.flour, data: 0}]);
 
 IDRegistry.genItemID("butter");
 Item.createItem("butter", "Butter", {name: "butter", meta: 0});
-Recipes.addShapeless({id: ItemID.butter, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: ItemID.heavy_cream, data: 0}, {id: ItemID.salt, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.recipe({id:ItemID.butter},[{id: ItemID.saucepan, data: 0}, {id: ItemID.heavy_cream, data: 0}, {id: ItemID.salt, data: 0}]);
 
-IDRegistry.genItemID("hot_wings");
-Item.createFoodItem("hot_wings", "Hot wings", {name: "hot_wings", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.hot_wings, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 366, data: 0}, {id: ItemID.chili_pepper, data: 0}, {id: ItemID.butter, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.skillet){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("hot_wings","Hot wings",5);
+Harvest.recipe({id:ItemID.hot_wings},[{id: ItemID.skillet, data: 0}, {id: 366, data: 0}, {id: ItemID.chili_pepper, data: 0}, {id: ItemID.butter, data: 0}]);
 
 IDRegistry.genItemID("mayo");
 Item.createFoodItem("mayo", "Mayo", {name: "mayo", meta: 0});
-Recipes.addShapeless({id: ItemID.mayo, count: 1, data: 0}, [{id: ItemID.juicer, data: 0}, {id: 344, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.juicer){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.recipe({id:ItemID.mayo},[{id: ItemID.juicer, data: 0}, {id: 344, data: 0}]);
 
+Harvest.setFood("fish_dinner","Fish dinner",10);
 IDRegistry.genItemID("fish_dinner");
 Item.createFoodItem("fish_dinner", "Fish dinner", {name: "fish_dinner", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.fish_dinner, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 349, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.mayo, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.skillet){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.fish_dinner, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 460, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.mayo, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.skillet){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.recipe({id:ItemID.fish_dinner},[{id: ItemID.skillet, data: 0}, {id: 349, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.mayo, data: 0}]);
+Harvest.recipe({id:ItemID.fish_dinner},[{id: ItemID.skillet, data: 0}, {id: 460, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.mayo, data: 0}]);
 
+Harvest.setFood("potato_cakes","Potato cakes",7);
 IDRegistry.genItemID("potato_cakes");
 Item.createFoodItem("potato_cakes", "Potato cakes", {name: "potato_cakes", meta: 0}, {food: 7});
-Recipes.addShapeless({id: ItemID.potato_cakes, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 392, data: 0}, {id: ItemID.butter, data: 0}, {id: ItemID.onion, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.skillet){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.recipe({id:ItemID.potato_cakes},[{id: ItemID.skillet, data: 0}, {id: 392, data: 0}, {id: ItemID.butter, data: 0}, {id: ItemID.onion, data: 0}]);
 
-IDRegistry.genItemID("hearty_breakfast");
-Item.createFoodItem("hearty_breakfast", "Hearty breakfast", {name: "hearty_breakfast", meta: 0}, {food: 18});
-Recipes.addShapeless({id: ItemID.hearty_breakfast, count: 1, data: 0}, [{id: ItemID.fried_egg, data: 0}, {id: 320, data: 0}, {id: ItemID.potato_cakes, data: 0}, {id: ItemID.toast, data: 0}, {id: ItemID.grape_juice, data: 0}]);
+Harvest.setFood("hearty_breakfast","Hearty breakfast",18);
+Harvest.recipe({id:ItemID.hearty_breakfast},[{id: ItemID.fried_egg, data: 0}, {id: 320, data: 0}, {id: ItemID.potato_cakes, data: 0}, {id: ItemID.toast, data: 0}, {id: ItemID.grape_juice, data: 0}]);
 
-IDRegistry.genItemID("steak_and_chips");
-Item.createFoodItem("steak_and_chips", "Steak and chips", {name: "steak_and_chips", meta: 0}, {food: 12});
-Recipes.addShapeless({id: ItemID.steak_and_chips, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 363, data: 0}, {id: ItemID.fries, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.skillet){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("steak_and_chips","Steak and chips",12);
+Harvest.recipe({id:ItemID.steak_and_chips},[{id: ItemID.skillet, data: 0}, {id: 363, data: 0}, {id: ItemID.fries, data: 0}]);
 
-IDRegistry.genItemID("roast_chicken");
-Item.createFoodItem("roast_chicken", "Roast chicken", {name: "roast_chicken", meta: 0}, {food: 9});
-Recipes.addShapeless({id: ItemID.roast_chicken, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: 366, data: 0}, {id: ItemID.salt, data: 0}, {id: ItemID.black_pepper, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("avocadoburrito","Avocado burrito",12);
+Harvest.recipe({id:ItemID.avocadoburrito},[{id: ItemID.cutting_board, data: 0}, {id: ItemID.avocado, data: 0}, {id: ItemID.tortilla, data: 0}, {id: 366, data: 0}]);
+Harvest.recipe({id:ItemID.avocadoburrito},[{id: ItemID.cutting_board, data: 0}, {id: ItemID.avocado, data: 0}, {id: ItemID.tortilla, data: 0}, {id: 320, data: 0}]);
 
-IDRegistry.genItemID("roast_potatoes");
-Item.createFoodItem("roast_potatoes", "Roast potatoes", {name: "roast_potatoes", meta: 0}, {food: 6});
-Recipes.addShapeless({id: ItemID.roast_potatoes, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: 392, data: 0}, {id: ItemID.salt, data: 0}, {id: ItemID.black_pepper, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("roast_chicken","Roast chicken",9);
+Harvest.recipe({id:ItemID.roast_chicken},[{id: ItemID.bakeware, data: 0}, {id: 366, data: 0}, {id: ItemID.salt, data: 0}, {id: ItemID.black_pepper, data: 0}]);
 
-IDRegistry.genItemID("sunday_roast");
-Item.createFoodItem("sunday_roast", "Sunday roast", {name: "sunday_roast", meta: 0}, {food: 14});
-Recipes.addShapeless({id: ItemID.sunday_roast, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: ItemID.roast_chicken, data: 0}, {id: ItemID.roast_potatoes, data: 0}, {id: ItemID.lettuce, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("roast_potatoes","Roast potatoes",6);
+Harvest.recipe({id:ItemID.roast_potatoes},[{id: ItemID.bakeware, data: 0}, {id: 392, data: 0}, {id: ItemID.salt, data: 0}, {id: ItemID.black_pepper, data: 0}]);
 
-IDRegistry.genItemID("lamb_with_mint_sauce");
-Item.createFoodItem("lamb_with_mint_sauce", "Lamb with mint sauce", {name: "lamb_with_mint_sauce", meta: 0}, {food: 11});
-Recipes.addShapeless({id: ItemID.lamb_with_mint_sauce, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: 423, data: 0}, {id: ItemID.spice_leaf, data: 0}, {id: ItemID.vinegar, data: 0}, {id: 353, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("sunday_roast","Strawberry juice",14);
+Harvest.recipe({id:ItemID.sunday_roast},[{id: ItemID.bakeware, data: 0}, {id: ItemID.roast_chicken, data: 0}, {id: ItemID.roast_potatoes, data: 0}, {id: ItemID.lettuce, data: 0}]);
 
+Harvest.setFood("lamb_with_mint_sauce","Lamb with mint sauce",11);
+Harvest.recipe({id:ItemID.lamb_with_mint_sauce},[{id: ItemID.bakeware, data: 0}, {id: 423, data: 0}, {id: ItemID.spice_leaf, data: 0}, {id: ItemID.vinegar, data: 0}, {id: 353, data: 0}]);
 
-IDRegistry.genItemID("meaty_stew");
-Item.createFoodItem("meaty_stew", "Meaty stew", {name: "meaty_stew", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.meaty_stew, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 363, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.meaty_stew, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 319, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.meaty_stew, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 423, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.meaty_stew, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 363, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.meaty_stew, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 411, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("meaty_stew","Meaty stew",8);
+Harvest.recipe({id:ItemID.meaty_stew},[{id: ItemID.pot, data: 0}, {id: 363, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.stock, data: 0}]);
+Harvest.recipe({id:ItemID.meaty_stew},[{id: ItemID.pot, data: 0}, {id: 319, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.stock, data: 0}]);
+Harvest.recipe({id:ItemID.meaty_stew},[{id: ItemID.pot, data: 0}, {id: 423, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.stock, data: 0}]);
+Harvest.recipe({id:ItemID.meaty_stew},[{id: ItemID.pot, data: 0}, {id: 363, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.stock, data: 0}]);
+Harvest.recipe({id:ItemID.meaty_stew},[{id: ItemID.pot, data: 0}, {id: 411, data: 0}, {id: ItemID.flour, data: 0}, {id: ItemID.stock, data: 0}]);
 
-IDRegistry.genItemID("chocolate_bar");
-Item.createFoodItem("chocolate_bar", "Chocolate bar", {name: "chocolate_bar", meta: 0}, {food: 5});
-Recipes.addShapeless({id: ItemID.chocolate_bar, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: ItemID.cocoa_powder, data: 0}, {id: ItemID.butter, data: 0}, {id: ItemID.fresh_milk, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.chocolate_bar, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: ItemID.cocoa_powder, data: 0}, {id: ItemID.butter, data: 0}, {id: 325, data: 1}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-		else{
-			field[i].data = 0
-		}
-	}
-});
+Harvest.setFood("chocolate_bar","Chocolate bar",5);
+Harvest.recipe({id:ItemID.chocolate_bar},[{id: ItemID.saucepan, data: 0}, {id: ItemID.cocoa_powder, data: 0}, {id: ItemID.butter, data: 0}, {id: ItemID.fresh_milk, data: 0}]);
+Harvest.recipe({id:ItemID.chocolate_bar},[{id: ItemID.saucepan, data: 0}, {id: ItemID.cocoa_powder, data: 0}, {id: ItemID.butter, data: 0}, {id: 325, data: 1}]);
 
-IDRegistry.genItemID("chaos_cookie");
-Item.createFoodItem("chaos_cookie", "Chaos cookie", {name: "chaos_cookie", meta: 0}, {food: 4});
-Recipes.addShapeless({id: ItemID.chaos_cookie, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: ItemID.chocolate_bar, data: 0}, {id: ItemID.flour, data: 0}, {id: 352, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("chaos_cookie","Chaos cookie",4);
+Harvest.recipe({id:ItemID.chaos_cookie}, [{id: ItemID.bakeware, data: 0}, {id: ItemID.chocolate_bar, data: 0}, {id: ItemID.flour, data: 0}, {id: 352, data: 0}]);
 
-IDRegistry.genItemID("blueberry_pie");
-Item.createFoodItem("blueberry_pie", "Blueberry pie", {name: "blueberry_pie", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.blueberry_pie, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: ItemID.blueberry, data: 0}, {id: ItemID.dough, data: 0}, {id: 353, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("blueberry_pie","Blueberry pie",8);
+Harvest.recipe({id:ItemID.blueberry_pie},[{id: ItemID.bakeware, data: 0}, {id: ItemID.blueberry, data: 0}, {id: ItemID.dough, data: 0}, {id: 353, data: 0}]);
 
-IDRegistry.genItemID("waffles");
-Item.createFoodItem("waffles", "Waffles", {name: "waffles", meta: 0}, {food: 9});
-Recipes.addShapeless({id: ItemID.blueberry_pie, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: ItemID.flour, data: 0}, {id: 344, data: 0}, {id: ItemID.butter, data: 0}, {id: ItemID.fresh_milk, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.skillet){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.blueberry_pie, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: ItemID.flour, data: 0}, {id: 344, data: 0}, {id: ItemID.butter, data: 0}, {id: 325, data: 1}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.skillet){
-			api.decreaseFieldSlot(i);
-		}
-		else{
-			field[i].data = 0
-		}
-	}
-});
+Harvest.setFood("waffles","Waffles",9);
+Harvest.recipe({id:ItemID.waffles},[{id: ItemID.skillet, data: 0}, {id: ItemID.flour, data: 0}, {id: 344, data: 0}, {id: ItemID.butter, data: 0}, {id: ItemID.fresh_milk, data: 0}]);
+Harvest.recipe({id:ItemID.waffles},[{id: ItemID.skillet, data: 0}, {id: ItemID.flour, data: 0}, {id: 344, data: 0}, {id: ItemID.butter, data: 0}, {id: 325, data: 1}]);
 
 IDRegistry.genItemID("fresh_water");
 Item.createItem("fresh_water", "Fresh water", {name: "fresh_water", meta: 0});
-Recipes.addShapeless({id: ItemID.fresh_water, count: 1, data: 0}, [{id: 325, data: 8}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != 325){
-			api.decreaseFieldSlot(i);
-		}
-		else{
-			field[i].data = 0
-		}
-	}
-});
+Harvest.recipe({id:ItemID.fresh_water},[{id: 325, data: 8}]);
 
 IDRegistry.genItemID("fresh_milk");
 Item.createItem("fresh_milk", "Fresh milk", {name: "fresh_milk", meta: 0});
-Recipes.addShapeless({id: ItemID.fresh_milk, count: 4, data: 0}, [{id: 325, data: 1}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != 325){
-			api.decreaseFieldSlot(i);
-		}
-		else{
-			field[i].data = 0
-		}
-	}
-});
+Harvest.recipe({id:ItemID.fresh_milk},[{id: 325, data: 1}]);
 
 IDRegistry.genItemID("salt");
 Item.createItem("salt", "Salt", {name: "salt", meta: 0});
-Recipes.addShapeless({id: ItemID.salt, count: 1, data: 0}, [{id: ItemID.fresh_water, data: 0}, {id: ItemID.pot, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.recipe({id:ItemID.salt},[{id: ItemID.fresh_water, data: 0}, {id: ItemID.pot, data: 0}]);
 
 IDRegistry.genItemID("flour");
 Item.createItem("flour", "Flour", {name: "flour", meta: 0});
-Recipes.addShapeless({id: ItemID.flour, count: 1, data: 0}, [{id: ItemID.mortar_bowl, data: 0}, {id: 394, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != mortar_bowl){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.flour, count: 1, data: 0}, [{id: ItemID.mortar_bowl, data: 0}, {id: 296, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != mortar_bowl){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.recipe({id:ItemID.flour},[{id: ItemID.mortar_bowl, data: 0}, {id: 394, data: 0}]);
+Harvest.recipe({id:ItemID.flour},[{id: ItemID.mortar_bowl, data: 0}, {id: 296, data: 0}]);
+
+Harvest.setFood("spidereyesoup","Spider Eye Soup",8);
 IDRegistry.genItemID("spidereyesoup");
 Item.createFoodItem("spidereyesoup", "Spider Eye Soup", {name: "spidereyesoup", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.spidereyesoup, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 375, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("zombiejerky");
-Item.createFoodItem("zombiejerky", "Zombie Jerky", {name: "zombiejerky", meta: 0}, {food: 4});
-Recipes.addShapeless({id: ItemID.zombiejerky, count: 1, data: 0}, [{id: ItemID.salt, data: 0}, {id: ItemID.salt, data: 0}, {id: 367, data: 0}]);
+Harvest.recipe({id:ItemID.spidereyesoup},[{id: ItemID.pot, data: 0}, {id: 375, data: 0}, {id: ItemID.stock, data: 0}]);
+
+Harvest.setFood("zombiejerky","Zombie Jerky",4);
+Harvest.recipe({id:ItemID.zombiejerky},[{id: ItemID.salt, data: 0}, {id: ItemID.salt, data: 0}, {id: 367, data: 0}]);
 
 IDRegistry.genItemID("currypowder");
 Item.createItem("currypowder", "Curry Powder", {name: "currypowder", meta: 0});
-Recipes.addShapeless({id: ItemID.currypowder, count: 1, data: 0}, [{id: ItemID.mortar_bowl, data: 0}, {id: ItemID.curryleaf, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.mortar_bowl){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("vindaloo");
-Item.createFoodItem("vindaloo", "Vindaloo", {name: "vindaloo", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.vindaloo, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: 363, data: 0}, {id: ItemID.currypowder, data: 0}, {id: ItemID.butter, data: 0}, {id: 351, data: 0}, {id: ItemID.onion, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.vindaloo, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: 365, data: 0}, {id: ItemID.currypowder, data: 0}, {id: ItemID.butter, data: 0}, {id: 351, data: 0}, {id: ItemID.onion, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.vindaloo, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: 319, data: 0}, {id: ItemID.currypowder, data: 0}, {id: ItemID.butter, data: 0}, {id: 351, data: 0}, {id: ItemID.onion, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.vindaloo, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: 411, data: 0}, {id: ItemID.currypowder, data: 0}, {id: ItemID.butter, data: 0}, {id: 351, data: 0}, {id: ItemID.onion, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.vindaloo, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: 423, data: 0}, {id: ItemID.currypowder, data: 0}, {id: ItemID.butter, data: 0}, {id: 351, data: 0}, {id: ItemID.onion, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("sausage");
-Item.createFoodItem("sausage", "Sausage", {name: "sausage", meta: 0}, {food: 6});
-Recipes.addShapeless({id: ItemID.sausage, count: 1, data: 0}, [{id: ItemID.cutting_board, data: 0}, {id: ItemID.salt, data: 0}, {id: ItemID.currypowder, data: 0}, {id: 363, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.recipe({id:ItemID.currypowder},[{id: ItemID.mortar_bowl, data: 0}, {id: ItemID.curryleaf, data: 0}]);
 
-IDRegistry.genItemID("cashewChicken");
-Item.createFoodItem("cashewChicken", "Cashew chicken", {name: "cashewchicken", meta: 0}, {food: 6});
-Recipes.addShapeless({id: ItemID.cashewChicken, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: ItemID.peas, data: 0}, {id: ItemID.peppercorn, data: 0}, {id: ItemID.corn, data: 0},{id: 365, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("chickenCeleryCasserole");
-Item.createFoodItem("chickenCeleryCasserole", "Chicken celery casserole", {name: "chickencelerycasserole", meta: 0}, {food: 12});
-Recipes.addShapeless({id: ItemID.chickenCeleryCasserole, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: 391, data: 0}, {id: ItemID.garlic, data: 0}, {id: 39, data: 0},{id: 365, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("chickenChowmein");
-Item.createFoodItem("chickenChowmein", "Chicken chowmein", {name: "chickenchowmein", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.chickenChowmein, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 391, data: 0}, {id: ItemID.peas, data: 0}, {id: ItemID.onion, data: 0},{id: ItemID.garlic, data: 0},{id: ItemID.stock, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.skillet){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("chickenCurry");
-Item.createFoodItem("chickenCurry", "Chicken curry", {name: "chickencurry", meta: 0}, {food: 14});
-Recipes.addShapeless({id: ItemID.chickenCurry, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 392, data: 0}, {id: ItemID.plain_yogurt, data: 0}, {id: ItemID.spice_leaf, data: 0},{id: ItemID.chili_pepper, data: 0},{id: 365, data: 0},{id: ItemID.lettuce, data: 0},{id: ItemID.peas, data: 0},{id: ItemID.garlic, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("chickenGumbo");
-Item.createFoodItem("chickenGumbo", "Chicken gumbo", {name: "chickengumbo", meta: 0}, {food: 16});
-Recipes.addShapeless({id: ItemID.chickenGumbo, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 392, data: 0}, {id: 391, data: 0}, {id: ItemID.onion, data: 0},{id: ItemID.stock, data: 0},{id: 365, data: 0},{id: ItemID.spice_leaf, data: 0},{id: ItemID.bellpepper, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("chickenNoodleSoup");
-Item.createFoodItem("chickenNoodleSoup", "Chicken noodle soup", {name: "chickennoodlesoup", meta: 0}, {food: 9});
-Recipes.addShapeless({id: ItemID.chickenNoodleSoup, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 296, data: 0}, {id: 391, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("vindaloo","Vindaloo",10);
+Harvest.recipe({id:ItemID.vindaloo},[{id: ItemID.saucepan, data: 0}, {id: 363, data: 0}, {id: ItemID.currypowder, data: 0}, {id: ItemID.butter, data: 0}, {id: 351, data: 0}, {id: ItemID.onion, data: 0}]);
+Harvest.recipe({id:ItemID.vindaloo}, [{id: ItemID.saucepan, data: 0}, {id: 365, data: 0}, {id: ItemID.currypowder, data: 0}, {id: ItemID.butter, data: 0}, {id: 351, data: 0}, {id: ItemID.onion, data: 0}]);
+Harvest.recipe({id:ItemID.vindaloo},[{id: ItemID.saucepan, data: 0}, {id: 319, data: 0}, {id: ItemID.currypowder, data: 0}, {id: ItemID.butter, data: 0}, {id: 351, data: 0}, {id: ItemID.onion, data: 0}]);
+Harvest.recipe({id:ItemID.vindaloo},[{id: ItemID.saucepan, data: 0}, {id: 411, data: 0}, {id: ItemID.currypowder, data: 0}, {id: ItemID.butter, data: 0}, {id: 351, data: 0}, {id: ItemID.onion, data: 0}]);
+Harvest.recipe({id:ItemID.vindaloo},[{id: ItemID.saucepan, data: 0}, {id: 423, data: 0}, {id: ItemID.currypowder, data: 0}, {id: ItemID.butter, data: 0}, {id: 351, data: 0}, {id: ItemID.onion, data: 0}]);
 
-IDRegistry.genItemID("chickenPotPie");
-Item.createFoodItem("chickenPotPie", "Chicken pot pie", {name: "chickenpotpie", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.chickenPotPie, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: 265, data: 0}, {id: 391, data: 0},{id: ItemID.dough, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("chickenSandwich");
-Item.createFoodItem("chickenSandwich", "Chicken sandwich", {name: "chickensandwich", meta: 0}, {food: 11});
-Recipes.addShapeless({id: ItemID.chickenSandwich, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 365, data: 0}, {id: 297, data: 0}, {id: ItemID.mayo, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.skillet){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("friredChicken");
-Item.createFoodItem("friredChicken", "Fried chicken", {name: "friedchicken", meta: 0}, {food: 11});
-Recipes.addShapeless({id: ItemID.friredChicken, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: 365, data: 0}, {id: ItemID.butter, data: 0}, {id: ItemID.spice_leaf, data: 0}, {id: ItemID.black_pepper, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("garlicChicken");
-Item.createFoodItem("garlicChicken", "Garlic chicken", {name: "garlicchicken", meta: 0}, {food: 12});
-Recipes.addShapeless({id: ItemID.garlicChicken, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id: ItemID.garlic, data: 0}, {id: ItemID.garlic, data: 0},{id: 365, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("generalTsoChicken");
-Item.createFoodItem("generalTsoChicken", "General tso chicken", {name: "generaltsochicken", meta: 0}, {food: 12});
-Recipes.addShapeless({id: ItemID.generalTsoChicken, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id: 365, data: 0}, {id: ItemID.lettuce, data: 0}, {id: 353, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.skillet){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("gingerChicken");
-Item.createFoodItem("gingerChicken", "Ginger chicken", {name: "gingerchicken", meta: 0}, {food: 12});
-Recipes.addShapeless({id: ItemID.gingerChicken, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id: ItemID.garlic, data: 0}, {id: 365, data: 0}, {id: ItemID.onion, data: 0}, {id: 353, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("kungPaoCkicken");
-Item.createFoodItem("kungPaoCkicken", "Kung pao chicken", {name: "kungpaochicken", meta: 0}, {food: 12});
-Recipes.addShapeless({id: ItemID.kungPaoCkicken, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:365, data: 0}, {id: ItemID.grape, data: 0}, {id: ItemID.garlic, data: 0}, {id: ItemID.onion, data: 0},{id:353 ,data:0},{id:ItemID.butter ,data:0},{id:ItemID.peppercorn ,data:0},{id:ItemID.cucumber ,data:0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("lemonChicken");
-Item.createFoodItem("lemonChicken", "Lemon chicken", {name: "lemonchicken", meta: 0}, {food: 9});
-Recipes.addShapeless({id: ItemID.lemonChicken, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id:365, data: 0}, {id: ItemID.grape, data: 0},{id:ItemID.butter ,data:0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("orangeChicken");
-Item.createFoodItem("orangeChicken", "Orange chicken", {name: "orangechicken", meta: 0}, {food: 12});
-Recipes.addShapeless({id: ItemID.orangeChicken, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:365, data: 0}, {id: ItemID.grape, data: 0},{id:353 ,data:0},{id:ItemID.lettuce ,data:0},{id:ItemID.cabbage ,data:0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("sweetAndSourChicken");
-Item.createFoodItem("sweetAndSourChicken", "Sweet and sour chicken", {name: "sweetandsourchicken", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.sweetAndSourChicken, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:365, data: 0}, {id: ItemID.butter, data: 0},{id:ItemID.grape ,data:0},{id:ItemID.bellpepper ,data:0},{id:ItemID.onion ,data:0},{id:ItemID.tomato ,data:0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("teriyakiChicken");
-Item.createFoodItem("teriyakiChicken", "Teriyaki chicken", {name: "teriyakichicken", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.teriyakiChicken, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id:365, data: 0}, {id: ItemID.peas, data: 0},{id:ItemID.sausage ,data:0},{id:ItemID.candleberry ,data:0},{id:ItemID.onion ,data:0},{id:ItemID.garlic ,data:0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.skillet){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("baconAndEggs");
-Item.createFoodItem("baconAndEggs", "Bacon and eggs", {name: "baconandeggs", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.baconAndEggs, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id:319, data: 0}, {id: 344, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.skillet){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("bakedHam");
-Item.createFoodItem("bakedHam", "Baked ham", {name: "bakedham", meta: 0}, {food: 9});
-Recipes.addShapeless({id: ItemID.bakedHam, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id:319, data: 0}, {id: 260, data: 0}, {id: 353, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("honeyGlazedHam");
-Item.createFoodItem("honeyGlazedHam", "Honey glazed ham", {name: "honeyglazedham", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.honeyGlazedHam, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:319, data: 0}, {id: 353, data: 0}, {id: ItemID.black_pepper, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
+Harvest.setFood("sausage","Sausage",6);
+Harvest.recipe({id:ItemID.sausage},[{id: ItemID.cutting_board, data: 0}, {id: ItemID.salt, data: 0}, {id: ItemID.currypowder, data: 0}, {id: 363, data: 0}]);
+
+Harvest.setFood("cashewChicken","Cashew chicken",6);
+Harvest.recipe({id:ItemID.cashewChicken},[{id: ItemID.saucepan, data: 0}, {id: ItemID.peas, data: 0}, {id: ItemID.peppercorn, data: 0}, {id: ItemID.corn, data: 0},{id: 365, data: 0}]);
+
+Harvest.setFood("chickenCeleryCasserole","Chicken celery casserole",12);
+Harvest.recipe({id:ItemID.chickenCeleryCasserole},[{id: ItemID.bakeware, data: 0}, {id: 391, data: 0}, {id: ItemID.garlic, data: 0}, {id: 39, data: 0},{id: 365, data: 0}]);
+
+Harvest.setFood("chickenChowmein","Chicken chowmein",10);
+Harvest.recipe({id:ItemID.chickenChowmein},[{id: ItemID.skillet, data: 0}, {id: 391, data: 0}, {id: ItemID.peas, data: 0}, {id: ItemID.onion, data: 0},{id: ItemID.garlic, data: 0},{id: ItemID.stock, data: 0}]);
+
+Harvest.setFood("chickenCurry","Chicken curry",14);
+Harvest.recipe({id:ItemID.chickenCurry},[{id: ItemID.pot, data: 0}, {id: 392, data: 0}, {id: ItemID.plain_yogurt, data: 0}, {id: ItemID.spice_leaf, data: 0},{id: ItemID.chili_pepper, data: 0},{id: 365, data: 0},{id: ItemID.lettuce, data: 0},{id: ItemID.peas, data: 0},{id: ItemID.garlic, data: 0}]);
+
+Harvest.setFood("chickenGumbo","Chicken gumbo",16);
+Harvest.recipe({id:ItemID.chickenGumbo},[{id: ItemID.pot, data: 0}, {id: 392, data: 0}, {id: 391, data: 0}, {id: ItemID.onion, data: 0},{id: ItemID.stock, data: 0},{id: 365, data: 0},{id: ItemID.spice_leaf, data: 0},{id: ItemID.bellpepper, data: 0}]);
+
+Harvest.setFood("chickenNoodleSoup","Chicken noodle soup",9);
+Harvest.recipe({id:ItemID.chickenNoodleSoup},[{id: ItemID.pot, data: 0}, {id: 296, data: 0}, {id: 391, data: 0}, {id: ItemID.stock, data: 0}]);
+
+Harvest.setFood("chickenPotPie","Chicken pot pie",10);
+Harvest.recipe({id:ItemID.chickenPotPie},[{id: ItemID.bakeware, data: 0}, {id: 265, data: 0}, {id: 391, data: 0},{id: ItemID.dough, data: 0}]);
+
+Harvest.setFood("chickenSandwich","Chicken sandwich",11);
+Harvest.recipe({id:ItemID.chickenSandwich},[{id: ItemID.skillet, data: 0}, {id: 365, data: 0}, {id: 297, data: 0}, {id: ItemID.mayo, data: 0}]);
+
+Harvest.setFood("friredChicken","Fried chicken",11);
+Harvest.recipe({id:ItemID.friredChicken},[{id: ItemID.pot, data: 0}, {id: 365, data: 0}, {id: ItemID.butter, data: 0}, {id: ItemID.spice_leaf, data: 0}, {id: ItemID.black_pepper, data: 0}]);
+
+Harvest.setFood("garlicChicken","Garlic chicken",12);
+Harvest.recipe({id:ItemID.garlicChicken},[{id: ItemID.bakeware, data: 0}, {id: ItemID.garlic, data: 0}, {id: ItemID.garlic, data: 0},{id: 365, data: 0}]);
+
+Harvest.setFood("generalTsoChicken","General tso chicken",12);
+Harvest.recipe({id:ItemID.generalTsoChicken},[{id: ItemID.skillet, data: 0}, {id: 365, data: 0}, {id: ItemID.lettuce, data: 0}, {id: 353, data: 0}]);
+
+Harvest.setFood("gingerChicken","Ginger chicken",12);
+Harvest.recipe({id:ItemID.gingerChicken},[{id: ItemID.saucepan, data: 0}, {id: ItemID.garlic, data: 0}, {id: 365, data: 0}, {id: ItemID.onion, data: 0}, {id: 353, data: 0}]);
+
+Harvest.setFood("kungPaoCkicken","Kung pao chicken",12);
+Harvest.recipe({id:ItemID.kungPaoCkicken},[{id: ItemID.saucepan, data: 0}, {id:365, data: 0}, {id: ItemID.grape, data: 0}, {id: ItemID.garlic, data: 0}, {id: ItemID.onion, data: 0},{id:353 ,data:0},{id:ItemID.butter ,data:0},{id:ItemID.peppercorn ,data:0},{id:ItemID.cucumber ,data:0}]);
+
+Harvest.setFood("lemonChicken","Lemon chicken",9);
+Harvest.recipe({id:ItemID.lemonChicken},[{id: ItemID.bakeware, data: 0}, {id:365, data: 0}, {id: ItemID.grape, data: 0},{id:ItemID.butter ,data:0}]);
+
+Harvest.setFood("orangeChicken","Orange chicken",12);
+Harvest.recipe({id:ItemID.orangeChicken},[{id: ItemID.saucepan, data: 0}, {id:365, data: 0}, {id: ItemID.grape, data: 0},{id:353 ,data:0},{id:ItemID.lettuce ,data:0},{id:ItemID.cabbage ,data:0}]);
+
+Harvest.setFood("sweetAndSourChicken","Sweet and sour chicken",10);
+Harvest.recipe({id:ItemID.sweetAndSourChicken},[{id: ItemID.saucepan, data: 0}, {id:365, data: 0}, {id: ItemID.butter, data: 0},{id:ItemID.grape ,data:0},{id:ItemID.bellpepper ,data:0},{id:ItemID.onion ,data:0},{id:ItemID.tomato ,data:0}]);
+
+Harvest.setFood("teriyakiChicken","Teriyaki chicken",10);
+Harvest.recipe({id:ItemID.teriyakiChicken},[{id: ItemID.skillet, data: 0}, {id:365, data: 0}, {id: ItemID.peas, data: 0},{id:ItemID.sausage ,data:0},{id:ItemID.candleberry ,data:0},{id:ItemID.onion ,data:0},{id:ItemID.garlic ,data:0}]);
+
+Harvest.setFood("baconAndEggs","Bacon and eggs",10);
+Harvest.recipe({id:ItemID.baconAndEggs},[{id: ItemID.skillet, data: 0}, {id:319, data: 0}, {id: 344, data: 0}]);
+
+Harvest.setFood("bakedHam","Baked ham",9);
+Harvest.recipe({id:ItemID.bakedHam},[{id: ItemID.bakeware, data: 0}, {id:319, data: 0}, {id: 260, data: 0}, {id: 353, data: 0}]);
+
+Harvest.setFood("honeyGlazedHam","Honey glazed ham",10);
+Harvest.recipe({id:ItemID.honeyGlazedHam}, [{id: ItemID.saucepan, data: 0}, {id:319, data: 0}, {id: 353, data: 0}, {id: ItemID.black_pepper, data: 0}]);
+
+Harvest.setFood("honeySoyRibs","Honey soy ribs",14);
+Harvest.recipe({id:ItemID.honeySoyRibs},[{id: ItemID.bakeware, data: 0}, {id:319, data: 0}, {id: 353, data: 0}, {id: ItemID.sausage, data: 0},{id: ItemID.garlic, data: 0},{id: ItemID.vinegar, data: 0}]);
+
+Harvest.setFood("hotAndSourSoup","Hot and sour soup",12);
+Harvest.recipe({id:ItemID.hotAndSourSoup},[{id: ItemID.saucepan, data: 0}, {id:319, data: 0}, {id: 39, data: 0}, {id: ItemID.cucumber, data: 0},{id: 344, data: 0},{id: ItemID.vinegar, data: 0},{id: ItemID.black_pepper, data: 0}]);
+
+Harvest.setFood("peaAndHamSoup","Pea and ham soup",8);
+Harvest.recipe({id:ItemID.peaAndHamSoup},[{id: ItemID.pot, data: 0}, {id:319, data: 0}, {id: ItemID.peas, data: 0}, {id: ItemID.strawberry, data: 0},{id: ItemID.onion, data: 0},{id: 391, data: 0},{id: ItemID.raspberry, data: 0},{id: ItemID.black_pepper, data: 0}]);
+
+Harvest.setFood("pineappleHam","Pineapple ham",10);
+Harvest.recipe({id:ItemID.pineappleHam},[{id: ItemID.bakeware, data: 0}, {id:319, data: 0}, {id: 353, data: 0}]);
+
+Harvest.setFood("porkLoMein","Pork lo mein",14);
+Harvest.recipe({id:ItemID.porkLoMein},[{id: ItemID.pot, data: 0}, {id:319, data: 0}, {id: 296, data: 0}, {id: ItemID.onion, data: 0}, {id: 291, data: 0},{id: ItemID.cabbage, data: 0},{id: ItemID.garlic, data: 0},{id: ItemID.sausage, data: 0}]);
+
+Harvest.setFood("spicyMustardPork","Spicy mustarg pork",10);
+Harvest.recipe({id:ItemID.spicyMustardPork}, [{id: ItemID.saucepan, data: 0}, {id:319, data: 0}, {id: ItemID.garlic, data: 0}]);
+Harvest.recipe({id:ItemID.spicyMustardPork},[{id: ItemID.saucepan, data: 0}, {id:319, data: 0}, {id: ItemID.salt, data: 0}]);
+Harvest.recipe({id:ItemID.spicyMustardPork},[{id: ItemID.saucepan, data: 0}, {id:319, data: 0}, {id: ItemID.black_pepper, data: 0}]);
+
+Harvest.setFood("honeyLemonLamb","Honey lemon lamb",8);
+Harvest.recipe({id:ItemID.honeyLemonLamb},[{id: ItemID.pot, data: 0}, {id:291, data: 0}, {id: 292, data: 0}, {id: 411, data: 0}, {id: 39, data: 0}]);
+
+Harvest.setFood("lambBarleySoup","Lamb barley soup",10);
+Harvest.recipe({id:ItemID.lambBarleySoup},[{id: ItemID.pot, data: 0}, {id:291, data: 0}, {id: ItemID.stock, data: 0}, {id: 411, data: 0}, {id: ItemID.onion, data: 0}]);
+
+Harvest.setFood("shepardsPie","Shepards pie",12);
+Harvest.recipe({id:ItemID.shepardsPie}, [{id: ItemID.bakeware, data: 0}, {id:292, data: 0}, {id: ItemID.dough, data: 0}, {id: 291, data: 0}, {id: ItemID.peas, data: 0}]);
+
+Harvest.setFood("beefjerky","Beefjerky",5);
+Harvest.recipe({id:ItemID.beefjerky},[{id:363, data: 0}, {id: ItemID.salt, data: 0}]);
+
+Harvest.setFood("meatPie","Meat pie",14);
+Harvest.recipe({id:ItemID.meatPie},[{id: ItemID.dough, data: 0}, {id:363, data: 0}, {id: ItemID.bakeware, data: 0}, {id: ItemID.onion, data: 0}, {id: ItemID.garlic, data: 0}, {id: ItemID.stock, data: 0}]);
+
+Harvest.setFood("bakedbeans","Baked Beans",10);
+Harvest.recipe({id:ItemID.bakedbeans},[{id: ItemID.bean, data: 0}, {id: ItemID.pot, data: 0}, {id:320, data: 0}, {id:353, data: 0}]);
+
+Harvest.setFood("maplesausage","Maple Sausage",1);
+Harvest.recipe({id:ItemID.maplesausage},[{id: ItemID.spice_leaf, data: 0}, {id:363, data: 0}]);
+
+Harvest.setFood("toast","Toast",4);
+Harvest.recipe({id:ItemID.toast},[{id: ItemID.bakeware, data: 0}, {id:297, data: 0}]);
+
+Harvest.setFood("hamburger","Hamburger",8);
+Harvest.recipe({id:ItemID.hamburger},[{id: ItemID.skillet, data: 0}, {id:363, data: 0}, {id: ItemID.toast, data: 0}]);
+
+Harvest.setFood("dimsum","Dim Sum",12);
 /*
-pot roast
-spider eye soup
-zombie jerky
-vindaloo
-sausage
-
-meat pie
-baked beans
-maple sausage
-hamburger
-dim sum
-cottage pie
-cornish pasty
-corned beef
-beef wellington
-
-beef jerky
-shepards pie
-lamb berley soup
-honey lemon lamb
-rabbit stew
-spicy mustard pork
-pork lo mein
-pineapple ham
-pea and ham soup
-hot and sour soup
-honey soy ribs
-
-honey glazed ham
-baked ham
-bacon and eggs
-teriyaki chicken
-sweet and sour chicken
-orange chicken
-lemon chicken
-kung pao chicken
-ginger chicken
-general tso's chicken
-garlic chicken
-fired chicken
-chicken sandwich
-chicken pot pie
-chicken noodle soup
-chicken gumbo
-chicken curry
-chicken chow mein
-chicken celery casserole
-cashew chicken
+Harvest.recipe({id:ItemID.dimsum},[{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id:365, data: 0}]);
+Harvest.recipe({id:ItemID.dimsum},[{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id:363, data: 0}]);
+Harvest.recipe({id:ItemID.dimsum}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id:319, data: 0}]);
+Harvest.recipe({id:ItemID.dimsum},[{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id:411, data: 0}]);
+Harvest.recipe({id:ItemID.dimsum},[{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id:423, data: 0}],);
+Harvest.recipe({id:ItemID.dimsum},[{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id: ItemID.turkeyRaw, data: 0}]);
+Harvest.recipe({id:ItemID.dimsum},[{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id: ItemID.venisonRaw, data: 0}]);
 */
-IDRegistry.genItemID("honeySoyRibs");
-Item.createFoodItem("honeySoyRibs", "Honey soy ribs", {name: "honeysoyribs", meta: 0}, {food: 14});
-Recipes.addShapeless({id: ItemID.honeySoyRibs, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id:319, data: 0}, {id: 353, data: 0}, {id: ItemID.sausage, data: 0},{id: ItemID.garlic, data: 0},{id: ItemID.vinegar, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("hotAndSourSoup");
-Item.createFoodItem("hotAndSourSoup", "Hot and sour soup", {name: "hotandsoursoup", meta: 0}, {food: 12});
-Recipes.addShapeless({id: ItemID.hotAndSourSoup, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:319, data: 0}, {id: 39, data: 0}, {id: ItemID.cucumber, data: 0},{id: 344, data: 0},{id: ItemID.vinegar, data: 0},{id: ItemID.black_pepper, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("peaAndHamSoup");
-Item.createFoodItem("peaAndHamSoup", "Pea and ham soup", {name: "peaandhamsoup", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.peaAndHamSoup, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id:319, data: 0}, {id: ItemID.peas, data: 0}, {id: ItemID.strawberry, data: 0},{id: ItemID.onion, data: 0},{id: 391, data: 0},{id: ItemID.raspberry, data: 0},{id: ItemID.black_pepper, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("pineappleHam");
-Item.createFoodItem("pineappleHam", "Pineapple ham", {name: "pineappleham", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.pineappleHam, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id:319, data: 0}, {id: 353, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("porkLoMein");
-Item.createFoodItem("porkLoMein", "Pork lo mein", {name: "porklomein", meta: 0}, {food: 14});
-Recipes.addShapeless({id: ItemID.porkLoMein, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id:319, data: 0}, {id: 296, data: 0}, {id: ItemID.onion, data: 0}, {id: 291, data: 0},{id: ItemID.cabbage, data: 0},{id: ItemID.garlic, data: 0},{id: ItemID.sausage, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("spicyMustardPork");
-Item.createFoodItem("spicyMustardPork", "Spicy mustarg pork", {name: "spicymustardpork", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.spicyMustardPork, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:319, data: 0}, {id: ItemID.garlic, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.spicyMustardPork, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:319, data: 0}, {id: ItemID.salt, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.spicyMustardPork, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:319, data: 0}, {id: ItemID.black_pepper, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.spicyMustardPork, count: 1, data: 0}, [{id: ItemID.saucepan, data: 0}, {id:319, data: 0}, {id: ItemID.black_pepper, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.saucepan){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("honeyLemonLamb");
-Item.createFoodItem("honeyLemonLamb", "Honey lemon lamb", {name: "honeylemonlamb", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.honeyLemonLamb, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id:291, data: 0}, {id: 292, data: 0}, {id: 411, data: 0}, {id: 39, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("lambBarleySoup");
-Item.createFoodItem("lambBarleySoup", "Lamb barley soup", {name: "lambbarleysoup", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.lambBarleySoup, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id:291, data: 0}, {id: ItemID.stock, data: 0}, {id: 411, data: 0}, {id: ItemID.onion, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("shepardsPie");
-Item.createFoodItem("shepardsPie", "Shepards pie", {name: "shepardspie", meta: 0}, {food: 12});
-Recipes.addShapeless({id: ItemID.shepardsPie, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id:292, data: 0}, {id: ItemID.dough, data: 0}, {id: 291, data: 0}, {id: ItemID.peas, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("beefjerky");
-Item.createFoodItem("beefjerky", "Beefjerky", {name: "beefjerky", meta: 0}, {food: 5});
-Recipes.addShapeless({id: ItemID.beefjerky, count: 1, data: 0}, [{id:363, data: 0}, {id: ItemID.salt, data: 0}]);
+Harvest.recipe({id:ItemID.dimsum},[{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id:365, data: 0}]);
+Harvest.recipe({id:ItemID.dimsum},[{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id:363, data: 0}]);
+Harvest.recipe({id:ItemID.dimsum},[{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id:319, data: 0}]);
+Harvest.recipe({id:ItemID.dimsum},[{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id:411, data: 0}]);
+Harvest.recipe({id:ItemID.dimsum},[{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id:423, data: 0}]);
+Harvest.recipe({id:ItemID.dimsum},[{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id: ItemID.turkeyRaw, data: 0}]);
+Harvest.recipe({id:ItemID.dimsum},[{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id: ItemID.venisonRaw, data: 0}]);
+Harvest.recipe({id:ItemID.dimsum},[{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id:365, data: 0}]);
+Harvest.recipe({id:ItemID.dimsum},[{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id:363, data: 0}]);
+Harvest.recipe({id:ItemID.dimsum},[{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id:319, data: 0}]);
+Harvest.recipe({id:ItemID.dimsum},[{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id:411, data: 0}]);
+Harvest.recipe({id:ItemID.dimsum}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id:423, data: 0}]);
+Harvest.recipe({id:ItemID.dimsum},[{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id: ItemID.turkeyRaw, data: 0}]);
+Harvest.recipe({id:ItemID.dimsum},[{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id: ItemID.venisonRaw, data: 0}]);
+Harvest.recipe({id:ItemID.dimsum},[{id: ItemID.bakeware, data: 0}, {id:363, data: 0}, {id:392, data: 0}, {id:391, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.peas, data: 0}]);
 
-IDRegistry.genItemID("meatPie");
-Item.createFoodItem("meatPie", "Meat pie", {name: "meatpie", meta: 0}, {food: 14});
-Recipes.addShapeless({id: ItemID.meatPie, count: 1, data: 0}, [{id: ItemID.dough, data: 0}, {id:363, data: 0}, {id: ItemID.bakeware, data: 0}, {id: ItemID.onion, data: 0}, {id: ItemID.garlic, data: 0}, {id: ItemID.stock, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("bakedbeans");
-Item.createFoodItem("bakedbeans", "Baked Beans", {name: "bakedbeans", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.bakedbeans, count: 1, data: 0}, [{id: ItemID.bean, data: 0}, {id: ItemID.pot, data: 0}, {id:320, data: 0}, {id:353, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("maplesausage");
-Item.createFoodItem("maplesausage", "Maple Sausage", {name: "maplesausage", meta: 0}, {food: 1});
-Recipes.addShapeless({id: ItemID.maplesausage, count: 1, data: 0}, [{id: ItemID.spice_leaf, data: 0}, {id:363, data: 0}]);
+Harvest.setFood("cornishpasty","Cornish Pasty",12);
+Harvest.recipe({id:ItemID.cornishpasty},[{id: ItemID.bakeware, data: 0}, {id:363, data: 0}, {id:392, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.rutabaga, data: 0}]);
 
-IDRegistry.genItemID("toast");
-Item.createFoodItem("toast", "Toast", {name: "toast", meta: 0}, {food: 4});
-Recipes.addShapeless({id: ItemID.toast, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id:297, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("hamburger");
-Item.createFoodItem("hamburger", "Hamburger", {name: "hamburger", meta: 0}, {food: 8});
-Recipes.addShapeless({id: ItemID.hamburger, count: 1, data: 0}, [{id: ItemID.skillet, data: 0}, {id:363, data: 0}, {id: ItemID.toast, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.skillet){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("dimsum");
-Item.createFoodItem("dimsum", "Dim Sum", {name: "dimsum", meta: 0}, {food: 12});
-/*
-Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id:365, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id:363, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id:319, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id:411, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id:423, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id: ItemID.turkeyRaw, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.whitemushroom, data: 0}, {id: ItemID.venisonRaw, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-*/
-Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id:365, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id:363, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id:319, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id:411, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id:423, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id: ItemID.turkeyRaw, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:40, data: 0}, {id: ItemID.venisonRaw, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id:365, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id:363, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id:319, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id:411, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id:423, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id: ItemID.turkeyRaw, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-Recipes.addShapeless({id: ItemID.dimsum, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.waterchestnut, data: 0}, {id: ItemID.rice, data: 0}, {id: ItemID.dough, data: 0}, {id:39, data: 0}, {id: ItemID.venisonRaw, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("cottagepie");
-Item.createFoodItem("cottagepie", "Cottage Pie", {name: "cottagepie", meta: 0}, {food: 12});
-Recipes.addShapeless({id: ItemID.cottagepie, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id:363, data: 0}, {id:392, data: 0}, {id:391, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.peas, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("cornishpasty");
-Item.createFoodItem("cornishpasty", "Cornish Pasty", {name: "cornishpasty", meta: 0}, {food: 12});
-Recipes.addShapeless({id: ItemID.cornishpasty, count: 1, data: 0}, [{id: ItemID.bakeware, data: 0}, {id:363, data: 0}, {id:392, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.rutabaga, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.bakeware){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("cornedbeef");
-Item.createFoodItem("cornedbeef", "Corned Beef", {name: "cornedbeef", meta: 0}, {food: 10});
-Recipes.addShapeless({id: ItemID.cornishpasty, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id:363, data: 0}, {id: ItemID.salt, data: 0}, {id:353, data: 0}, {id: ItemID.mustardseeds, data: 0}, {id: ItemID.spice_leaf, data: 0}, {id: ItemID.ginger, data: 0}], function(api, field, result){
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-IDRegistry.genItemID("beefwellington");
-Item.createFoodItem("beefwellington", "Beef Wellington", {name: "beefwellington", meta: 0}, {food: 18});
-Recipes.addShapeless({id: ItemID.beefwellington, count: 1, data: 0}, [{id:363, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.spinach, data: 0}, {id:40, data: 0}]);
-Recipes.addShapeless({id: ItemID.beefwellington, count: 1, data: 0}, [{id:363, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.spinach, data: 0}, {id:39, data: 0}]);
-//
+Harvest.setFood("cornedbeef","Corned Beef",10);
+Harvest.recipe({id:ItemID.cornedbeef},[{id: ItemID.pot, data: 0}, {id:363, data: 0}, {id: ItemID.salt, data: 0}, {id:353, data: 0}, {id: ItemID.mustardseeds, data: 0}, {id: ItemID.spice_leaf, data: 0}, {id: ItemID.ginger, data: 0}]);
+
+Harvest.setFood("beefwellington","Beef Wellington",18);
+Harvest.recipe({id:ItemID.beefwellington},[{id:363, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.spinach, data: 0}, {id:40, data: 0}]);
+Harvest.recipe({id:ItemID.beefwellington}, [{id:363, data: 0}, {id: ItemID.dough, data: 0}, {id: ItemID.spinach, data: 0}, {id:39, data: 0}]);
+
+Harvest.setFood("baconwrappeddates","Bacon wrapped dates",10);
+Harvest.recipe({id:ItemID.baconwrappeddates},[{id: ItemID.bakeware, data: 0}, {id:320, data: 0},{id: ItemID.date, data: 0}]);
+
+Harvest.setFood("candiedlemon","Carnied lemon",3);
+Harvest.recipe({id:ItemID.candiedlemon},[{id: ItemID.saucepan, data: 0}, {id:353, data: 0},{id: ItemID.lemon, data: 0}]);
 
 
 
@@ -2623,23 +1883,22 @@ Recipes.addShapeless({id: ItemID.beefwellington, count: 1, data: 0}, [{id:363, d
 
 IDRegistry.genItemID("pressedWax");
 Item.createItem("pressedWax", "Wax", {name: "wax", meta: 0}, {});
-Recipes.addShapeless({id: ItemID.pressedWax, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0}], function(api, field, result){ 
-	for (var i in field){
-		if (field[i].id != ItemID.pot){
-			api.decreaseFieldSlot(i);
-		}
-	}
-});
-
-if(ItemID[ItemID.beeswax]){
-	Recipes.addShapeless({id: ItemID.pressedWax, count: 1, data: 0}, [{id: ItemID.beeswax, data: 0}]);
-};
 
 IDRegistry.genBlockID("pressedWaxBlock"); 
 Block.createBlock("pressedWaxBlock", [
 	{name: "Pressed wax", texture: [["pressedwax", 0]], inCreative: true}
 ]);
-Recipes.addShaped({id: BlockID.pressedWaxBlock, count: 1, data: 0}, ["bbb", "bbb"," bbb"], [ "b", ItemID.pressedWax, 0]);
+
+Callback.addCallback("PostLoaded", function(){
+	Recipes.addShaped({id: BlockID.pressedWaxBlock, count: 1, data: 0}, ["bbb", "bbb"," bbb"], [ "b", ItemID.pressedWax, 0]);
+	Recipes.addShapeless({id: ItemID.pressedWax, count: 1, data: 0}, [{id: ItemID.pot, data: 0}, {id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0},{id: ItemID.candleberry, data: 0}], function(api, field, result){ 
+		for (var i in field){
+			if (field[i].id != ItemID.pot){
+				api.decreaseFieldSlot(i);
+			}
+		}
+	});
+});
 
 
 
@@ -2648,8 +1907,6 @@ Recipes.addShaped({id: BlockID.pressedWaxBlock, count: 1, data: 0}, ["bbb", "bbb
 
 IDRegistry.genItemID("hardedLeather");
 Item.createItem("hardedLeather", "Harded leather", {name: "hardenedleatherItem", meta: 0}, {stack: 64});
-Recipes.addShapeless({id: ItemID.hardedLeather, count: 1, data: 0}, [{id: 334, data: 0}, {id: ItemID.pressedWax, data: 0}]);
-
 IDRegistry.genItemID("hardedHelm");
 IDRegistry.genItemID("hardedChestplate");
 IDRegistry.genItemID("hardedLegging");
@@ -2659,28 +1916,30 @@ Item.createArmorItem("hardedHelm", "Harded Leather Helmet", {name: "hardenedleat
 Item.createArmorItem("hardedChestplate", "Harded Leather Chestplate", {name: "hardenedleatherchestItem"}, {type: "chestplate", armor: 6, durability: 216, texture: "armor/hardenedleather_1.png"});
 Item.createArmorItem("hardedLegging", "Harded Leather Leggings", {name: "hardenedleatherleggingsItem"}, {type: "leggings", armor: 5, durability: 203, texture: "armor/hardenedleather_2.png"});
 Item.createArmorItem("hardedFoots", "Harded Leather Boots", {name: "hardenedleatherbootsItem"}, {type: "boots", armor: 2, durability: 176, texture: "armor/hardenedleather_1.png"});
+Callback.addCallback("PostLoaded", function(){
+	Recipes.addShapeless({id: ItemID.hardedLeather, count: 1, data: 0}, [{id: 334, data: 0}, {id: ItemID.pressedWax, data: 0}]);
+	Recipes.addShaped({id: ItemID.hardedHelm, count: 1, data: 0}, [
+		"xxx",
+		"x x"
+	], ['x', ItemID.hardedLeather, 0]);
 
-Recipes.addShaped({id: ItemID.hardedHelm, count: 1, data: 0}, [
-	"xxx",
-	"x x"
-], ['x', ItemID.hardedLeather, 0]);
+	Recipes.addShaped({id: ItemID.hardedChestplate, count: 1, data: 0}, [
+		"x x",
+		"xxx",
+		"xxx"
+	], ['x', ItemID.hardedLeather, 0]);
 
-Recipes.addShaped({id: ItemID.hardedChestplate, count: 1, data: 0}, [
-	"x x",
-	"xxx",
-	"xxx"
-], ['x', ItemID.hardedLeather, 0]);
+	Recipes.addShaped({id: ItemID.hardedLegging, count: 1, data: 0}, [
+		"xxx",
+		"x x",
+		"x x"
+	], ['x', ItemID.hardedLeather, 0]);
 
-Recipes.addShaped({id: ItemID.hardedLegging, count: 1, data: 0}, [
-	"xxx",
-	"x x",
-	"x x"
-], ['x', ItemID.hardedLeather, 0]);
-
-Recipes.addShaped({id: ItemID.hardedFoots, count: 1, data: 0}, [
-	"x x",
-	"x x"
-], ['x', ItemID.hardedLeather, 0]);
+	Recipes.addShaped({id: ItemID.hardedFoots, count: 1, data: 0}, [
+		"x x",
+		"x x"
+	], ['x', ItemID.hardedLeather, 0]);
+});
 
 
 
@@ -2692,134 +1951,109 @@ for(var i = 0;i<16;i++){
 	Item.createItem("candleItem"+i, "Candle", {name: "candle", meta: i},{});
 };
 Item.registerUseFunction("candleItem1", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+	if(coords.side==1&&!GenerationUtils.isTransparentBlock(block.id)){
 		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,1);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem1, item.count - 1, 0)
+		Player.decreaseCarriedItem(1);
 	}
 });
 Item.registerUseFunction("candleItem2", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+	if(coords.side==1&&!GenerationUtils.isTransparentBlock(block.id)){
 		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,2);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem2, item.count - 1, 0)
+		Player.decreaseCarriedItem(1);
 	}
 });
 Item.registerUseFunction("candleItem3", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+	if(coords.side==1&&!GenerationUtils.isTransparentBlock(block.id)){
 		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,3);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem3, item.count - 1, 0)
+		Player.decreaseCarriedItem(1);
 	}
 });
 Item.registerUseFunction("candleItem4", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+	if(coords.side==1&&!GenerationUtils.isTransparentBlock(block.id)){
 		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,4);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem4, item.count - 1, 0)
+		Player.decreaseCarriedItem(1);
 	}
 });
 Item.registerUseFunction("candleItem5", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+	if(coords.side==1&&!GenerationUtils.isTransparentBlock(block.id)){
 		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,5);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem5, item.count - 1, 0)
+		Player.decreaseCarriedItem(1);
 	}
 });
 Item.registerUseFunction("candleItem6", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+	if(coords.side==1&&!GenerationUtils.isTransparentBlock(block.id)){
 		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,6);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem6, item.count - 1, 0)
+		Player.decreaseCarriedItem(1);
 	}
 });
 Item.registerUseFunction("candleItem7", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+	if(coords.side==1&&!GenerationUtils.isTransparentBlock(block.id)){
 		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,7);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem7, item.count - 1, 0)
+		Player.decreaseCarriedItem(1);
 	}
 });
 Item.registerUseFunction("candleItem8", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+	if(coords.side==1&&!GenerationUtils.isTransparentBlock(block.id)){
 		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,8);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem8, item.count - 1, 0)
+		Player.decreaseCarriedItem(1);
 	}
 });
 Item.registerUseFunction("candleItem9", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+	if(coords.side==1&&!GenerationUtils.isTransparentBlock(block.id)){
 		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,9);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem9, item.count - 1, 0)
+		Player.decreaseCarriedItem(1);
 	}
 });
 Item.registerUseFunction("candleItem10", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+	if(coords.side==1&&!GenerationUtils.isTransparentBlock(block.id)){
 		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,10);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem10, item.count - 1, 0)
+		Player.decreaseCarriedItem(1);
 	}
 });
 Item.registerUseFunction("candleItem11", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+	if(coords.side==1&&!GenerationUtils.isTransparentBlock(block.id)){
 		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,11);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem11, item.count - 1, 0)
+		Player.decreaseCarriedItem(1);
 	}
 });
 Item.registerUseFunction("candleItem12", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+	if(coords.side==1&&!GenerationUtils.isTransparentBlock(block.id)){
 		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,12);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem12, item.count - 1, 0)
+		Player.decreaseCarriedItem(1);
 	}
 });
 Item.registerUseFunction("candleItem13", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+	if(coords.side==1&&!GenerationUtils.isTransparentBlock(block.id)){
 		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,13);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem13, item.count - 1, 0)
+		Player.decreaseCarriedItem(1);
 	}
 });
 Item.registerUseFunction("candleItem14", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+	if(coords.side==1&&!GenerationUtils.isTransparentBlock(block.id)){
 		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,14);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem14, item.count - 1, 0)
+		Player.decreaseCarriedItem(1);
 	}
 });
 Item.registerUseFunction("candleItem15", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+	if(coords.side==1&&!GenerationUtils.isTransparentBlock(block.id)){
 		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,15);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem15, item.count - 1, 0)
+		Player.decreaseCarriedItem(1);
 	}
 });
 Item.registerUseFunction("candleItem0", function(coords, item, block){
-	if(World.getBlockID(coords.x,coords.y+1,coords.z)==0){
+	if(coords.side==1&&!GenerationUtils.isTransparentBlock(block.id)){
 		World.setBlock(coords.x,coords.y+1,coords.z, BlockID.candle ,0);
-		World.addTileEntity(coords.x, coords.y+1, coords.z);
-		Player.setCarriedItem(ItemID.candleItem0, item.count - 1, 0)
+		Player.decreaseCarriedItem(1);
 	}
 });
 
-Recipes.addShapeless({id: ItemID.candleItem0, count: 4, data: 0}, [{id: 287, data: 0},{id: ItemID.pressedWax, data: 0}]);
-Recipes.addShapeless({id: ItemID.candleItem1, count: 4, data: 0}, [{id: 351, data: 14},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
-Recipes.addShapeless({id: ItemID.candleItem2, count: 4, data: 0}, [{id: 351, data: 13},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
-Recipes.addShapeless({id: ItemID.candleItem3, count: 4, data: 0}, [{id: 351, data: 12},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
-Recipes.addShapeless({id: ItemID.candleItem4, count: 4, data: 0}, [{id: 351, data: 11},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
-Recipes.addShapeless({id: ItemID.candleItem5, count: 4, data: 0}, [{id: 351, data: 10},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
-Recipes.addShapeless({id: ItemID.candleItem6, count: 4, data: 0}, [{id: 351, data: 9},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
-Recipes.addShapeless({id: ItemID.candleItem7, count: 4, data: 0}, [{id: 351, data: 8},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
-Recipes.addShapeless({id: ItemID.candleItem8, count: 4, data: 0}, [{id: 351, data: 7},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
-Recipes.addShapeless({id: ItemID.candleItem9, count: 4, data: 0}, [{id: 351, data: 6},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
-Recipes.addShapeless({id: ItemID.candleItem10, count: 4, data: 0}, [{id: 351, data: 5},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
-Recipes.addShapeless({id: ItemID.candleItem11, count: 4, data: 0}, [{id: 351, data: 4},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
-Recipes.addShapeless({id: ItemID.candleItem12, count: 4, data: 0}, [{id: 351, data: 3},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
-Recipes.addShapeless({id: ItemID.candleItem13, count: 4, data: 0}, [{id: 351, data: 2},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
-Recipes.addShapeless({id: ItemID.candleItem14, count: 4, data: 0}, [{id: 351, data: 1},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
-Recipes.addShapeless({id: ItemID.candleItem15, count: 4, data: 0}, [{id: 351, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
+Callback.addCallback("PostLoaded", function(){	
+	Recipes.addShapeless({id: ItemID.candleItem0, count: 4, data: 0}, [{id: 287, data: 0},{id: ItemID.pressedWax, data: 0}]);
+	for(var paintIndex = 14;paintIndex>=0;paintIndex-- ){
+		var candleData = 15-paintIndex;
+		Recipes.addShapeless({id: Item.getNumericId("candleItem"+candleData), count: 4, data: 0}, [{id: 351, data: paintIndex},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0},{id: ItemID.candleItem0, data: 0}]);
+	}
+});
 
 
 
@@ -2841,65 +2075,42 @@ Block.registerDropFunction("salt", function(coords, blockID, blockData, level){
 
 // file: BLOCKS/sinks.js
 
-IDRegistry.genBlockID("sink_0"); 
-IDRegistry.genBlockID("sink_1"); 
-IDRegistry.genBlockID("sink_2"); 
-IDRegistry.genBlockID("sink_3"); 
-Block.createBlock("sink_0", [
-{name: "Sink", texture: [["sinkbottom", 0], ["sinktop", 0], ["sinkside", 0], ["sinkside", 0], ["sinkside", 0], ["sinkside", 0]], inCreative: true}
+IDRegistry.genBlockID("well"); 
+Block.createBlock("well", [
+	{name: "Sink", texture: [["sinkbottom", 0], ["sinktop", 0], ["sinkside", 0], ["sinkside", 0], ["sinkside", 0], ["sinkside", 0]], inCreative: true},
+	{name: "Sink", texture: [["sinkbottom", 1], ["sinktop", 1], ["sinkside", 1], ["sinkside", 1], ["sinkside", 1], ["sinkside", 1]], inCreative: true},
+	{name: "Sink", texture: [["sinkbottom", 2], ["sinktop", 2], ["sinkside", 2], ["sinkside", 2], ["sinkside", 2], ["sinkside", 2]], inCreative: true},
+	{name: "Sink", texture: [["sinkbottom", 3], ["sinktop", 3], ["sinkside", 3], ["sinkside", 3], ["sinkside", 3], ["sinkside", 3]], inCreative: true}
 ]);
-Block.createBlock("sink_1", [
-{name: "Sink 1", texture: [["sinkbottom", 1], ["sinktop", 1], ["sinkside", 1], ["sinkside", 1], ["sinkside", 1], ["sinkside", 1]], inCreative: true}
-]);
-Block.createBlock("sink_2", [
-{name: "Sink 2", texture: [["sinkbottom", 2], ["sinktop", 2], ["sinkside", 2], ["sinkside", 2], ["sinkside", 2], ["sinkside", 2]], inCreative: true}
-]);
-Block.createBlock("sink_3", [
-{name: "Sink 3", texture: [["sinkbottom", 3], ["sinktop", 3], ["sinkside", 3], ["sinkside", 3], ["sinkside", 3], ["sinkside", 3]], inCreative: true}
-]);   
 Callback.addCallback("ItemUse", function(coords,item,block){
-	if((item.id==325&&item.data==0)){
-		switch(block.id){
-			case BlockID.sink_0:
-			case BlockID.sink_1:
-			case BlockID.sink_2:
-			case BlockID.sink_3:				
-				Player.setCarriedItem(item.id, item.count - 1, item.data);
-				//Player.addItemToInventory(325, 1, 8);
-				World.drop(coords.x,coords.y,coords.z,325,1,8);
-					break;
-		}	
-	}
-	if(item.id==374){
-		switch(block.id){
-			case BlockID.sink_0:
-			case BlockID.sink_1:
-			case BlockID.sink_2:
-			case BlockID.sink_3:				
-				Player.setCarriedItem(item.id, item.count - 1, item.data);
-				//Player.addItemToInventory(325, 1, 8);
-				World.drop(coords.x,coords.y,coords.z,373,1,0);
-					break;
-		}	
+	if(block.id==BlockID.well){
+		if((item.id==325&&item.data==0)){
+			Player.addItemToInventory(325, 1, 8);
+			Player.decreaseCarriedItem(1);	
+		}
+		if(item.id==374){	
+			Player.addItemToInventory(373, 1, 0);
+			Player.decreaseCarriedItem(1);
+		}
 	}
 });       
 Callback.addCallback("PostLoaded", function(){
-	Recipes.addShaped({id: BlockID.sink_0, count: 1, data: 0}, [
+	Recipes.addShaped({id: BlockID.well, count: 1, data: 0}, [
 		"ara",
 		"ara",
 		"ara"
 	], ["a", 265, 0, 'r', 17, -1]);
-	 Recipes.addShaped({id: BlockID.sink_1, count: 1, data: 0}, [
+	 Recipes.addShaped({id: BlockID.well, count: 1, data: 1}, [
 		"ara",
 		"ara",
 		"ara"
 	], ["a", 265, 0, 'r', 1, -1]);
-	 Recipes.addShaped({id: BlockID.sink_2, count: 1, data: 0}, [
+	 Recipes.addShaped({id: BlockID.well, count: 1, data: 2}, [
 		"ara",
 		"ara",
 		"ara"
 	], ["a", 265, 0, 'r', 82, 0]);
-	 Recipes.addShaped({id: BlockID.sink_3, count: 1, data: 0}, [
+	 Recipes.addShaped({id: BlockID.well, count: 1, data: 3}, [
 		"ara",
 		"ara",
 		"ara"
@@ -2915,7 +2126,10 @@ IDRegistry.genBlockID("animalTrap");
 Block.createBlock("animalTrap", [
 	{name: "Animal trap", texture: [["animaltrap", 0]], inCreative: true}
 ]);
-Recipes.addShaped({id: BlockID.animalTrap, count: 1, data: 0}, ["aba", "sds","asa"], ["a", 280, 0, "b", 96, 0,"d",54,0,"s",287,0]);
+//ICRenderLib.addConnectionBlock("bc-container", BlockID.animalTrap);
+Callback.addCallback("PostLoaded", function(){
+	Recipes.addShaped({id: BlockID.animalTrap, count: 1, data: 0}, ["aba", "sds","asa"], ["a", 280, 0, "b", 96, 0,"d",54,0,"s",287,0]);
+});
 
 
 
@@ -2942,21 +2156,21 @@ var animalTrapGUI = new UI.StandartWindow({
     elements: {
 	
 		"slotBait":{type:"slot",x:408,y:173,size:71,bitmap:"slot",isTransparentBackground:true},
-	
+		
 	    "slot0":{type:"slot",x:553,y:103,size:71,bitmap:"slot",isTransparentBackground:true},
 		"slot1":{type:"slot",x:625,y:103,size:71,bitmap:"slot",isTransparentBackground:true},
 		"slot2":{type:"slot",x:697,y:103,size:71,bitmap:"slot",isTransparentBackground:true},
 		"slot3":{type:"slot",x:769,y:103,size:71,bitmap:"slot",isTransparentBackground:true},
 		"slot4":{type:"slot",x:841,y:103,size:71,bitmap:"slot",isTransparentBackground:true},
 		"slot5":{type:"slot",x:913,y:103,size:71,bitmap:"slot",isTransparentBackground:true},
-		 
+
 		"slot6":{type:"slot",x:553,y:175,size:71,bitmap:"slot",isTransparentBackground:true},
 		"slot7":{type:"slot",x:625,y:175,size:71,bitmap:"slot",isTransparentBackground:true},
 		"slot8":{type:"slot",x:697,y:175,size:71,bitmap:"slot",isTransparentBackground:true},
 		"slot9":{type:"slot",x:769,y:175,size:71,bitmap:"slot",isTransparentBackground:true},
 		"slot10":{type:"slot",x:841,y:175,size:71,bitmap:"slot",isTransparentBackground:true},
 		"slot11":{type:"slot",x:913,y:175,size:71,bitmap:"slot",isTransparentBackground:true},
-		 
+
 		"slot12":{type:"slot",x:553,y:247,size:71,bitmap:"slot",isTransparentBackground:true},
 		"slot13":{type:"slot",x:625,y:247,size:71,bitmap:"slot",isTransparentBackground:true},
 		"slot14":{type:"slot",x:697,y:247,size:71,bitmap:"slot",isTransparentBackground:true},
@@ -2965,7 +2179,6 @@ var animalTrapGUI = new UI.StandartWindow({
 		"slot17":{type:"slot",x:913,y:247,size:71,bitmap:"slot",isTransparentBackground:true}
     }
 });
-//UI.testUI(animalTrapGUI); 
 
 
 
@@ -2980,6 +2193,12 @@ if(__config__.access("traps.animal.TileEntity")){
 		},	
 		getGuiScreen: function(){
 			return animalTrapGUI;
+		},
+		getTransportSlots: function(){
+			return {
+				input: ["slotBait"],
+				output: ["slot0","slot1","slot2","slot3","slot4","slot5","slot6","slot7","slot8","slot9","slot10","slot11","slot12","slot13","slot14","slot15","slot16","slot17"]
+			};
 		},
 		checker:function(){
 			if(World.getBlockID(this.x+1,this.y,this.z)==2&&
@@ -3059,7 +2278,7 @@ Block.createBlock("fishTrap", [
 
 
 
-// file: BLOCKS/CANDLES/block.js
+// file: BLOCKS/candle.js
 
 var candleVariations = [];
 for(var e = 0;e<16;e++){
@@ -3067,61 +2286,14 @@ for(var e = 0;e<16;e++){
 };
 IDRegistry.genBlockID("candle"); 
 Block.createBlock("candle", candleVariations,BLOCK_TYPE_CANDLE);
-
 PlantModel.tree(BlockID.candle,0);
-
-Block.registerDropFunction("candle", function(coords, blockID, blockData, level){
-	switch(blockData){
-		case 0 : 
-			return[[ ItemID.candleItem0,1,0 ]];
-				break;
-		case 1 : 
-			return[[ ItemID.candleItem1,1,0 ]];
-				break;
-		case 2 : 
-			return[[ ItemID.candleItem2,1,0 ]];
-				break;
-		case 3 : 
-			return[[ ItemID.candleItem3,1,0 ]];
-				break;
-		case 4 : 
-			return[[ ItemID.candleItem4,1,0 ]];
-				break;
-		case 5 : 
-			return[[ ItemID.candleItem5,1,0 ]];
-				break;
-		case 6 : 
-			return[[ ItemID.candleItem6,1,0 ]];
-				break;
-		case 7 : 
-			return[[ ItemID.candleItem7,1,0 ]];
-				break;
-		case 8 : 
-			return[[ ItemID.candleItem8,1,0 ]];
-				break;
-		case 9 : 
-			return[[ ItemID.candleItem9,1,0 ]];
-				break;
-		case 10 : 
-			return[[ ItemID.candleItem10,1,0 ]];
-				break;
-		case 11 : 
-			return[[ ItemID.candleItem11,1,0 ]];
-				break;
-		case 12 : 
-			return[[ ItemID.candleItem12,1,0 ]];
-				break;
-		case 13 : 
-			return[[ ItemID.candleItem13,1,0 ]];
-				break;
-		case 14 : 
-			return[[ ItemID.candleItem14,1,0 ]];
-				break;
-		case 15 : 
-			return[[ ItemID.candleItem15,1,0 ]];
-				break;		
+Block.setAnimateTickCallback(BlockID.candle, function(x, y, z, id, data) { 
+	if(particles){
+		Particles.addParticle(Native.ParticleType.flame,x+0.5, y+0.5, z+0.5, Random.Float(-0.01,0.01), Random.Float(-0.01,0.01), Random.Float(-0.01,0.01),0);
 	}
-	//return[[ ItemID.candleItem+blockData,1,0 ]];
+});
+Block.registerDropFunction("candle", function(coords, blockID, blockData, level){
+	return[[ ItemID["candleItem"+blockData],1,0 ]];
 });
 
 
@@ -3133,35 +2305,34 @@ IDRegistry.genBlockID("berrygarden");
 Block.createBlock("berrygarden", [
 	{name: "Berry garden", texture: [["empty", 0],["empty", 0],["berrygardenBlock", 0]], inCreative: false}
 ],BLOCK_TYPE_PLANT);
-
-Harvest.registerDroppingBlock(BlockID.berrygarden);
-
 PlantModel.tree(BlockID.berrygarden,0);
-
-CropRegistry.fruitPush(BlockID.berrygarden,ItemID.berryGardenITEM);
-
+CropRegistry.deriveCropAsClass("harvestcraft_garden",{
+	id:BlockID.berrygarden,
+	drop:0,
+	seed:ItemID.berryGardenITEM
+});
 Block.registerDropFunction("berrygarden", function(coords, blockID, blockData, level){
 	var drop = [];
 	if(Math.random() < .5){
-		drop.push([ItemID.blackberry,rrd, 0]);
+		drop.push([ItemID.blackberry,Random.Int(1,3), 0]);
 	}
 	if(Math.random() < .5){
-		drop.push([ItemID.candleberry,rrd, 0]);
+		drop.push([ItemID.candleberry,Random.Int(1,3), 0]);
 	}	
 	if(Math.random() < .5){
-		drop.push([ItemID.strawberry,rrd, 0]);
+		drop.push([ItemID.strawberry,Random.Int(1,3), 0]);
 	}	
 	if(Math.random() < .5){
-		drop.push([ItemID.raspberry,rrd, 0]);
+		drop.push([ItemID.raspberry,Random.Int(1,3), 0]);
 	}	
 	if(Math.random() < .5){
-		drop.push([ItemID.blueberry,rrd, 0]);
+		drop.push([ItemID.blueberry,Random.Int(1,3), 0]);
 	}	
 	if(Math.random() < .5){
-		drop.push([ItemID.cranberry,rrd, 0]);
+		drop.push([ItemID.cranberry,Random.Int(1,3), 0]);
 	}	
 	if(Math.random() < .5){
-		drop.push([ItemID.grape, rrd, 0]);
+		drop.push([ItemID.grape, Random.Int(1,3), 0]);
 	}	
 	return drop;
 });
@@ -3173,24 +2344,6 @@ Block.registerDropFunction("berrygarden", function(coords, blockID, blockData, l
 
 IDRegistry.genItemID("berryGardenITEM");
 Item.createItem("berryGardenITEM", "Berry garden", {name: "berrygardenBlock", meta: 0} ,{isTech: false} );
-Item.registerUseFunction("berryGardenITEM", function(coords, item, tile){
-	var place = coords.relative;
-	var tile1 = World.getBlock(place.x, place.y, place.z);
-	var tile2 = World.getBlock(place.x, place.y - 1, place.z);	
-	if (GenerationUtils.isTransparentBlock(tile1.id) && TREE_SAPLING_GROUND_TILES[tile2.id]){
-		World.setBlock(place.x, place.y, place.z, BlockID.berrygarden);
-		Player.setCarriedItem(item.id, item.count - 1, item.data);
-	}
-});
-
-
-
-
-// file: GARDENS/BERRYGARDEN/TileEntity.js
-
-if(__config__.access("debug.TileEntity.garden.berry")){
-	TileEntity.registerPrototype(BlockID.berrygarden,gardenPROTO);
-};
 
 
 
@@ -3201,45 +2354,32 @@ IDRegistry.genBlockID("grassgarden");
 Block.createBlock("grassgarden", [
 	{name: "Grass garden", texture: [["empty", 0],["empty", 0],["grassgardenBlock", 0]], inCreative: false}
 ],BLOCK_TYPE_PLANT);
-
-Harvest.registerDroppingBlock(BlockID.grassgarden);
-
 PlantModel.tree(BlockID.grassgarden,0);
-
-CropRegistry.fruitPush(BlockID.grassgarden,ItemID.grassGardenITEM);
-
+CropRegistry.deriveCropAsClass("harvestcraft_garden",{
+	id:BlockID.grassgarden,
+	drop:0,
+	seed:ItemID.grassGardenITEM
+});
 Block.registerDropFunction("grassgarden", function(coords, blockID, blockData, level){
 	var drop = [];
 	if(Math.random() < .5){
-		drop.push([ItemID.cucumber, rrd, 0]);
+		drop.push([ItemID.corn,Random.Int(1,3), 0]);
 	}	
 	if(Math.random() < .5){
-		drop.push([ItemID.onion,rrd, 0]);
-	}	
+		drop.push([ItemID.ItemID.asparagus, Random.Int(1,3), 0]);
+	}
 	if(Math.random() < .5){
-		drop.push([ItemID.cabbage,rrd, 0]);
-	}	
+		drop.push([ItemID.ItemID.bambooshoot, Random.Int(1,3), 0]);
+	}
 	if(Math.random() < .5){
-		drop.push([ItemID.tomato,rrd, 0]);
-	}	
+		drop.push([ItemID.ItemID.rye, Random.Int(1,3), 0]);
+	}
 	if(Math.random() < .5){
-		drop.push([ItemID.bellpepper,rrd, 0]);
-	}	
+		drop.push([ItemID.oats, Random.Int(1,3), 0]);
+	}
 	if(Math.random() < .5){
-		drop.push([ItemID.lettuce, rrd, 0]);
-	}	
-	if(Math.random() < .5){
-		drop.push([ItemID.peas,rrd, 0]);
-	}	
-	if(Math.random() < .5){
-		drop.push([ItemID.chilli_pepper,rrd, 0]);
-	}	
-	if(Math.random() < .5){
-		drop.push([ItemID.corn,rrd, 0]);
-	}	
-	if(Math.random() < .5){
-		drop.push([ItemID.peppercorn, rrd, 0]);
-	}	
+		drop.push([ItemID.barley, Random.Int(1,3), 0]);
+	}
 	return drop;
 });
 
@@ -3250,24 +2390,6 @@ Block.registerDropFunction("grassgarden", function(coords, blockID, blockData, l
 
 IDRegistry.genItemID("grassGardenITEM");
 Item.createItem("grassGardenITEM", "Grass garden", {name: "grassgardenBlock", meta: 0} ,{isTech: false} );
-Item.registerUseFunction("grassGardenITEM", function(coords, item, tile){
-	var place = coords.relative;
-	var tile1 = World.getBlock(place.x, place.y, place.z);
-	var tile2 = World.getBlock(place.x, place.y - 1, place.z);	
-	if (GenerationUtils.isTransparentBlock(tile1.id) && TREE_SAPLING_GROUND_TILES[tile2.id]){
-		World.setBlock(place.x, place.y, place.z, BlockID.grassgarden);
-		Player.setCarriedItem(item.id, item.count - 1, item.data);
-	}
-});
-
-
-
-
-// file: GARDENS/GRASSGARDEN/TileEntity.js
-
-if(__config__.access("debug.TileEntity.garden.grass")){
-	TileEntity.registerPrototype(BlockID.grassgarden,gardenPROTO);
-};
 
 
 
@@ -3278,24 +2400,35 @@ IDRegistry.genBlockID("herbgarden");
 Block.createBlock("herbgarden", [
 	{name: "Herb garden", texture: [["empty", 0],["empty", 0],["herbgardenBlock", 0]], inCreative: false}
 ],BLOCK_TYPE_PLANT);
-
-Harvest.registerDroppingBlock(BlockID.herbgarden);
-
 PlantModel.tree(BlockID.herbgarden,0);
-
-CropRegistry.fruitPush(BlockID.herbgarden,ItemID.herbGardenITEM);
-
+CropRegistry.deriveCropAsClass("harvestcraft_garden",{
+	id:BlockID.herbgarden,
+	drop:0,
+	seed:ItemID.herbGardenITEM
+});
 Block.registerDropFunction("herbgarden", function(coords, blockID, blockData, level){
 	var drop = [];
-	if(Math.random() < .8){
-		drop.push([ItemID.spice_leaf,rrr, 0]);
+	if(Math.random() < .5){
+		drop.push([ItemID.celery,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .5){
+		drop.push([ItemID.coffee_beans,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .5){
+		drop.push([ItemID.spice_leaf,Random.Int(1,3), 0]);
+	}		
+	if(Math.random() < .5){
+		drop.push([ItemID.garlic,Random.Int(1,3), 0]);
 	}	
-	if(Math.random() < .8){
-		drop.push([ItemID.coffee_beans,rrr, 0]);
-	}	
-	if(Math.random() < .8){
-		drop.push([ItemID.garlic,rrr, 0]);
-	}	
+	if(Math.random() < .5){
+		drop.push([ItemID.ginger,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .5){
+		drop.push([ItemID.mustardseeds,Random.Int(1,3), 0]);
+	}		
+	if(Math.random() < .5){
+		drop.push([ItemID.tealeaf,Random.Int(1,3), 0]);
+	}
 	return drop;
 });
 
@@ -3306,24 +2439,6 @@ Block.registerDropFunction("herbgarden", function(coords, blockID, blockData, le
 
 IDRegistry.genItemID("herbGardenITEM");
 Item.createItem("herbGardenITEM", "Herb garden", {name: "herbgardenBlock", meta: 0} ,{isTech: false} );
-Item.registerUseFunction("herbGardenITEM", function(coords, item, tile){
-	var place = coords.relative;
-	var tile1 = World.getBlock(place.x, place.y, place.z);
-	var tile2 = World.getBlock(place.x, place.y - 1, place.z);	
-	if (GenerationUtils.isTransparentBlock(tile1.id) && TREE_SAPLING_GROUND_TILES[tile2.id]){
-		World.setBlock(place.x, place.y, place.z, BlockID.herbgarden);
-		Player.setCarriedItem(item.id, item.count - 1, item.data);
-	}
-});
-
-
-
-
-// file: GARDENS/HERBGARDEN/TileEntity.js
-
-if(__config__.access("debug.TileEntity.garden.herb")){
-	TileEntity.registerPrototype(BlockID.herbgarden,gardenPROTO);
-};
 
 
 
@@ -3334,16 +2449,15 @@ IDRegistry.genBlockID("candleberrygarden");
 Block.createBlock("candleberrygarden", [
 	{name: "Candleberry garden", texture: [["empty", 0],["empty", 0],["candleberrycrop", 2]], inCreative: false}
 ],BLOCK_TYPE_PLANT);
-
-Harvest.registerDroppingBlock(BlockID.candleberrygarden);
-
 PlantModel.tree(BlockID.candleberrygarden,0);
-
-CropRegistry.fruitPush(BlockID.candleberrygarden,ItemID.candleberrygardenITEM);
-
+CropRegistry.deriveCropAsClass("harvestcraft_garden",{
+	id:BlockID.candleberrygarden,
+	drop:0,
+	seed:ItemID.candleberrygardenITEM
+});
 Block.registerDropFunction("candleberrygarden", function(coords, blockID, blockData, level){
 	var drop = [];
-	drop.push([ItemID.candleberry,rrr, 0]);
+	drop.push([ItemID.candleberry,Random.Int(1,3), 0]);
 	return drop;
 });
 
@@ -3354,24 +2468,6 @@ Block.registerDropFunction("candleberrygarden", function(coords, blockID, blockD
 
 IDRegistry.genItemID("candleberrygardenITEM");
 Item.createItem("candleberrygardenITEM", "Candleberry garden", {name: "candleberrycrop", meta: 2} ,{isTech: false} );
-Item.registerUseFunction("candleberrygardenITEM", function(coords, item, tile){
-	var place = coords.relative;
-	var tile1 = World.getBlock(place.x, place.y, place.z);
-	var tile2 = World.getBlock(place.x, place.y - 1, place.z);	
-	if (GenerationUtils.isTransparentBlock(tile1.id) && TREE_SAPLING_GROUND_TILES[tile2.id]){
-		World.setBlock(place.x, place.y, place.z, BlockID.candleberrygarden);
-		Player.setCarriedItem(item.id, item.count - 1, item.data);
-	}
-});
-
-
-
-
-// file: GARDENS/CANDLEBERRYGARDEN/TileEntity.js
-
-if(__config__.access("debug.TileEntity.garden.candleberry")){
-	TileEntity.registerPrototype(BlockID.candleberrygarden,gardenPROTO);
-};
 
 
 
@@ -3382,16 +2478,15 @@ IDRegistry.genBlockID("cottongarden");
 Block.createBlock("cottongarden", [
 	{name: "Cotton garden", texture: [["empty", 0],["empty", 0],["cottoncrop", 2]], inCreative: false}
 ],BLOCK_TYPE_PLANT);
-
-Harvest.registerDroppingBlock(BlockID.cottongarden);
-
 PlantModel.tree(BlockID.cottongarden,0);
-
-CropRegistry.fruitPush(BlockID.cottongarden,ItemID.cottongardenITEM);
-
+CropRegistry.deriveCropAsClass("harvestcraft_garden",{
+	id:BlockID.cottongarden,
+	drop:0,
+	seed:ItemID.cottongardenITEM
+});
 Block.registerDropFunction("cottongarden", function(coords, blockID, blockData, level){
 	var drop = [];
-	drop.push([ItemID.cotton,rrr, 0]);
+	drop.push([ItemID.cotton,Random.Int(1,3), 0]);
 	return drop;
 });
 
@@ -3402,151 +2497,1342 @@ Block.registerDropFunction("cottongarden", function(coords, blockID, blockData, 
 
 IDRegistry.genItemID("cottongardenITEM");
 Item.createItem("cottongardenITEM", "Cotton garden", {name: "cottonGarden", meta: 0} ,{isTech: false} );
-Item.registerUseFunction("cottongardenITEM", function(coords, item, tile){
-	var place = coords.relative;
-	var tile1 = World.getBlock(place.x, place.y, place.z);
-	var tile2 = World.getBlock(place.x, place.y - 1, place.z);	
-	if (GenerationUtils.isTransparentBlock(tile1.id) && TREE_SAPLING_GROUND_TILES[tile2.id]){
-		World.setBlock(place.x, place.y, place.z, BlockID.cottongarden);
-		Player.setCarriedItem(item.id, item.count - 1, item.data);
-	}
+
+
+
+
+// file: GARDENS/ARIDGARDEN/block.js
+
+IDRegistry.genBlockID("aridgarden"); 
+Block.createBlock("aridgarden", [
+	{name: "Arid garden", texture: [["empty", 0],["empty", 0],["aridgarden", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+PlantModel.tree(BlockID.aridgarden,0);
+CropRegistry.deriveCropAsClass("harvestcraft_tropicalGarden",{
+	id:BlockID.aridgarden,
+	drop:0,
+	seed:ItemID.aridGardenITEM
+});
+Block.registerDropFunction("aridgarden", function(coords, blockID, blockData, level){
+	var drop = [];	
+	drop.push([ItemID.cactusfruit, Random.Int(1,3), 0]);	
+	drop.push([81, Random.Int(1,3), 0]);
+	return drop;
 });
 
 
 
 
-// file: GARDENS/COTTONGARDEN/TileEntity.js
+// file: GARDENS/ARIDGARDEN/item.js
 
-if(__config__.access("debug.TileEntity.garden.cotton")){
-	TileEntity.registerPrototype(BlockID.cottongarden,gardenPROTO);
-};
-
-
-
-
-// file: TREES/APPLE/appleBlock.js
-
-CropRegistry.registerWithID("appleBlock","appleBlock","appleBlock",0);
-CropRegistry.fruitPush(BlockID.appleBlock,260);
-
-TileEntity.registerPrototype(BlockID.appleBlock,fruitPROTO);
-
-PlantModel.tree(BlockID.appleBlock,0);
-
-Block.setBlockShape(BlockID.appleBlock, {x: 0.001, y: 0.001, z: 0.001}, {x: 0.999, y: 0.999, z: 0.999});
+IDRegistry.genItemID("aridGardenITEM");
+Item.createItem("aridGardenITEM", "Arid garden", {name: "aridgarden", meta: 0} ,{isTech: false} );
 
 
 
 
-// file: TREES/APPLE/sapling.js
+// file: GARDENS/TROPICALGARDEN/block.js
 
-IDRegistry.genItemID("appleSapling");
-Item.createItem("appleSapling", "Apple Tree Sapling", {name: "appleSapling", data: 0});
-Item.registerUseFunction("appleSapling", function(coords, item, tile){
-	var place = coords.relative;
-	var tile1 = World.getBlock(place.x, place.y, place.z);
-	var tile2 = World.getBlock(place.x, place.y - 1, place.z);
-	
-	if (GenerationUtils.isTransparentBlock(tile1.id) && TREE_SAPLING_GROUND_TILES[tile2.id]){
-		World.setBlock(place.x, place.y, place.z, BlockID.appleTreeSapling);
-		World.addTileEntity(place.x, place.y, place.z);
-		Player.setCarriedItem(item.id, item.count - 1, item.data);
+IDRegistry.genBlockID("tropicalgarden"); 
+Block.createBlock("tropicalgarden", [
+	{name: "Tropical garden", texture: [["empty", 0],["empty", 0],["tropicalgarden", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+PlantModel.tree(BlockID.tropicalgarden,0);
+CropRegistry.deriveCropAsClass("harvestcraft_tropicalGarden",{
+	id:BlockID.tropicalgarden,
+	drop:0,
+	seed:ItemID.tropicalGardenITEM
+});
+Block.registerDropFunction("tropicalgarden", function(coords, blockID, blockData, level){
+	var drop = [];
+	if(Math.random() < .8){
+		drop.push([ItemID.grape,Random.Int(1,3), 0]);
 	}
+	if(Math.random() < .8){
+		drop.push([ItemID.kiwi,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .8){
+		drop.push([ItemID.pineapple,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .8){
+		drop.push([103,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .8){
+		drop.push([ItemID.curryleaf,Random.Int(1,3), 0]);
+	}
+	return drop;
 });
 
-PlantModel.tree(BlockID.appleTreeSapling,0);
 
+
+
+// file: GARDENS/TROPICALGARDEN/item.js
+
+IDRegistry.genItemID("tropicalGardenITEM");
+Item.createItem("tropicalGardenITEM", "Tropical garden", {name: "tropicalgarden", meta: 0} ,{isTech: false} );
+
+
+
+
+// file: GARDENS/LEAFYGARDEN/block.js
+
+IDRegistry.genBlockID("leafygarden"); 
+Block.createBlock("leafygarden", [
+	{name: "Leafy garden", texture: [["empty", 0],["empty", 0],["leafygarden", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+PlantModel.tree(BlockID.leafygarden,0);
+CropRegistry.deriveCropAsClass("harvestcraft_garden",{
+	id:BlockID.leafygarden,
+	drop:0,
+	seed:ItemID.leafyGardenITEM
+});
+Block.registerDropFunction("leafygarden", function(coords, blockID, blockData, level){
+	var drop = [];
+	if(Math.random() < .5){
+		drop.push([ItemID.artichoke,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .5){
+		drop.push([ItemID.broccoli,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .5){
+		drop.push([ItemID.brusselsprout,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .5){
+		drop.push([ItemID.cabbage,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .5){
+		drop.push([ItemID.cauliflower,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .5){
+		drop.push([ItemID.leek,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .5){
+		drop.push([ItemID.lettuce,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .5){
+		drop.push([ItemID.scallion,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .5){
+		drop.push([ItemID.spinach,Random.Int(1,3), 0]);
+	}
+	return drop;
+});
+
+
+
+
+// file: GARDENS/LEAFYGARDEN/item.js
+
+IDRegistry.genItemID("leafyGardenITEM");
+Item.createItem("leafyGardenITEM", "Leafy garden", {name: "leafygarden", meta: 0} ,{isTech: false} );
+
+
+
+
+// file: GARDENS/FROSTYGARDEN/block.js
+
+IDRegistry.genBlockID("frostygarden"); 
+Block.createBlock("frostygarden", [
+	{name: "Frosty garden", texture: [["empty", 0],["empty", 0],["frostygarden", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+PlantModel.tree(BlockID.frostygarden,0);
+CropRegistry.deriveCropAsClass("harvestcraft_garden",{
+	id:BlockID.frostygarden,
+	drop:0,
+	seed:ItemID.frostyGardenITEM
+});
+Block.registerDropFunction("frostygarden", function(coords, blockID, blockData, level){
+	var drop = [];
+	if(Math.random() < .8){
+		drop.push([ItemID.broccoli,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .8){
+		drop.push([ItemID.parsnip,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .8){
+		drop.push([ItemID.rye,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .8){
+		drop.push([ItemID.oats,Random.Int(1,3), 0]);
+	}
+	return drop;
+});
+
+
+
+
+// file: GARDENS/FROSTYGARDEN/item.js
+
+IDRegistry.genItemID("frostyGardenITEM");
+Item.createItem("frostyGardenITEM", "Frosty garden", {name: "frostygarden", meta: 0} ,{isTech: false} );
+
+
+
+
+// file: GARDENS/GROUNDGARDEN/block.js
+
+IDRegistry.genBlockID("groundgarden"); 
+Block.createBlock("groundgarden", [
+	{name: "Ground garden", texture: [["empty", 0],["empty", 0],["groundgarden", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+PlantModel.tree(BlockID.groundgarden,0);
+CropRegistry.deriveCropAsClass("harvestcraft_garden",{
+	id:BlockID.groundgarden,
+	drop:0,
+	seed:ItemID.groundGardenITEM
+});
+Block.registerDropFunction("groundgarden", function(coords, blockID, blockData, level){
+	var drop = [];
+	if(Math.random() < .4){
+		drop.push([ItemID.beet,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .4){
+		drop.push([391,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .4){
+		drop.push([ItemID.onion,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .4){
+		drop.push([ItemID.parsnip,Random.Int(1,3), 0]);
+	}	
+	if(Math.random() < .4){
+		drop.push([ItemID.peanut,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .4){
+		drop.push([392,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .4){
+		drop.push([ItemID.radish,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .4){
+		drop.push([ItemID.rhubarb,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .4){
+		drop.push([ItemID.rutabaga,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .4){
+		drop.push([ItemID.sweetpotato,Random.Int(1,3), 0]);
+	}	
+	if(Math.random() < .4){
+		drop.push([ItemID.turnip,Random.Int(1,3), 0]);
+	}
+	return drop;
+});
+
+
+
+
+// file: GARDENS/GROUNDGARDEN/item.js
+
+IDRegistry.genItemID("groundGardenITEM");
+Item.createItem("groundGardenITEM", "Ground garden", {name: "groundgarden", meta: 0} ,{isTech: false} );
+
+
+
+
+// file: GARDENS/STALKGARDEN/block.js
+
+IDRegistry.genBlockID("stalkgarden"); 
+Block.createBlock("stalkgarden", [
+	{name: "Stalk garden", texture: [["empty", 0],["empty", 0],["stalkgarden", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+PlantModel.tree(BlockID.stalkgarden,0);
+CropRegistry.deriveCropAsClass("harvestcraft_garden",{
+	id:BlockID.stalkgarden,
+	drop:0,
+	seed:ItemID.stalkGardenITEM
+});
+Block.registerDropFunction("stalkgarden", function(coords, blockID, blockData, level){
+	var drop = [];
+	if(Math.random() < .5){
+		drop.push([ItemID.bean,Random.Int(1,3), 0]);
+	}	
+	if(Math.random() < .5){
+		drop.push([ItemID.bellpepper,Random.Int(1,3), 0]);
+	}	
+	if(Math.random() < .5){
+		drop.push([ItemID.chili_pepper,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .5){
+		drop.push([ItemID.okra,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .5){
+		drop.push([ItemID.eggplant,Random.Int(1,3), 0]);
+	}	
+	if(Math.random() < .5){
+		drop.push([ItemID.peas,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .5){
+		drop.push([ItemID.tomato,Random.Int(1,3), 0]);
+	}
+	if(Math.random() < .5){
+		drop.push([ItemID.soybean,Random.Int(1,3), 0]);
+	}
+	return drop;
+});
+
+
+
+
+// file: GARDENS/STALKGARDEN/item.js
+
+IDRegistry.genItemID("stalkGardenITEM");
+Item.createItem("stalkGardenITEM", "Stalk garden", {name: "stalkgarden", meta: 0} ,{isTech: false} );
+
+
+
+
+// file: GARDENS/GOURDGARDEN/block.js
+
+IDRegistry.genBlockID("gourdgarden"); 
+Block.createBlock("gourdgarden", [
+	{name: "Gourd garden", texture: [["empty", 0],["empty", 0],["gourdgarden", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+PlantModel.tree(BlockID.gourdgarden,0);
+CropRegistry.deriveCropAsClass("harvestcraft_garden",{
+	id:BlockID.gourdgarden,
+	drop:0,
+	seed:ItemID.gourdGardenITEM
+});
+Block.registerDropFunction("gourdgarden", function(coords, blockID, blockData, level){
+	var drop = [];
+	if(Math.random() < .5){
+		drop.push([ItemID.cantaloupe,Random.Int(1,3), 0]);
+	}	
+	if(Math.random() < .5){
+		drop.push([91,Random.Int(1,3), 0]);
+	}	
+	if(Math.random() < .5){
+		drop.push([ItemID.zucchini,Random.Int(1,3), 0]);
+	}	
+	if(Math.random() < .5){
+		drop.push([ItemID.cucumber,Random.Int(1,3), 0]);
+	}		
+	if(Math.random() < .5){
+		drop.push([ItemID.wintersquash,Random.Int(1,3), 0]);
+	}
+	return drop;
+});
+
+
+
+
+// file: GARDENS/GOURDGARDEN/item.js
+
+IDRegistry.genItemID("gourdGardenITEM");
+Item.createItem("gourdGardenITEM", "Gourd garden", {name: "gourdgarden", meta: 0} ,{isTech: false} );
+
+
+
+
+// file: TREES/FRUITS/items.js
+
+//apple
 IDRegistry.genItemID("appleMini");
 Item.createItem("appleMini", " Apple", {name: "appleBlock", meta: 0},{});
 
-Item.registerUseFunction("appleMini", function(coords, item, tile){
-	var place = coords.relative;
-	World.setBlock(place.x,place.y,place.z,BlockID.appleBlock);
-	World.addTileEntity(place.x,place.y,place.z);
+//apricot
+Harvest.setFood("apricot","Apricot",1);
+
+//cherry
+Harvest.setFood("cherry","Cherry",1);
+
+//avocado
+Harvest.setFood("avocado","Avocado",1);
+
+//banana
+Harvest.setFood("banana","Banana",1);
+
+//date
+Harvest.setFood("date","Date",1);
+
+//dragonfruit
+Harvest.setFood("dragonfruit","Dragonfruit",1);
+
+//fig
+Harvest.setFood("fig","Fig",1);
+
+//grapefruit
+Harvest.setFood("grapefruit","Grapefruit",1);
+
+//gooseberry
+Harvest.setFood("gooseberry","Gooseberry",1);
+
+//lemon
+Harvest.setFood("lemon","Lemon",1);
+
+//lime
+Harvest.setFood("lime","Lime",1);
+
+//mango
+Harvest.setFood("mango","Mango",1);
+
+//olive
+Harvest.setFood("olive","Olive",1);
+
+//orange
+Harvest.setFood("orange","Orange",1);
+
+//papaya
+Harvest.setFood("papaya","Papaya",1);
+
+//peach
+Harvest.setFood("peach","Peach",1);
+
+//pear
+Harvest.setFood("pear","Pear",1);
+
+//persimmon
+Harvest.setFood("persimmon","Persimmon",1);
+
+//plum
+Harvest.setFood("plum","Plum",1);
+
+//pomegranate
+Harvest.setFood("pomegranate","Pomegranate",1);
+
+//starfruit
+Harvest.setFood("starfruit","Starfruit",1);
+
+//almond
+Harvest.setFood("almond","Almond",1);
+
+//peppercorn
+//Harvest.setFood("peppercorn","Peppercorn",1);
+
+//cashew
+Harvest.setFood("cashew","Cashew",1);
+
+//coconut
+Harvest.setFood("coconut","Coconut",1);
+
+
+
+
+// file: TREES/FRUITS/blocks.js
+
+//apple
+CropRegistry.registerWithID("appleBlock","appleBlock","appleBlock",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.appleBlock,
+	drop:260
 });
 
+//apricot
+CropRegistry.registerWithID("apricot","apricot","apricot",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.apricot,
+	drop:ItemID.apricot
+});
+
+//cherry
+CropRegistry.registerWithID("cherry","cherry","cherry",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.cherry,
+	drop:ItemID.cherry
+});
+
+//avocado
+CropRegistry.registerWithID("avocado","avocado","avocado",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.avocado,
+	drop:ItemID.avocado
+});
+
+//banana
+CropRegistry.registerWithID("banana","banana","banana",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.banana,
+	drop:ItemID.banana
+});
+
+//date
+CropRegistry.registerWithID("date","date","date",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.date,
+	drop:ItemID.date
+});
+
+//dragonfruit
+CropRegistry.registerWithID("dragonfruit","dragonfruit","dragonfruit",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.dragonfruit,
+	drop:ItemID.dragonfruit
+});
+
+//fig
+CropRegistry.registerWithID("fig","fig","fig",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.fig,
+	drop:ItemID.fig
+});
+
+//grapefruit
+CropRegistry.registerWithID("grapefruit","grapefruit","grapefruit",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.grapefruit,
+	drop:ItemID.grapefruit
+});
+
+//gooseberry
+CropRegistry.registerWithID("gooseberry","gooseberry","gooseberry",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.gooseberry,
+	drop:ItemID.gooseberry
+});
+
+//lemon
+CropRegistry.registerWithID("lemon","lemon","lemon",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.lemon,
+	drop:ItemID.lemon
+});
+
+//lime
+CropRegistry.registerWithID("lime","lime","lime",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.lime,
+	drop:ItemID.lime
+});
+
+//mango
+CropRegistry.registerWithID("mango","mango","mango",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.mango,
+	drop:ItemID.mango
+});
+
+//olive
+CropRegistry.registerWithID("olive","olive","olive",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.olive,
+	drop:ItemID.olive
+});
+
+//orange
+CropRegistry.registerWithID("orange","orange","orange",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.orange,
+	drop:ItemID.orange
+});
+
+//papaya
+CropRegistry.registerWithID("papaya","papaya","papaya",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.papaya,
+	drop:ItemID.papaya
+});
+
+//peach
+CropRegistry.registerWithID("peach","peach","peach",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.peach,
+	drop:ItemID.peach
+});
+
+//pear
+CropRegistry.registerWithID("pear","pear","pear",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.pear,
+	drop:ItemID.pear
+});
+
+//persimmon
+CropRegistry.registerWithID("persimmon","persimmon","persimmon",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.persimmon,
+	drop:ItemID.persimmon
+});
+
+//plum
+CropRegistry.registerWithID("plum","plum","plum",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.plum,
+	drop:ItemID.plum
+});
+
+//pomegranate
+CropRegistry.registerWithID("pomegranate","pomegranate","pomegranate",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.pomegranate,
+	drop:ItemID.pomegranate
+});
+
+//starfruit
+CropRegistry.registerWithID("starfruit","starfruit","starfruit",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.starfruit,
+	drop:ItemID.starfruit
+});
+
+//almond
+CropRegistry.registerWithID("almond","almond","almond",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.almond,
+	drop:ItemID.almond
+});
+
+//peppercorn
+CropRegistry.registerWithID("peppercornfruit","peppercornfruit","peppercornfruit",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.peppercornfruit,
+	drop:ItemID.peppercornfruit
+});
+
+//cashew
+CropRegistry.registerWithID("cashew","cashew","cashew",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.cashew,
+	drop:ItemID.cashew
+});
+
+//coconut
+CropRegistry.registerWithID("coconut","coconut","coconut",BLOCK_TYPE_CROP);
+CropRegistry.deriveCropAsClass("Harvestcraft_fruit",{
+	id:BlockID.coconut,
+	drop:ItemID.coconut
+});
+
+
+
+
+// file: TREES/SAPLINGS/items.js
+
+//apple
+IDRegistry.genItemID("appleSapling");
+Item.createItem("appleSapling", "Apple Tree Sapling", {name: "appleSapling", data: 0});
+
+//apricot
+IDRegistry.genItemID("apricotSapling");
+Item.createItem("apricotSapling", "Apricot Tree Sapling", {name: "apricotSapling", data: 0});
+
+//cherry
+IDRegistry.genItemID("cherrySapling");
+Item.createItem("cherrySapling", "Cherry Tree Sapling", {name: "cherrySapling", data: 0});
+
+//avocado
+IDRegistry.genItemID("avocadoSapling");
+Item.createItem("avocadoSapling", "Avocado Tree Sapling", {name: "avocadoSapling", data: 0});
+
+//banana
+IDRegistry.genItemID("bananaSapling");
+Item.createItem("bananaSapling", "Banana Tree Sapling", {name: "bananaSapling", data: 0});
+
+//date
+IDRegistry.genItemID("dateSapling");
+Item.createItem("dateSapling", "Date Tree Sapling", {name: "dateSapling", data: 0});
+
+//dragonfruit
+IDRegistry.genItemID("dragonfruitSapling");
+Item.createItem("dragonfruitSapling", "Dragonfruit Tree Sapling", {name: "dragonfruitSapling", data: 0});
+
+//fig
+IDRegistry.genItemID("figSapling");
+Item.createItem("figSapling", "Fig Tree Sapling", {name: "figSapling", data: 0});
+
+//grapefruit
+IDRegistry.genItemID("grapefruitSapling");
+Item.createItem("grapefruitSapling", "Grapefruit Tree Sapling", {name: "grapefruitSapling", data: 0});
+
+//gooseberry
+IDRegistry.genItemID("gooseberrySapling");
+Item.createItem("gooseberrySapling", "Gooseberry Tree Sapling", {name: "gooseberrySapling", data: 0});
+
+//lemon
+IDRegistry.genItemID("lemonSapling");
+Item.createItem("lemonSapling", "Lemon Tree Sapling", {name: "lemonSapling", data: 0});
+
+//lime
+IDRegistry.genItemID("limeSapling");
+Item.createItem("limeSapling", "Lime Tree Sapling", {name: "limeSapling", data: 0});
+
+//mango
+IDRegistry.genItemID("mangoSapling");
+Item.createItem("mangoSapling", "Mango Tree Sapling", {name: "mangoSapling", data: 0});
+
+//olive
+IDRegistry.genItemID("oliveSapling");
+Item.createItem("oliveSapling", "Olive Tree Sapling", {name: "oliveSapling", data: 0});
+
+//orange
+IDRegistry.genItemID("orangeSapling");
+Item.createItem("orangeSapling", "Orange Tree Sapling", {name: "orangeSapling", data: 0});
+
+//papaya
+IDRegistry.genItemID("papayaSapling");
+Item.createItem("papayaSapling", "Papaya Tree Sapling", {name: "papayaSapling", data: 0});
+
+//peach
+IDRegistry.genItemID("peachSapling");
+Item.createItem("peachSapling", "Peach Tree Sapling", {name: "peachSapling", data: 0});
+
+//pear
+IDRegistry.genItemID("pearSapling");
+Item.createItem("pearSapling", "Pear Tree Sapling", {name: "pearSapling", data: 0});
+
+//persimmon
+IDRegistry.genItemID("persimmonSapling");
+Item.createItem("persimmonSapling", "Persimmon Tree Sapling", {name: "persimmonSapling", data: 0});
+
+//plum
+IDRegistry.genItemID("plumSapling");
+Item.createItem("plumSapling", "Plum Tree Sapling", {name: "plumSapling", data: 0});
+
+//pomegranate
+IDRegistry.genItemID("pomegranateSapling");
+Item.createItem("pomegranateSapling", "Pomegranate Tree Sapling", {name: "pomegranateSapling", data: 0});
+
+//starfruit
+IDRegistry.genItemID("starfruitSapling");
+Item.createItem("starfruitSapling", "Starfruit Tree Sapling", {name: "starfruitSapling", data: 0});
+
+//almond
+IDRegistry.genItemID("almondSapling");
+Item.createItem("almondSapling", "Almond Tree Sapling", {name: "almondSapling", data: 0});
+
+//peppercorn
+IDRegistry.genItemID("peppercornSapling");
+Item.createItem("peppercornSapling", "Peppercorn Tree Sapling", {name: "peppercornSapling", data: 0});
+
+//cashew
+IDRegistry.genItemID("cashewSapling");
+Item.createItem("cashewSapling", "Cashew Tree Sapling", {name: "cashewSapling", data: 0});
+
+//coconut
+IDRegistry.genItemID("coconutSapling");
+Item.createItem("coconutSapling", "Coconut Tree Sapling", {name: "coconutSapling", data: 0});
+
+
+
+
+// file: TREES/SAPLINGS/blocks.js
+
+//apple
 IDRegistry.genBlockID("appleTreeSapling");
 Block.createBlock("appleTreeSapling", [
 	{name: "Apple Tree Sapling", texture: [["empty", 0], ["empty", 0], ["appleSapling", 0]], inCreative: false}
 ],BLOCK_TYPE_PLANT);
-
-TileEntity.registerPrototype(BlockID.appleTreeSapling,saplingPROTO);
-
-Harvest.registerDestroy("appleTreeSapling",ItemID.appleSapling);
-
-Callback.addCallback("PostLoaded", function(){
-	Recipes.addShaped({id: ItemID.appleSapling, count: 1, data: 0}, [
-		"yx",
-		"",
-		""
-	], ['x', 260,0,"y",6,0]);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.appleTreeSapling,
+	seed:ItemID.appleSapling
 });
+Harvest.recipe({id:ItemID.appleSapling},[{id: 260, data: 0}, {id: 6, data: 0}]);
+
+//apricot
+IDRegistry.genBlockID("apricotTreeSapling");
+Block.createBlock("apricotTreeSapling", [
+	{name: "Apricot Tree Sapling", texture: [["empty", 0], ["empty", 0], ["apricotSapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.apricotTreeSapling,
+	seed:ItemID.apricotSapling
+});
+Harvest.recipe({id:ItemID.apricotSapling},[{id: ItemID.apricot, data: 0}, {id: 6, data: 3}]);
+
+//cherry
+IDRegistry.genBlockID("cherryTreeSapling");
+Block.createBlock("cherryTreeSapling", [
+	{name: "Cherry Tree Sapling", texture: [["empty", 0], ["empty", 0], ["cherrySapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.cherryTreeSapling,
+	seed:ItemID.cherrySapling
+});
+Harvest.recipe({id:ItemID.cherrySapling},[{id: ItemID.cherry, data: 0}, {id: 6, data: 0}]);
+
+//avocado
+IDRegistry.genBlockID("avocadoTreeSapling");
+Block.createBlock("avocadoTreeSapling", [
+	{name: "Avocado Tree Sapling", texture: [["empty", 0], ["empty", 0], ["avocadoSapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.avocadoTreeSapling,
+	seed:ItemID.avocadoSapling
+});
+Harvest.recipe({id:ItemID.avocadoSapling},[{id: ItemID.avocado, data: 0}, {id: 6, data: 0}]);
+
+//banana
+IDRegistry.genBlockID("bananaTreeSapling");
+Block.createBlock("bananaTreeSapling", [
+	{name: "Banana Tree Sapling", texture: [["empty", 0], ["empty", 0], ["bananaSapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.bananaTreeSapling,
+	seed:ItemID.bananaSapling
+});
+Harvest.recipe({id:ItemID.bananaSapling},[{id: ItemID.banana, data: 0}, {id: 6, data: 3}]);
+
+//date
+IDRegistry.genBlockID("dateTreeSapling");
+Block.createBlock("dateTreeSapling", [
+	{name: "Date Tree Sapling", texture: [["empty", 0], ["empty", 0], ["dateSapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.dateTreeSapling,
+	seed:ItemID.dateSapling
+});
+Harvest.recipe({id:ItemID.dateSapling},[{id: ItemID.date, data: 0}, {id: 6, data: 3}]);
+
+//dragonfruit
+IDRegistry.genBlockID("dragonfruitTreeSapling");
+Block.createBlock("dragonfruitTreeSapling", [
+	{name: "Dragonfruit Tree Sapling", texture: [["empty", 0], ["empty", 0], ["dragonfruitSapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.dragonfruitTreeSapling,
+	seed:ItemID.dragonfruitSapling
+});
+Harvest.recipe({id:ItemID.dragonfruitSapling},[{id: ItemID.dragonfruit, data: 0}, {id: 6, data: 3}]);
+
+//fig
+IDRegistry.genBlockID("figTreeSapling");
+Block.createBlock("figTreeSapling", [
+	{name: "Fig Tree Sapling", texture: [["empty", 0], ["empty", 0], ["figSapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.figTreeSapling,
+	seed:ItemID.figSapling
+});
+Harvest.recipe({id:ItemID.figSapling},[{id: ItemID.fig, data: 0}, {id: 6, data: 3}]);
+
+//grapefruit
+IDRegistry.genBlockID("grapefruitTreeSapling");
+Block.createBlock("grapefruitTreeSapling", [
+	{name: "Grapefruit Tree Sapling", texture: [["empty", 0], ["empty", 0], ["grapefruitSapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.grapefruitTreeSapling,
+	seed:ItemID.grapefruitSapling
+});
+Harvest.recipe({id:ItemID.grapefruitSapling},[{id: ItemID.grapefruit, data: 0}, {id: 6, data: 3}]);
+
+//gooseberry
+IDRegistry.genBlockID("gooseberryTreeSapling");
+Block.createBlock("gooseberryTreeSapling", [
+	{name: "Gooseberry Tree Sapling", texture: [["empty", 0], ["empty", 0], ["gooseberrySapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.gooseberryTreeSapling,
+	seed:ItemID.gooseberrySapling
+});
+Harvest.recipe({id:ItemID.gooseberrySapling},[{id: ItemID.gooseberry, data: 0}, {id: 6, data: 3}]);
+
+//lemon
+IDRegistry.genBlockID("lemonTreeSapling");
+Block.createBlock("lemonTreeSapling", [
+	{name: "Lemon Tree Sapling", texture: [["empty", 0], ["empty", 0], ["lemonSapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.lemonTreeSapling,
+	seed:ItemID.lemonSapling
+});
+Harvest.recipe({id:ItemID.lemonSapling},[{id: ItemID.lemon, data: 0}, {id: 6, data: 3}]);
+
+//lime
+IDRegistry.genBlockID("limeTreeSapling");
+Block.createBlock("limeTreeSapling", [
+	{name: "Lime Tree Sapling", texture: [["empty", 0], ["empty", 0], ["limeSapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.limeTreeSapling,
+	seed:ItemID.limeSapling
+});
+Harvest.recipe({id:ItemID.limeSapling},[{id: ItemID.lime, data: 0}, {id: 6, data: 3}]);
+
+//mango
+IDRegistry.genBlockID("mangoTreeSapling");
+Block.createBlock("mangoTreeSapling", [
+	{name: "Mango Tree Sapling", texture: [["empty", 0], ["empty", 0], ["mangoSapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.mangoTreeSapling,
+	seed:ItemID.mangoSapling
+});
+Harvest.recipe({id:ItemID.mangoSapling},[{id: ItemID.mango, data: 0}, {id: 6, data: 3}]);
+
+//olive
+IDRegistry.genBlockID("oliveTreeSapling");
+Block.createBlock("oliveTreeSapling", [
+	{name: "Olive Tree Sapling", texture: [["empty", 0], ["empty", 0], ["oliveSapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.oliveTreeSapling,
+	seed:ItemID.oliveSapling
+});
+Harvest.recipe({id:ItemID.oliveSapling},[{id: ItemID.olive, data: 0}, {id: 6, data: 3}]);
+
+//orange
+IDRegistry.genBlockID("orangeTreeSapling");
+Block.createBlock("orangeTreeSapling", [
+	{name: "Orange Tree Sapling", texture: [["empty", 0], ["empty", 0], ["orangeSapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.orangeTreeSapling,
+	seed:ItemID.orangeSapling
+});
+Harvest.recipe({id:ItemID.orangeSapling},[{id: ItemID.orange, data: 0}, {id: 6, data: 3}]);
+
+//papaya
+IDRegistry.genBlockID("papayaTreeSapling");
+Block.createBlock("papayaTreeSapling", [
+	{name: "Papaya Tree Sapling", texture: [["empty", 0], ["empty", 0], ["papayaSapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.papayaTreeSapling,
+	seed:ItemID.papayaSapling
+});
+Harvest.recipe({id:ItemID.orangeSapling},[{id: ItemID.papaya, data: 0}, {id: 6, data: 3}]);
+
+//peach
+IDRegistry.genBlockID("peachTreeSapling");
+Block.createBlock("peachTreeSapling", [
+	{name: "Peach Tree Sapling", texture: [["empty", 0], ["empty", 0], ["peachSapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.peachTreeSapling,
+	seed:ItemID.peachSapling
+});
+Harvest.recipe({id:ItemID.peachSapling},[{id: ItemID.peach, data: 0}, {id: 6, data: 3}]);
+
+//pear
+IDRegistry.genBlockID("pearTreeSapling");
+Block.createBlock("pearTreeSapling", [
+	{name: "Pear Tree Sapling", texture: [["empty", 0], ["empty", 0], ["pearSapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.pearTreeSapling,
+	seed:ItemID.pearSapling
+});
+Harvest.recipe({id:ItemID.peachSapling},[{id: ItemID.pear, data: 0}, {id: 6, data: 4}]);
+
+//persimmon
+IDRegistry.genBlockID("persimmonTreeSapling");
+Block.createBlock("persimmonTreeSapling", [
+	{name: "Persimmon Tree Sapling", texture: [["empty", 0], ["empty", 0], ["persimmonSapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.persimmonTreeSapling,
+	seed:ItemID.persimmonSapling
+});
+Harvest.recipe({id:ItemID.persimmonSapling},[{id: ItemID.persimmon, data: 0}, {id: 6, data: 3}]);
+
+//plum
+IDRegistry.genBlockID("plumTreeSapling");
+Block.createBlock("plumTreeSapling", [
+	{name: "Plum Tree Sapling", texture: [["empty", 0], ["empty", 0], ["plumSapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.plumTreeSapling,
+	seed:ItemID.plumSapling
+});
+Harvest.recipe({id:ItemID.plumSapling},[{id: ItemID.plum, data: 0}, {id: 6, data: 3}]);
+
+//pomegranate
+IDRegistry.genBlockID("pomegranateTreeSapling");
+Block.createBlock("pomegranateTreeSapling", [
+	{name: "Pomegranate Tree Sapling", texture: [["empty", 0], ["empty", 0], ["pomegranateSapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.pomegranateTreeSapling,
+	seed:ItemID.pomegranateSapling
+});
+Harvest.recipe({id:ItemID.pomegranateSapling},[{id: ItemID.pomegranate, data: 0}, {id: 6, data: 3}]);
+
+//starfruit
+IDRegistry.genBlockID("starfruitTreeSapling");
+Block.createBlock("starfruitTreeSapling", [
+	{name: "Starfruit Tree Sapling", texture: [["empty", 0], ["empty", 0], ["starfruitSapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.starfruitTreeSapling,
+	seed:ItemID.starfruitSapling
+});
+Harvest.recipe({id:ItemID.starfruitSapling},[{id: ItemID.starfruit, data: 0}, {id: 6, data: 3}]);
+
+//almond
+IDRegistry.genBlockID("almondTreeSapling");
+Block.createBlock("almondTreeSapling", [
+	{name: "Almond Tree Sapling", texture: [["empty", 0], ["empty", 0], ["almondSapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.almondTreeSapling,
+	seed:ItemID.almondSapling
+});
+Harvest.recipe({id:ItemID.almondSapling},[{id: ItemID.almond, data: 0}, {id: 6, data: 3}]);
+
+//peppercorn
+IDRegistry.genBlockID("peppercornTreeSapling");
+Block.createBlock("peppercornTreeSapling", [
+	{name: "Peppercorn Tree Sapling", texture: [["empty", 0], ["empty", 0], ["peppercornSapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.peppercornTreeSapling,
+	seed:ItemID.peppercornSapling
+});
+Harvest.recipe({id:ItemID.peppercornSapling},[{id: ItemID.peppercorn, data: 0}, {id: 6, data: 3}]);
+
+//cashew
+IDRegistry.genBlockID("cashewTreeSapling");
+Block.createBlock("cashewTreeSapling", [
+	{name: "Cashew Tree Sapling", texture: [["empty", 0], ["empty", 0], ["cashewSapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.cashewTreeSapling,
+	seed:ItemID.cashewSapling
+});
+Harvest.recipe({id:ItemID.cashewSapling},[{id: ItemID.cashew, data: 0}, {id: 6, data: 3}]);
+
+//coconut
+IDRegistry.genBlockID("coconutTreeSapling");
+Block.createBlock("coconutTreeSapling", [
+	{name: "Coconut Tree Sapling", texture: [["empty", 0], ["empty", 0], ["coconutSapling", 0]], inCreative: false}
+],BLOCK_TYPE_PLANT);
+CropRegistry.deriveCropAsClass("Harvestcraft_treeSapling",{
+	id:BlockID.coconutTreeSapling,
+	seed:ItemID.coconutSapling
+});
+Harvest.recipe({id:ItemID.coconutSapling},[{id: ItemID.coconut, data: 0}, {id: 6, data: 3}]);
 
 
 
 
-// file: WORLD/grassdrop.js
+// file: TREES/trees.js
 
- var seedsArray = [
-	 ItemID.curryleaf_seed,
-	 ItemID.candleberryseed,
-	 ItemID.strawberry_seed,
-	 ItemID.raspberry_seed,
-	 ItemID.cranberry_seed,
-	 ItemID.blueberry_seed,
-	 ItemID.blackberry_seed,
-	 ItemID.grape_seed,
-	 ItemID.cucumber_seed,
-	 ItemID.onion_seed,
-	 ItemID.cabbage_seed,
-	 ItemID.tomato_seed,
-	 ItemID.bellpepper_seed,
-	 ItemID.garlic_seed,
-	 ItemID.lettuce_seed,
-	 ItemID.coffee_seed,
-	 ItemID.peas_seed,
-	 ItemID.chili_pepper_seed,
-	 ItemID.spice_leaf_seed,
-	 ItemID.corn_seed,
-	 ItemID.peppercorn_seed,
-	 ItemID.cotton_seed
- ];
-Callback.addCallback("DestroyBlock", function(coords, block, player){
-	var trueIDs = {
-		31:true,
-		175:true
-	};
-	var trueMetaS = {
-		1:true,
-		2:true,
-		10:true
-	};
-	if(trueIDs[block.id]&&trueMetaS[block.data]){
-		var nnn =__config__.access("other.grassDrop");
-		var nn = Random.Int(0,nnn);
-		//Debug.m(nn);
-		if(nn<seedsArray.length){  
-			Harvest.dropPlant(seedsArray[nn],coords.x,coords.y,coords.z);
-		}
+//apple
+TreeRegistry.deriveTreeAsClass("Harvestcraft_middleFruitTree",{
+	name:"apple",
+	sapling:{
+		block:BlockID.appleTreeSapling,
+		item:ItemID.appleSapling
+	},
+	fruit:{
+		block:BlockID.appleBlock,
+		item:260
 	}
 });
-Callback.addCallback("ItemUse", function(coords, item, block){
- 
-	var trueTool = {
-		290:true,
-		291:true,
-		292:true,
-		293:true,
-		294:true
-	};
-	
-	if(block.id==2&&trueTool[item.id]){
-		var nnn =__config__.access("other.grassDrop");
-		var nn = Random.Int(0,nnn);
-		//Debug.m(nn);
-		if(nn<seedsArray.length){  
-			Harvest.dropPlant(seedsArray[nn],coords.x,coords.y+1,coords.z);
-		}
+
+//apricot
+TreeRegistry.deriveTreeAsClass("Harvestcraft_jungleFruitTree",{
+	name:"apricot",
+	sapling:{
+		block:BlockID.apricotTreeSapling,
+		item:ItemID.apricotSapling
+	},
+	fruit:{
+		block:BlockID.apricot,
+		item:ItemID.apricot
+	}
+});
+
+//cherry
+TreeRegistry.deriveTreeAsClass("Harvestcraft_middleFruitTree",{
+	name:"cherry",
+	sapling:{
+		block:BlockID.cherryTreeSapling,
+		item:ItemID.cherrySapling
+	},
+	fruit:{
+		block:BlockID.cherry,
+		item:ItemID.cherry
+	}
+});
+
+//avocado
+TreeRegistry.deriveTreeAsClass("Harvestcraft_middleFruitTree",{
+	name:"avocado",
+	sapling:{
+		block:BlockID.avocadoTreeSapling,
+		item:ItemID.avocadoSapling
+	},
+	fruit:{
+		block:BlockID.avocado,
+		item:ItemID.avocado
+	}
+});
+
+//banana
+TreeRegistry.deriveTreeAsClass("Harvestcraft_jungleFruitTree",{
+	name:"banana",
+	sapling:{
+		block:BlockID.bananaTreeSapling,
+		item:ItemID.bananaSapling
+	},
+	fruit:{
+		block:BlockID.banana,
+		item:ItemID.banana
+	}
+});
+
+//date
+TreeRegistry.deriveTreeAsClass("Harvestcraft_jungleFruitTree",{
+	name:"date",
+	sapling:{
+		block:BlockID.dateTreeSapling,
+		item:ItemID.dateSapling
+	},
+	fruit:{
+		block:BlockID.date,
+		item:ItemID.date
+	}
+});
+
+//dragonfruit
+TreeRegistry.deriveTreeAsClass("Harvestcraft_jungleFruitTree",{
+	name:"dragonfruit",
+	sapling:{
+		block:BlockID.dragonfruitTreeSapling,
+		item:ItemID.dragonfruitSapling
+	},
+	fruit:{
+		block:BlockID.dragonfruit,
+		item:ItemID.dragonfruit
+	}
+});
+
+//fig
+TreeRegistry.deriveTreeAsClass("Harvestcraft_jungleFruitTree",{
+	name:"fig",
+	sapling:{
+		block:BlockID.figTreeSapling,
+		item:ItemID.figSapling
+	},
+	fruit:{
+		block:BlockID.fig,
+		item:ItemID.fig
+	}
+});
+
+//grapefruit
+TreeRegistry.deriveTreeAsClass("Harvestcraft_jungleFruitTree",{
+	name:"grapefruit",
+	sapling:{
+		block:BlockID.grapefruitTreeSapling,
+		item:ItemID.grapefruitSapling
+	},
+	fruit:{
+		block:BlockID.grapefruit,
+		item:ItemID.grapefruit
+	}
+});
+
+//gooseberry
+TreeRegistry.deriveTreeAsClass("Harvestcraft_jungleFruitTree",{
+	name:"gooseberry",
+	sapling:{
+		block:BlockID.gooseberryTreeSapling,
+		item:ItemID.gooseberrySapling
+	},
+	fruit:{
+		block:BlockID.gooseberry,
+		item:ItemID.gooseberry
+	}
+});
+
+//lemon
+TreeRegistry.deriveTreeAsClass("Harvestcraft_jungleFruitTree",{
+	name:"lemon",
+	sapling:{
+		block:BlockID.lemonTreeSapling,
+		item:ItemID.lemonSapling
+	},
+	fruit:{
+		block:BlockID.lemon,
+		item:ItemID.lemon
+	}
+});
+
+//lime
+TreeRegistry.deriveTreeAsClass("Harvestcraft_jungleFruitTree",{
+	name:"lime",
+	sapling:{
+		block:BlockID.limeTreeSapling,
+		item:ItemID.limeSapling
+	},
+	fruit:{
+		block:BlockID.lime,
+		item:ItemID.lime
+	}
+});
+
+//mango
+TreeRegistry.deriveTreeAsClass("Harvestcraft_jungleFruitTree",{
+	name:"mango",
+	sapling:{
+		block:BlockID.mangoTreeSapling,
+		item:ItemID.mangoSapling
+	},
+	fruit:{
+		block:BlockID.mango,
+		item:ItemID.mango
+	}
+});
+
+//olive
+TreeRegistry.deriveTreeAsClass("Harvestcraft_jungleFruitTree",{
+	name:"olive",
+	sapling:{
+		block:BlockID.oliveTreeSapling,
+		item:ItemID.oliveSapling
+	},
+	fruit:{
+		block:BlockID.olive,
+		item:ItemID.olive
+	}
+});
+
+//orange
+TreeRegistry.deriveTreeAsClass("Harvestcraft_jungleFruitTree",{
+	name:"orange",
+	sapling:{
+		block:BlockID.orangeTreeSapling,
+		item:ItemID.orangeSapling
+	},
+	fruit:{
+		block:BlockID.orange,
+		item:ItemID.orange
+	}
+});
+
+//papaya
+TreeRegistry.deriveTreeAsClass("Harvestcraft_jungleFruitTree",{
+	name:"papaya",
+	sapling:{
+		block:BlockID.papayaTreeSapling,
+		item:ItemID.papayaSapling
+	},
+	fruit:{
+		block:BlockID.papaya,
+		item:ItemID.papaya
+	}
+});
+
+//peach
+TreeRegistry.deriveTreeAsClass("Harvestcraft_jungleFruitTree",{
+	name:"peach",
+	sapling:{
+		block:BlockID.peachTreeSapling,
+		item:ItemID.peachSapling
+	},
+	fruit:{
+		block:BlockID.peach,
+		item:ItemID.peach
+	}
+});
+
+//pear
+TreeRegistry.deriveTreeAsClass("Harvestcraft_taigaFruitTree",{
+	name:"pear",
+	sapling:{
+		block:BlockID.pearTreeSapling,
+		item:ItemID.pearSapling
+	},
+	fruit:{
+		block:BlockID.pear,
+		item:ItemID.pear
+	}
+});
+
+//persimmon
+TreeRegistry.deriveTreeAsClass("Harvestcraft_jungleFruitTree",{
+	name:"persimmon",
+	sapling:{
+		block:BlockID.persimmonTreeSapling,
+		item:ItemID.persimmonSapling
+	},
+	fruit:{
+		block:BlockID.persimmon,
+		item:ItemID.persimmon
+	}
+});
+
+//plum
+TreeRegistry.deriveTreeAsClass("Harvestcraft_jungleFruitTree",{
+	name:"plum",
+	sapling:{
+		block:BlockID.plumTreeSapling,
+		item:ItemID.plumSapling
+	},
+	fruit:{
+		block:BlockID.plum,
+		item:ItemID.plum
+	}
+});
+
+//pomegranate
+TreeRegistry.deriveTreeAsClass("Harvestcraft_jungleFruitTree",{
+	name:"pomegranate",
+	sapling:{
+		block:BlockID.pomegranateTreeSapling,
+		item:ItemID.pomegranateSapling
+	},
+	fruit:{
+		block:BlockID.pomegranate,
+		item:ItemID.pomegranate
+	}
+});
+
+//starfruit
+TreeRegistry.deriveTreeAsClass("Harvestcraft_jungleFruitTree",{
+	name:"starfruit",
+	sapling:{
+		block:BlockID.starfruitTreeSapling,
+		item:ItemID.starfruitSapling
+	},
+	fruit:{
+		block:BlockID.starfruit,
+		item:ItemID.starfruit
+	}
+});
+
+//almond
+TreeRegistry.deriveTreeAsClass("Harvestcraft_jungleFruitTree",{
+	name:"almond",
+	sapling:{
+		block:BlockID.almondTreeSapling,
+		item:ItemID.almondSapling
+	},
+	fruit:{
+		block:BlockID.almond,
+		item:ItemID.almond
+	}
+});
+
+//peppercorn
+TreeRegistry.deriveTreeAsClass("Harvestcraft_jungleFruitTree",{
+	name:"peppercorn",
+	sapling:{
+		block:BlockID.peppercornTreeSapling,
+		item:ItemID.peppercornSapling
+	},
+	fruit:{
+		block:BlockID.peppercornfruit,
+		item:ItemID.peppercorn
+	}
+});
+
+//cashew
+TreeRegistry.deriveTreeAsClass("Harvestcraft_jungleFruitTree",{
+	name:"cashew",
+	sapling:{
+		block:BlockID.cashewTreeSapling,
+		item:ItemID.cashewSapling
+	},
+	fruit:{
+		block:BlockID.cashew,
+		item:ItemID.cashew
+	}
+});
+
+//coconut
+TreeRegistry.deriveTreeAsClass("Harvestcraft_jungleFruitTree",{
+	name:"coconut",
+	sapling:{
+		block:BlockID.coconutTreeSapling,
+		item:ItemID.coconutSapling
+	},
+	fruit:{
+		block:BlockID.coconut,
+		item:ItemID.coconut
 	}
 });
 
@@ -3557,41 +3843,44 @@ Callback.addCallback("ItemUse", function(coords, item, block){
 
 var SaltBiomes = [0,24,10];
 	//var SaltBiomes = __config__.access("generation.biomes.gardens.SaltBiomes");
-var BerryGardenBiomes = [1,4, 18, 27, 28,13];
+var BerryGardenBiomes = [1,4,3,132,129,34, 18, 27, 28,13];
 	//var BerryGardenBiomes = __config__.access("generation.biomes.gardens.BerryGardenBiomes");
-var CandleberryGardenBiomes = [1,4, 18, 27, 28,13];
+var CandleberryGardenBiomes = [1,4,3,132,129,34, 18, 27, 28,13];
 	//var CandleberryGardenBiomes = __config__.access("generation.biomes.gardens.CandleberryGardenBiomes");
-var DesertGardenBiomes =[2,35,37];
+var DesertGardenBiomes =[2,35,37,135];
 	//var DesertGardenBiomes = __config__.access("generation.biomes.gardens.DesertGardenBiomes");
-var GourdGardenBiomes = [1,4, 18, 27, 28,13];
+var GourdGardenBiomes = [1,4,3,132,129,34, 18, 27, 28,13];
 	//var GourdGardenBiomes = __config__.access("generation.biomes.gardens.GourdGardenBiomes");
-var GrassGardenBiomes = [1,4, 18, 27, 28];
+var GrassGardenBiomes = [1,4,3,132,129,34, 18, 27, 28];
 	//var GrassGardenBiomes = __config__.access("generation.biomes.gardens.GrassGardenBiomes");
-var GroundGardenBiomes =[4,4, 18, 27, 28,13];
+var GroundGardenBiomes =[1,4,3,132,129,34,4, 18, 27, 28,13];
 	//var GroundGardenBiomes = __config__.access("generation.biomes.gardens.GroundGardenBiomes");
-var HerbGardenBiomes =  [4, 18, 27, 28];
+var HerbGardenBiomes =  [1,4,3,132,129,34, 18, 27, 28];
 	//var HerbGardenBiomes = __config__.access("generation.biomes.gardens.HerbGardenBiomes");
-var LeafyGardenBiomes = [4, 18, 27, 28,13];
+var LeafyGardenBiomes = [1,4,3,132,129,34, 18, 27, 28,13];
 	//var LeafyGardenBiomes = __config__.access("generation.biomes.gardens.LeafyGardenBiomes");
-var MushroomGardenBiomes = [4, 18, 27, 28];
+var MushroomGardenBiomes = [1,4,3,132,129,34, 18, 27, 28];
 	//var MushroomGardenBiomes = __config__.access("generation.biomes.gardens.MushroomGardenBiomes");
-var StalkGardenBiomes = [4, 18, 27, 28];
+var StalkGardenBiomes = [1,4,3,132,129,34, 18, 27, 28];
 	//var StalkGardenBiomes = __config__.access("generation.biomes.gardens.StalkGardenBiomes");
-var TextileGardenBiomes = [4, 18, 27, 28];
+var TextileGardenBiomes = [1,4,3,132,129,34, 18, 27, 28];
 	//var TextileGardenBiomes = __config__.access("generation.biomes.gardens.TextileGardenBiomes");
-var TropicalGardenBiomes = [21, 22, 23, 149, 151,6, 134,35,36];
+var TropicalGardenBiomes = [21, 22, 23, 149, 151,6, 134,36];
 	//var TropicalGardenBiomes = __config__.access("generation.biomes.gardens.TropicalGardenBiomes");
 var WaterGardenBiomes = [24,0];
 	//var WaterGardenBiomes = __config__.access("generation.biomes.gardens.WaterGardenBiomes");
+var FrostyGardenBiomes = [12,140,30,158,11,26];
 
 
 
 
 // file: WORLD/GENERATION/GARDENS/berryGarden.js
 
-addGeneration({id:BlockID.berrygarden,data:0},BerryGardenBiomes,
-	Random.Int(__config__.access("generation.group.gardens.berry.min"),
-	__config__.access("generation.group.gardens.berry.max")),
+var BerryGardenCount = {
+	min: __config__.access("generation.group.gardens.berry.min"),
+	max: __config__.access("generation.group.gardens.berry.max")
+};
+Harvest.addBlockGeneration({id:BlockID.berrygarden,data:0},BerryGardenBiomes,BerryGardenCount,
 __config__.access("generation.numbers.gardens.berry"));
 
 
@@ -3599,9 +3888,11 @@ __config__.access("generation.numbers.gardens.berry"));
 
 // file: WORLD/GENERATION/GARDENS/herbGarden.js
 
-addGeneration({id:BlockID.herbgarden,data:0},HerbGardenBiomes,
-	Random.Int(__config__.access("generation.group.gardens.herb.min"),
-	__config__.access("generation.group.gardens.herb.max")),
+var HerbGardenCount = {
+	min: __config__.access("generation.group.gardens.herb.min"),
+	max: __config__.access("generation.group.gardens.herb.max")
+};
+Harvest.addBlockGeneration({id:BlockID.herbgarden,data:0},HerbGardenBiomes,HerbGardenCount,
 __config__.access("generation.numbers.gardens.herb"));
 
 
@@ -3609,9 +3900,11 @@ __config__.access("generation.numbers.gardens.herb"));
 
 // file: WORLD/GENERATION/GARDENS/grassGarden.js
 
-addGeneration({id:BlockID.grassgarden,data:0},GrassGardenBiomes,
-	Random.Int(__config__.access("generation.group.gardens.grass.min"),
-	__config__.access("generation.group.gardens.grass.max")),
+var GrassGardenCount = {
+	min: __config__.access("generation.group.gardens.grass.min"),
+	max: __config__.access("generation.group.gardens.grass.max")
+};
+Harvest.addBlockGeneration({id:BlockID.grassgarden,data:0},GrassGardenBiomes,GrassGardenCount,
 __config__.access("generation.numbers.gardens.grass"));
 
 
@@ -3619,9 +3912,11 @@ __config__.access("generation.numbers.gardens.grass"));
 
 // file: WORLD/GENERATION/GARDENS/candleberry.js
 
-addGeneration({id:BlockID.candleberryGarden,data:0},CandleberryGardenBiomes,
-	Random.Int(__config__.access("generation.group.gardens.candleberry.min"),
-	__config__.access("generation.group.gardens.candleberry.max")),
+var CandleberryGardenCount = {
+	min: __config__.access("generation.group.gardens.candleberry.min"),
+	max: __config__.access("generation.group.gardens.candleberry.max")
+};
+Harvest.addBlockGeneration({id:BlockID.candleberryGarden,data:0},CandleberryGardenBiomes,CandleberryGardenCount,
 __config__.access("generation.numbers.gardens.candleberry"));
 
 
@@ -3629,10 +3924,72 @@ __config__.access("generation.numbers.gardens.candleberry"));
 
 // file: WORLD/GENERATION/GARDENS/cottonGarden.js
 
-addGeneration({id:BlockID.cottongarden,data:0},TextileGardenBiomes,
-	Random.Int(__config__.access("generation.group.gardens.cotton.min"),
-	__config__.access("generation.group.gardens.cotton.max")),
+var TextileGardenCount = {
+	min: __config__.access("generation.group.gardens.cotton.min"),
+	max: __config__.access("generation.group.gardens.cotton.max")
+};
+Harvest.addBlockGeneration({id:BlockID.cottongarden,data:0},TextileGardenBiomes,TextileGardenCount,
 __config__.access("generation.numbers.gardens.cotton"));
+
+
+
+
+// file: WORLD/GENERATION/GARDENS/aridGarden.js
+
+var AridGardenCount = {
+	min: __config__.access("generation.group.gardens.arid.min"),
+	max: __config__.access("generation.group.gardens.arid.max")
+};
+Harvest.addBlockGeneration({id:BlockID.aridgarden,data:0},DesertGardenBiomes,TextileGardenCount,
+__config__.access("generation.numbers.gardens.arid"));
+
+
+
+
+// file: WORLD/GENERATION/GARDENS/tropicalGarden.js
+
+var TropicalGardenCount = {
+	min: __config__.access("generation.group.gardens.tropical.min"),
+	max: __config__.access("generation.group.gardens.tropical.max")
+};
+Harvest.addBlockGeneration({id:BlockID.tropicalgarden,data:0},TropicalGardenBiomes,TropicalGardenCount,
+__config__.access("generation.numbers.gardens.tropical"));
+
+
+
+
+// file: WORLD/GENERATION/GARDENS/groundGarden.js
+
+var GroundGardenCount = {
+	min: __config__.access("generation.group.gardens.ground.min"),
+	max: __config__.access("generation.group.gardens.ground.max")
+};
+Harvest.addBlockGeneration({id:BlockID.groundgarden,data:0},GroundGardenBiomes,GroundGardenCount,
+__config__.access("generation.numbers.gardens.ground"));
+
+
+
+
+// file: WORLD/GENERATION/GARDENS/stalkGarden.js
+
+var StalkGardenCount = {
+	min: __config__.access("generation.group.gardens.stalk.min"),
+	max: __config__.access("generation.group.gardens.stalk.max")
+};
+Harvest.addBlockGeneration({id:BlockID.stalkgarden,data:0},StalkGardenBiomes,StalkGardenCount,
+__config__.access("generation.numbers.gardens.stalk"));
+
+
+
+
+// file: WORLD/GENERATION/GARDENS/gourdGarden.js
+
+var GourdGardenCount = {
+	min: __config__.access("generation.group.gardens.gourd.min"),
+	max: __config__.access("generation.group.gardens.gourd.max")
+};
+Harvest.addBlockGeneration({id:BlockID.gourdgarden,data:0},GourdGardenBiomes,GourdGardenCount,
+__config__.access("generation.numbers.gardens.gourd"));
 
 
 
@@ -3678,18 +4035,922 @@ Callback.addCallback("GenerateChunkUnderground", function(chunkX, chunkZ){
 
 
 
-// file: WORLD/GENERATION/TREES/AppleTree.js
+// file: WORLD/GENERATION/TREES/biomes.js
 
-/*Callback.addCallback("GenerateChunk", function(chunkX, chunkZ){
-	var nnumber = __config__.access("genNumbers.trees.apple");
-	if(Math.random()<nnumber){
-		var coords = GenerationUtils.randomCoords(chunkX, chunkZ, 64, 128);
-		coords = GenerationUtils.findSurface(coords.x, coords.y, coords.z);
-		if((World.getBlockID(coords.x, coords.y, coords.z) == 2)){			
-			Harvest.addTree(0,BlockID.appleBlock,4,this.x,this.y,this.z);
-		}
-	}
-});*/
+var middleBiomes = [1,4,3,132,129,34, 18, 27, 28,13];
+var savannaBiomes = [1,2,4, 18, 27, 28,13];
+var taigaBiomes = [35,163,39,36,164, 167];
+
+
+
+
+// file: WORLD/GENERATION/TREES/trees.js
+
+//apple
+var appleTreesCount = {
+	min:__config__.access("generation.group.trees.apple.min"),
+	max:__config__.access("generation.group.trees.apple.max")
+};
+TreeRegistry.addTreeGeneration("apple",middleBiomes,appleTreesCount,__config__.access("generation.numbers.trees.apple"));
+
+//apricot
+var apricotTreesCount = {
+	min:__config__.access("generation.group.trees.apricot.min"),
+	max:__config__.access("generation.group.trees.apricot.max")
+};
+TreeRegistry.addTreeGeneration("apricot",savannaBiomes,apricotTreesCount,__config__.access("generation.numbers.trees.apricot"));
+
+//cherry
+var cherryTreesCount = {
+	min:__config__.access("generation.group.trees.cherry.min"),
+	max:__config__.access("generation.group.trees.cherry.max")
+};
+TreeRegistry.addTreeGeneration("cherry",middleBiomes,cherryTreesCount,__config__.access("generation.numbers.trees.cherry"));
+
+//avocado
+var avocadoTreesCount = {
+	min:__config__.access("generation.group.trees.avocado.min"),
+	max:__config__.access("generation.group.trees.avocado.max")
+};
+TreeRegistry.addTreeGeneration("avocado",middleBiomes,avocadoTreesCount,__config__.access("generation.numbers.trees.avocado"));
+
+//banana
+var bananaTreesCount = {
+	min:__config__.access("generation.group.trees.banana.min"),
+	max:__config__.access("generation.group.trees.banana.max")
+};
+TreeRegistry.addTreeGeneration("banana",savannaBiomes,bananaTreesCount,__config__.access("generation.numbers.trees.banana"));
+
+//date
+var dateTreesCount = {
+	min:__config__.access("generation.group.trees.date.min"),
+	max:__config__.access("generation.group.trees.date.max")
+};
+TreeRegistry.addTreeGeneration("date",savannaBiomes,dateTreesCount,__config__.access("generation.numbers.trees.date"));
+
+//dragonfruit
+var dragonfruitTreesCount = {
+	min:__config__.access("generation.group.trees.dragonfruit.min"),
+	max:__config__.access("generation.group.trees.dragonfruit.max")
+};
+TreeRegistry.addTreeGeneration("dragonfruit",savannaBiomes,dragonfruitTreesCount,__config__.access("generation.numbers.trees.dragonfruit"));
+
+//fig
+var figTreesCount = {
+	min:__config__.access("generation.group.trees.fig.min"),
+	max:__config__.access("generation.group.trees.fig.max")
+};
+TreeRegistry.addTreeGeneration("fig",savannaBiomes,figTreesCount,__config__.access("generation.numbers.trees.fig"));
+
+//grapefruit
+var grapefruitTreesCount = {
+	min:__config__.access("generation.group.trees.grapefruit.min"),
+	max:__config__.access("generation.group.trees.grapefruit.max")
+};
+TreeRegistry.addTreeGeneration("grapefruit",savannaBiomes,grapefruitTreesCount,__config__.access("generation.numbers.trees.grapefruit"));
+
+//gooseberry
+var gooseberryTreesCount = {
+	min:__config__.access("generation.group.trees.gooseberry.min"),
+	max:__config__.access("generation.group.trees.gooseberry.max")
+};
+TreeRegistry.addTreeGeneration("gooseberry",savannaBiomes,gooseberryTreesCount,__config__.access("generation.numbers.trees.gooseberry"));
+
+//lemon
+var lemonTreesCount = {
+	min:__config__.access("generation.group.trees.lemon.min"),
+	max:__config__.access("generation.group.trees.lemon.max")
+};
+TreeRegistry.addTreeGeneration("lemon",savannaBiomes,lemonTreesCount,__config__.access("generation.numbers.trees.lemon"));
+
+//lime
+var limeTreesCount = {
+	min:__config__.access("generation.group.trees.lime.min"),
+	max:__config__.access("generation.group.trees.lime.max")
+};
+TreeRegistry.addTreeGeneration("lime",savannaBiomes,limeTreesCount,__config__.access("generation.numbers.trees.lime"));
+
+//mango
+var mangoTreesCount = {
+	min:__config__.access("generation.group.trees.mango.min"),
+	max:__config__.access("generation.group.trees.mango.max")
+};
+TreeRegistry.addTreeGeneration("mango",savannaBiomes,mangoTreesCount,__config__.access("generation.numbers.trees.mango"));
+
+//olive
+var oliveTreesCount = {
+	min:__config__.access("generation.group.trees.olive.min"),
+	max:__config__.access("generation.group.trees.olive.max")
+};
+TreeRegistry.addTreeGeneration("olive",savannaBiomes,oliveTreesCount,__config__.access("generation.numbers.trees.olive"));
+
+//orange
+var orangeTreesCount = {
+	min:__config__.access("generation.group.trees.orange.min"),
+	max:__config__.access("generation.group.trees.orange.max")
+};
+TreeRegistry.addTreeGeneration("orange",savannaBiomes,orangeTreesCount,__config__.access("generation.numbers.trees.orange"));
+
+//papaya
+var papayaTreesCount = {
+	min:__config__.access("generation.group.trees.papaya.min"),
+	max:__config__.access("generation.group.trees.papaya.max")
+};
+TreeRegistry.addTreeGeneration("papaya",savannaBiomes,papayaTreesCount,__config__.access("generation.numbers.trees.papaya"));
+
+//peach
+var peachTreesCount = {
+	min:__config__.access("generation.group.trees.peach.min"),
+	max:__config__.access("generation.group.trees.peach.max")
+};
+TreeRegistry.addTreeGeneration("peach",savannaBiomes,peachTreesCount,__config__.access("generation.numbers.trees.peach"));
+
+//pear
+var pearTreesCount = {
+	min:__config__.access("generation.group.trees.pear.min"),
+	max:__config__.access("generation.group.trees.pear.max")
+};
+TreeRegistry.addTreeGeneration("pear",taigaBiomes,pearTreesCount,__config__.access("generation.numbers.trees.pear"));
+
+//persimmon
+var persimmonTreesCount = {
+	min:__config__.access("generation.group.trees.persimmon.min"),
+	max:__config__.access("generation.group.trees.persimmon.max")
+};
+TreeRegistry.addTreeGeneration("persimmon",savannaBiomes,persimmonTreesCount,__config__.access("generation.numbers.trees.persimmon"));
+
+//plum
+var plumTreesCount = {
+	min:__config__.access("generation.group.trees.plum.min"),
+	max:__config__.access("generation.group.trees.plum.max")
+};
+TreeRegistry.addTreeGeneration("plum",savannaBiomes,plumTreesCount,__config__.access("generation.numbers.trees.plum"));
+
+//pomegranate
+var pomegranateTreesCount = {
+	min:__config__.access("generation.group.trees.pomegranate.min"),
+	max:__config__.access("generation.group.trees.pomegranate.max")
+};
+TreeRegistry.addTreeGeneration("pomegranate",savannaBiomes,pomegranateTreesCount,__config__.access("generation.numbers.trees.pomegranate"));
+
+//starfruit
+var starfruitTreesCount = {
+	min:__config__.access("generation.group.trees.starfruit.min"),
+	max:__config__.access("generation.group.trees.starfruit.max")
+};
+TreeRegistry.addTreeGeneration("starfruit",savannaBiomes,starfruitTreesCount,__config__.access("generation.numbers.trees.starfruit"));
+
+//almond
+var almondTreesCount = {
+	min:__config__.access("generation.group.trees.almond.min"),
+	max:__config__.access("generation.group.trees.almond.max")
+};
+TreeRegistry.addTreeGeneration("almond",savannaBiomes,almondTreesCount,__config__.access("generation.numbers.trees.almond"));
+
+//peppercorn
+var peppercornTreesCount = {
+	min:__config__.access("generation.group.trees.peppercorn.min"),
+	max:__config__.access("generation.group.trees.peppercorn.max")
+};
+TreeRegistry.addTreeGeneration("peppercorn",savannaBiomes,peppercornTreesCount,__config__.access("generation.numbers.trees.peppercorn"));
+
+//cashew
+var cashewTreesCount = {
+	min:__config__.access("generation.group.trees.cashew.min"),
+	max:__config__.access("generation.group.trees.cashew.max")
+};
+TreeRegistry.addTreeGeneration("cashew",savannaBiomes,cashewTreesCount,__config__.access("generation.numbers.trees.cashew"));
+
+//coconut
+var coconutTreesCount = {
+	min:__config__.access("generation.group.trees.coconut.min"),
+	max:__config__.access("generation.group.trees.coconut.max")
+};
+TreeRegistry.addTreeGeneration("coconut",savannaBiomes,coconutTreesCount,__config__.access("generation.numbers.trees.coconut"));
+
+
+
+
+// file: CROPS/crops.js
+
+// file: CROPS/strawberry.js
+
+CropRegistry.registerWithID("strawberrycrop","strawberrycrop","strawberrycrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.strawberrycrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.strawberrycrop,
+	drop:ItemID.strawberry,
+	seed:ItemID.strawberry_seed
+});
+
+
+
+
+// file: CROPS/raspberry.js
+
+CropRegistry.registerWithID("raspberrycrop","raspberrycrop","raspberry_crop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.raspberrycrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.raspberrycrop,
+	drop:ItemID.raspberry,
+	seed:ItemID.raspberry_seed
+});
+
+
+
+
+// file: CROPS/cranberry.js
+
+CropRegistry.registerWithID("cranberrycrop","cranberrycrop","cranberrycrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.cranberrycrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.cranberrycrop,
+	drop:ItemID.cranberry,
+	seed:ItemID.cranberry_seed
+});
+
+
+
+
+// file: CROPS/blueberry.js
+
+CropRegistry.registerWithID("blueberrycrop","blueberrycrop","blueberrycrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.blueberrycrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.blueberrycrop,
+	drop:ItemID.blueberry,
+	seed:ItemID.blueberry_seed
+});
+
+
+
+
+// file: CROPS/blackberry.js
+
+CropRegistry.registerWithID("blackberrycrop","blackberrycrop","blackberrycrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.blackberrycrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.blackberrycrop,
+	drop:ItemID.blackberry,
+	seed:ItemID.blackberry_seed
+});
+
+
+
+
+// file: CROPS/grape.js
+
+CropRegistry.registerWithID("grapecrop","grapecrop","grapecrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.grapecrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.grapecrop,
+	drop:ItemID.grape,
+	seed:ItemID.grape_seed
+});
+
+
+
+
+// file: CROPS/cucumber.js
+
+CropRegistry.registerWithID("cucumbercrop","cucumbercrop","cucumbercrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.cucumbercrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.cucumbercrop,
+	drop:ItemID.cucumber,
+	seed:ItemID.cucumber_seed
+});
+
+
+
+
+// file: CROPS/onion.js
+
+CropRegistry.registerWithID("onioncrop","onioncrop","onioncrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.onioncrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.onioncrop,
+	drop:ItemID.onion,
+	seed:ItemID.onion_seed
+});
+
+
+
+
+// file: CROPS/cabbage.js
+
+CropRegistry.registerWithID("cabbagecrop","cabbagecrop","cabbagecrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.cabbagecrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.cabbagecrop,
+	drop:ItemID.cabbage,
+	seed:ItemID.cabbage_seed
+});
+
+
+
+
+// file: CROPS/tomato.js
+
+CropRegistry.registerWithID("tomatocrop","tomatocrop","tomatocrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.tomatocrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.tomatocrop,
+	drop:ItemID.tomato,
+	seed:ItemID.tomato_seed
+});
+
+
+
+
+// file: CROPS/garlic.js
+
+CropRegistry.registerWithID("garliccrop","garliccrop","garliccrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.garliccrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.garliccrop,
+	drop:ItemID.garlic,
+	seed:ItemID.garlic_seed
+});
+
+
+
+
+// file: CROPS/bellpepper.js
+
+CropRegistry.registerWithID("bellpeppercrop","bellpeppercrop","bellpeppercrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.bellpeppercrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.bellpeppercrop,
+	drop:ItemID.bellpepper,
+	seed:ItemID.bellpepper_seed
+});
+
+
+
+
+// file: CROPS/lettuce.js
+
+CropRegistry.registerWithID("lettucecrop","lettucecrop","lettucecrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.lettucecrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.lettuce,
+	drop:ItemID.lettuce,
+	seed:ItemID.lettuce_seed
+});
+
+
+
+
+// file: CROPS/coffeebean.js
+
+CropRegistry.registerWithID("coffeebeancrop","coffeebeancrop","coffeebeancrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.coffeebeancrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.coffeebeancrop,
+	drop:ItemID.coffee_beans,
+	seed:ItemID.coffee_seed
+});
+
+
+
+
+// file: CROPS/peas.js
+
+CropRegistry.registerWithID("peascrop","peascrop","peascrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.peascrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.peascrop,
+	drop:ItemID.peas,
+	seed:ItemID.peas_seed
+});
+
+
+
+
+// file: CROPS/chilipepper.js
+
+CropRegistry.registerWithID("chilipeppercrop","chilipeppercrop","chilipeppercrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.chilipeppercrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.chilipeppercrop,
+	drop:ItemID.chili_pepper,
+	seed:ItemID.chili_pepper_seed
+});
+
+
+
+
+// file: CROPS/spiceleaf.js
+
+CropRegistry.registerWithID("spiceleafcrop","spiceleafcrop","spiceleafcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.spiceleafcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.spiceleafcrop,
+	drop:ItemID.spice_leaf,
+	seed:ItemID.spice_leaf_seed
+});
+
+
+
+
+// file: CROPS/corn.js
+
+CropRegistry.registerWithID("corncrop","corncrop","corncrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.corncrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.corncrop,
+	drop:ItemID.corn,
+	seed:ItemID.corn_seed
+});
+
+
+
+
+// file: CROPS/candleberry.js
+
+CropRegistry.registerWithID("candleberrycrop","candleberrycrop","candleberrycrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.candleberrycrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.candleberrycrop,
+	drop:ItemID.candleberry,
+	seed:ItemID.candleberryseed
+});
+
+
+
+
+// file: CROPS/curryleaf.js
+
+CropRegistry.registerWithID("curryleaf","curryleaf","curryleafcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.curryleaf);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.curryleaf,
+	drop:ItemID.curryleaf,
+	seed:ItemID.curryleaf_seed
+});
+
+
+
+
+// file: CROPS/cotton.js
+
+CropRegistry.registerWithID("cottoncrop","cottoncrop","cottoncrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.cottoncrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.cottoncrop,
+	drop:ItemID.cotton,
+	seed:ItemID.cotton_seed
+});
+
+
+
+
+// file: CROPS/rutabaga.js
+
+CropRegistry.registerWithID("rutabagacrop","rutabagacrop","rutabagacrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.rutabagacrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.rutabagacrop,
+	drop:ItemID.rutabaga,
+	seed:ItemID.rutabaga_seed
+});
+
+
+
+
+// file: CROPS/bean.js
+
+CropRegistry.registerWithID("beancrop","beancrop","beancrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.beancrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.beancrop,
+	drop:ItemID.bean,
+	seed:ItemID.bean_seed
+});
+
+
+
+
+// file: CROPS/waterchestnut.js
+
+CropRegistry.registerWithID("waterchestnutcrop","waterchestnutcrop","waterchestnutcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.waterchestnutcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.waterchestnutcrop,
+	drop:ItemID.waterchestnut,
+	seed:ItemID.waterchestnut_seed
+});
+
+
+
+
+// file: CROPS/rice.js
+
+CropRegistry.registerWithID("ricecrop","ricecrop","ricecrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.ricecrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.ricecrop,
+	drop:ItemID.rice,
+	seed:ItemID.rice_seed
+});
+
+
+
+
+// file: CROPS/mustardseeds.js
+
+CropRegistry.registerWithID("mustardseedscrop","mustardseedscrop","mustardseedscrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.mustardseedscrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.mustardseedscrop,
+	drop:ItemID.mustardseeds,
+	seed:ItemID.mustard_seed
+});
+
+
+
+
+// file: CROPS/ginger.js
+
+CropRegistry.registerWithID("gingercrop","gingercrop","gingercrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.gingercrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.gingercrop,
+	drop:ItemID.ginger,
+	seed:ItemID.ginger_seed
+});
+
+
+
+
+// file: CROPS/spinach.js
+
+CropRegistry.registerWithID("spinachcrop","spinachcrop","spinachcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.spinachcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.spinachcrop,
+	drop:ItemID.spinach,
+	seed:ItemID.spinach_seed
+});
+
+
+
+// file: CROPS/cactusfruit.js
+
+CropRegistry.registerWithID("cactusfruitcrop","cactusfruitcrop","cactusfruitcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.cactusfruitcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.cactusfruitcrop,
+	drop:ItemID.cactusfruit,
+	seed:ItemID.cactusfruit_seed
+});
+
+
+
+// file: CROPS/cantaloupe.js
+
+CropRegistry.registerWithID("cantaloupecrop","cantaloupecrop","cantaloupecrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.cantaloupecrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.cantaloupecrop,
+	drop:ItemID.cantaloupe,
+	seed:ItemID.cantaloupe_seed
+});
+
+
+
+// file: CROPS/kiwi.js
+
+CropRegistry.registerWithID("kiwicrop","kiwicrop","kiwicrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.kiwicrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.kiwicrop,
+	drop:ItemID.kiwi,
+	seed:ItemID.kiwi_seed
+});
+
+
+
+// file: CROPS/pineapple.js
+
+CropRegistry.registerWithID("pineapplecrop","pineapplecrop","pineapplecrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.pineapplecrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.pineapplecrop,
+	drop:ItemID.pineapple,
+	seed:ItemID.pineapple_seed
+});
+
+
+//////////////////////////////////////////////////////////////////////////
+// file: CROPS/artichoke.js
+
+CropRegistry.registerWithID("artichokecrop","artichokecrop","artichokecrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.artichokecrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.artichokecrop,
+	drop:ItemID.artichoke,
+	seed:ItemID.artichoke_seed
+});
+
+
+
+// file: CROPS/asparagus.js
+
+CropRegistry.registerWithID("asparaguscrop","asparaguscrop","asparaguscrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.asparaguscrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.asparaguscrop,
+	drop:ItemID.asparagus,
+	seed:ItemID.asparagus_seed
+});
+
+
+
+// file: CROPS/bambooshoot.js
+
+CropRegistry.registerWithID("bambooshootcrop","bambooshootcrop","bambooshootcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.bambooshootcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.bambooshootcrop,
+	drop:ItemID.bambooshoot,
+	seed:ItemID.bambooshoot_seed
+});
+
+
+
+// file: CROPS/broccoli.js
+
+CropRegistry.registerWithID("broccolicrop","broccolicrop","broccolicrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.broccolicrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.broccolicrop,
+	drop:ItemID.broccoli,
+	seed:ItemID.broccoli_seed
+});
+
+
+
+// file: CROPS/brusselsprout.js
+
+CropRegistry.registerWithID("brusselsproutcrop","brusselsproutcrop","brusselsproutcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.brusselsproutcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.brusselsproutcrop,
+	drop:ItemID.brusselsprout,
+	seed:ItemID.brusselsprout_seed
+});
+
+
+
+// file: CROPS/cauliflower.js
+
+CropRegistry.registerWithID("cauliflowercrop","cauliflowercrop","cauliflowercrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.cauliflowercrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.cauliflowercrop,
+	drop:ItemID.cauliflower,
+	seed:ItemID.cauliflower_seed
+});
+
+
+
+
+// file: CROPS/celery.js
+
+CropRegistry.registerWithID("celerycrop","celerycrop","celerycrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.celerycrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.celerycrop,
+	drop:ItemID.celery,
+	seed:ItemID.celery_seed
+});
+
+
+
+
+// file: CROPS/radish.js
+
+CropRegistry.registerWithID("radishcrop","radishcrop","radishcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.radishcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.radishcrop,
+	drop:ItemID.radish,
+	seed:ItemID.radish_seed
+});
+
+
+
+
+// file: CROPS/eggplant.js
+
+CropRegistry.registerWithID("eggplantcrop","eggplantcrop","eggplantcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.eggplantcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.eggplantcrop,
+	drop:ItemID.eggplant,
+	seed:ItemID.eggplant_seed
+});
+
+
+
+// file: CROPS/leek.js
+
+CropRegistry.registerWithID("leekcrop","leekcrop","leekcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.leekcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.leekcrop,
+	drop:ItemID.leek,
+	seed:ItemID.leek_seed
+});
+
+
+
+// file: CROPS/okra.js
+
+CropRegistry.registerWithID("okracrop","okracrop","okracrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.okracrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.okracrop,
+	drop:ItemID.okra,
+	seed:ItemID.okra_seed
+});
+
+
+
+// file: CROPS/parsnip.js
+
+CropRegistry.registerWithID("parsnipcrop","parsnipcrop","parsnipcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.parsnipcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.parsnipcrop,
+	drop:ItemID.parsnip,
+	seed:ItemID.parsnip_seed
+});
+
+
+
+
+// file: CROPS/rhubarb.js
+
+CropRegistry.registerWithID("rhubarbcrop","rhubarbcrop","rhubarbcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.rhubarbcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.rhubarbcrop,
+	drop:ItemID.rhubarb,
+	seed:ItemID.rhubarb_seed
+});
+
+
+
+// file: CROPS/scallion.js
+
+CropRegistry.registerWithID("scallioncrop","scallioncrop","scallioncrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.scallioncrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.scallioncrop,
+	drop:ItemID.scallion,
+	seed:ItemID.scallion_seed
+});
+
+
+
+// file: CROPS/soybean.js
+
+CropRegistry.registerWithID("soybeancrop","soybeancrop","soybeancrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.soybeancrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.soybeancrop,
+	drop:ItemID.soybean,
+	seed:ItemID.soybean_seed
+});
+
+
+
+// file: CROPS/sweetpotato.js
+
+CropRegistry.registerWithID("sweetpotatocrop","sweetpotatocrop","sweetpotatocrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.sweetpotatocrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.sweetpotatocrop,
+	drop:ItemID.sweetpotato,
+	seed:ItemID.sweetpotato_seed
+});
+
+
+
+// file: CROPS/turnip.js
+
+CropRegistry.registerWithID("turnipcrop","turnipcrop","turnipcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.turnipcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.turnipcrop,
+	drop:ItemID.turnip,
+	seed:ItemID.turnip_seed
+});
+
+
+
+
+// file: CROPS/peanut.js
+
+CropRegistry.registerWithID("peanutcrop","peanutcrop","peanutcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.peanutcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.peanutcrop,
+	drop:ItemID.peanut,
+	seed:ItemID.peanut_seed
+});
+
+
+
+// file: CROPS/rye.js
+
+CropRegistry.registerWithID("ryecrop","ryecrop","ryecrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.ryecrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.ryecrop,
+	drop:ItemID.rye,
+	seed:ItemID.rye_seed
+});
+
+
+
+
+// file: CROPS/zucchini.js
+
+CropRegistry.registerWithID("zucchinicrop","zucchinicrop","zucchinicrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.zucchinicrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.zucchinicrop,
+	drop:ItemID.zucchini,
+	seed:ItemID.zucchini_seed
+});
+
+
+
+
+// file: CROPS/barley.js
+
+CropRegistry.registerWithID("barleycrop","barleycrop","barleycrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.barleycrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.barleycrop,
+	drop:ItemID.barley,
+	seed:ItemID.barley_seed
+});
+
+
+
+
+// file: CROPS/oats.js
+
+CropRegistry.registerWithID("oatscrop","oatscrop","oatscrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.oatscrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.oatscrop,
+	drop:ItemID.oats,
+	seed:ItemID.oats_seed
+});
+
+
+
+
+// file: CROPS/wintersquash.js
+
+CropRegistry.registerWithID("wintersquashcrop","wintersquashcrop","wintersquashcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.wintersquashcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.wintersquashcrop,
+	drop:ItemID.wintersquash,
+	seed:ItemID.wintersquash_seed
+});
+
+
+
+
+// file: CROPS/tealeaf.js
+
+CropRegistry.registerWithID("tealeafcrop","tealeafcrop","tealeafcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.tealeafcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.tealeafcrop,
+	drop:ItemID.tealeaf,
+	seed:ItemID.tealeaf_seed
+});
+
+
+
+// file: CROPS/beet.js
+
+CropRegistry.registerWithID("beetcrop","beetcrop","beetcrop",BLOCK_TYPE_CROP);
+PlantModel.crop(BlockID.beetcrop);
+CropRegistry.deriveCropAsClass("harvestcraft_crop",{
+	id:BlockID.beetcrop,
+	drop:ItemID.beet,
+	seed:ItemID.beet_seed
+});
 
 
 
