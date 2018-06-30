@@ -115,12 +115,13 @@ CropRegistry.registerClassDeriveFunction("Harvestcraft_treeSapling",function(cla
 		if(item.id==manure.id&&item.data==manure.data&&block.id==idd){
 			if(Math.random()<chance){
 				TreeRegistry.deployTree(coords.x,coords.y,coords.z,TreeRegistry.getTreeFromSaplingBlock(idd));
-			}	
+			}
 			if(particles){
 				for(var i = 0;i<particles;i++){
 					Particles.addParticle(Native.ParticleType.happyVillager, coords.x+Math.random()*.8,coords.y+Math.random()*.8,coords.z+Math.random()*.8,0,0,0,0)
 				}
 			}
+			Player.decreaseCarriedItem(1);
 		}
 	});
 	Block.registerDropFunction(idd, function(coords, blockID, blockData, level){
@@ -137,7 +138,8 @@ CropRegistry.registerClass("Harvestcraft_fruit");
 CropRegistry.registerClassConfig("Harvestcraft_fruit",{
 	ageSpeed:__config__.access("other.ageSpeed.fruits"),
 	manure:{id:351,data:15},
-	farmland:[{id:18,data:0}]
+	farmland:[{id:18,data:0}],
+	growStages:3
 });
 CropRegistry.setRegularFunctionsForClass("Harvestcraft_fruit",__config__.access("other.growChance.fruits"),particles);
 CropRegistry.registerClassDeriveFunction("Harvestcraft_fruit",function(classs,idd){
@@ -150,6 +152,9 @@ CropRegistry.registerClassDeriveFunction("Harvestcraft_fruit",function(classs,id
 		if(Math.random()<chance&&data<2){
 			World.setBlock(x,y,z,id,data+1);
 		}
+	});
+	Block.registerDropFunction(idd, function(coords, blockID, blockData, level){
+		return[[ 0, 0,0 ]];
 	});
 	if(ForestryAPI){
 		ForestryAPI.BeeRegistry.FLOWERS_JUNGLE.push(idd+':'+0);
